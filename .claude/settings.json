@@ -1,0 +1,241 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "SlashCommand",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm -f /tmp/single_page_*.pdf:*)",
+      "Bash(rm -f /tmp/*.pdf:*)",
+      "Bash(rm -f /tmp/*.tmp:*)",
+      "Write(learning-materials/**)",
+      "Write(knowledge-base/**)",
+      "Write(.review/**)",
+      "Write(chats/**)",
+      "Write(docs/**)",
+      "Write(scripts/**)",
+      "Edit(learning-materials/**)",
+      "Edit(knowledge-base/**)",
+      "Edit(.review/**)",
+      "Edit(scripts/**)",
+      "Edit(docs/**)"
+    ],
+    "deny": [
+      "Bash(rm -rf /:*)",
+      "Bash(sudo:*)",
+      "Bash(shutdown:*)",
+      "Read(.env*)",
+      "Write(.env*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(rm -rf:*)",
+      "Write(.claude/**)",
+      "Edit(.claude/**)",
+      "Write(*.py)",
+      "Edit(*.py)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-start.py",
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-user-input.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-review-reminder.py",
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "SlashCommand",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-checklist-injection.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-subagent-checklist.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-bash.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-detect-inline-python.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-protect-index-files.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-check-read-size.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-trigger-backlink-rebuild.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/smart-checkpoint.sh",
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__memory-server__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-memory-health.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-log-review-completion.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-learn-finalization-prompt.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f chats/index.json ] && cp chats/index.json chats/index.backup.json || true",
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-stop.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$(date -u +%Y-%m-%dT%H:%M:%SZ) SessionEnd\" >> ~/.claude/session.log",
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ]
+  }
+}

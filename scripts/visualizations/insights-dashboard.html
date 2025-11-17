@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Insights Dashboard</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                         Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+        #root {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const InsightsDashboard = () => {
+            const [insights, setInsights] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                // In production, this would fetch from an API
+                // For now, load from local file
+                fetch('.review/insights.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        setInsights(data);
+                        setLoading(false);
+                    })
+                    .catch(err => {
+                        setError(err.message);
+                        setLoading(false);
+                    });
+            }, []);
+
+            if (loading) {
+                return (
+                    <div style={{textAlign: 'center', padding: '50px'}}>
+                        <h2>Loading insights...</h2>
+                    </div>
+                );
+            }
+
+            if (error) {
+                return (
+                    <div style={{textAlign: 'center', padding: '50px', color: '#e74c3c'}}>
+                        <h2>Error loading insights</h2>
+                        <p>{error}</p>
+                        <p style={{marginTop: '20px', fontSize: '14px', color: '#7f8c8d'}}>
+                            Run: <code>python3 scripts/insights_engine.py</code>
+                        </p>
+                    </div>
+                );
+            }
+
+            if (!insights) {
+                return <div>No insights available</div>;
+            }
+
+            const { recommendations, alerts, achievements, trends, tips, userGoal } = insights;
+
+            const priorityColors = {
+                critical: '#e74c3c',
+                high: '#e67e22',
+                medium: '#f39c12',
+                low: '#3498db'
+            };
+
+            return (
+                <div>
+                    <header style={{
+                        background: 'white',
+                        padding: '30px',
+                        borderRadius: '12px',
+                        marginBottom: '30px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                        <h1 style={{fontSize: '32px', marginBottom: '10px'}}>
+                            Learning Insights Dashboard
+                        </h1>
+                        <p style={{color: '#7f8c8d'}}>
+                            Your personalized learning guidance | Goal: <strong>{userGoal}</strong>
+                        </p>
+                    </header>
+
+                    {/* Top Recommendations */}
+                    <section style={{marginBottom: '30px'}}>
+                        <h2 style={{
+                            fontSize: '24px',
+                            marginBottom: '15px',
+                            color: '#2c3e50'
+                        }}>
+                            🎯 Top Recommendations
+                        </h2>
+                        {recommendations.length > 0 ? (
+                            recommendations.slice(0, 3).map((rec, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        padding: '20px',
+                                        marginBottom: '15px',
+                                        background: 'white',
+                                        borderLeft: `4px solid ${priorityColors[rec.priority]}`,
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}
+                                >
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        marginBottom: '10px'
+                                    }}>
+                                        <strong style={{
+                                            color: priorityColors[rec.priority],
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {rec.priority}
+                                        </strong>
+                                        <span style={{
+                                            fontSize: '12px',
+                                            color: '#7f8c8d',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {rec.type}
+                                        </span>
+                                    </div>
+                                    <p style={{
+                                        fontSize: '18px',
+                                        marginBottom: '10px',
+                                        color: '#2c3e50'
+                                    }}>
+                                        {rec.message}
+                                    </p>
+                                    {rec.actionable && (
+                                        <div>
+                                            <button
+                                                style={{
+                                                    padding: '10px 20px',
+                                                    background: priorityColors[rec.priority],
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontFamily: 'monospace'
+                                                }}
+                                                onClick={() => alert(`Command: ${rec.actionable}\nCopy this command to run in your terminal.`)}
+                                            >
+                                                {rec.actionable}
+                                            </button>
+                                            <p style={{
+                                                fontSize: '12px',
+                                                color: '#7f8c8d',
+                                                marginTop: '8px'
+                                            }}>
+                                                Impact: {rec.impact}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{
+                                padding: '20px',
+                                background: 'white',
+                                borderRadius: '8px',
+                                color: '#7f8c8d'
+                            }}>
+                                No recommendations at this time. Keep up the great work!
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Active Alerts */}
+                    {alerts.length > 0 && (
+                        <section style={{marginBottom: '30px'}}>
+                            <h2 style={{
+                                fontSize: '24px',
+                                marginBottom: '15px',
+                                color: '#2c3e50'
+                            }}>
+                                ⚠️ Active Alerts
+                            </h2>
+                            {alerts.map((alert, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        padding: '15px',
+                                        marginBottom: '10px',
+                                        background: alert.severity === 'critical' ? '#ffe0e0' : '#fff3cd',
+                                        borderRadius: '8px',
+                                        borderLeft: `4px solid ${alert.severity === 'critical' ? '#e74c3c' : '#f39c12'}`
+                                    }}
+                                >
+                                    <strong>{alert.severity === 'critical' ? '🚨' : '⚠️'}</strong>{' '}
+                                    {alert.message}
+                                </div>
+                            ))}
+                        </section>
+                    )}
+
+                    {/* Recent Achievements */}
+                    {achievements.length > 0 && (
+                        <section style={{marginBottom: '30px'}}>
+                            <h2 style={{
+                                fontSize: '24px',
+                                marginBottom: '15px',
+                                color: '#2c3e50'
+                            }}>
+                                🏆 Recent Achievements
+                            </h2>
+                            <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '15px'
+                            }}>
+                                {achievements.map((ach, i) => {
+                                    const emoji = ach.message.split(' ')[0];
+                                    const text = ach.message.substring(ach.message.indexOf(' ') + 1);
+                                    return (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                padding: '20px',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                color: 'white',
+                                                borderRadius: '12px',
+                                                textAlign: 'center',
+                                                minWidth: '160px',
+                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                            }}
+                                        >
+                                            <div style={{fontSize: '40px', marginBottom: '8px'}}>
+                                                {emoji}
+                                            </div>
+                                            <div style={{fontSize: '14px', fontWeight: '500'}}>
+                                                {text}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Key Trends */}
+                    <section style={{marginBottom: '30px'}}>
+                        <h2 style={{
+                            fontSize: '24px',
+                            marginBottom: '15px',
+                            color: '#2c3e50'
+                        }}>
+                            📊 Key Trends
+                        </h2>
+                        {trends.length > 0 ? (
+                            trends.map((trend, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        padding: '15px',
+                                        marginBottom: '10px',
+                                        background: 'white',
+                                        borderRadius: '8px',
+                                        borderLeft: '4px solid #3498db'
+                                    }}
+                                >
+                                    {trend.message}
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{
+                                padding: '20px',
+                                background: 'white',
+                                borderRadius: '8px',
+                                color: '#7f8c8d'
+                            }}>
+                                Not enough historical data for trend analysis.
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Learning Tips */}
+                    <section style={{marginBottom: '30px'}}>
+                        <h2 style={{
+                            fontSize: '24px',
+                            marginBottom: '15px',
+                            color: '#2c3e50'
+                        }}>
+                            💡 Learning Tips
+                        </h2>
+                        {tips.length > 0 ? (
+                            tips.map((tip, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        padding: '15px',
+                                        marginBottom: '10px',
+                                        background: '#e8f5e9',
+                                        borderRadius: '8px',
+                                        borderLeft: '4px solid #4caf50'
+                                    }}
+                                >
+                                    {tip}
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{
+                                padding: '20px',
+                                background: 'white',
+                                borderRadius: '8px',
+                                color: '#7f8c8d'
+                            }}>
+                                Keep learning and tips will appear here!
+                            </div>
+                        )}
+                    </section>
+
+                    <footer style={{
+                        textAlign: 'center',
+                        padding: '30px',
+                        color: '#95a5a6',
+                        fontSize: '12px'
+                    }}>
+                        <p>Generated with Knowledge System Analytics Engine</p>
+                        <p>Story 3.6: Analytics Insights Engine</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<InsightsDashboard />);
+    </script>
+</body>
+</html>

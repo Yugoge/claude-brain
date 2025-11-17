@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+env/
+venv/
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Editor
+.vscode/
+.idea/
+*.sublime-*
+
+# Large binary files are tracked (no LFS installed, direct tracking)
+# Note: Files >100MB may require Git LFS in the future
+
+# But always track progress and metadata
+!learning-materials/**/*.progress.md
+!learning-materials/**/*.md
+!learning-materials/.index.json
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# System files
+.fuse_hidden*
+*.Identifier
+
+# Python Virtual Environment
+venv/
+env/
+
+# Knowledge Base Configuration
+# IMPORTANT: knowledge-base/.taxonomy.json MUST BE TRACKED
+# This file contains the UNESCO ISCED and Dewey Decimal taxonomy mappings
+# used for consistent concept classification across the entire system.
+# DO NOT add .taxonomy.json to .gitignore!
+
+# MCP Memory Server Storage
+# Memory files are local and should not be shared
+.mcp/memory/

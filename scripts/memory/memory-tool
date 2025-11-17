@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""
+Memory Tool CLI - Health Dashboard and Status
+
+Provides command-line interface for viewing memory system health metrics.
+
+Usage:
+    memory-tool status          - Show current system status
+    memory-tool health          - Show detailed health metrics
+    memory-tool reset           - Reset health metrics
+"""
+
+import json
+import sys
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
+
+
+class MemoryToolCLI:
+    """CLI interface for memory system management."""
+
+    def __init__(self):
+        self.health_file = Path("/root/knowledge-system/.mcp/memory/health.json")
+
+    def _read_health_data(self) -> Dict[str, Any]:
+        """Read health metrics from file."""
+        if not self.health_file.exists():
+            return {
+                "version": "1.0.0",
+                "current_backend": "unknown",
+                "health_status": "unknown",
+                "metrics": {
+                    "total_operations": 0,
+                    "failover_count": 0,
+                    "success_rate": 0.0,
+                    "avg_latency_ms": 0.0
+                },
+                "history": []
+            }
+
+        try:
+            with open(self.health_file, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to read health data: {e}", file=sys.stderr)
+            return {"error": str(e)}
+
+    def _format_status_color(self, status: str) -> str:
+        """Add color coding to status."""
+        colors = {
+            "healthy": "\033[92m",  # Green
+            "degraded": "\033[93m",  # Yellow
+            "failed": "\033[91m",    # Red
+            "unknown": "\033[90m"    # Gray
+        }
+        reset = "\033[0m"
+        color = colors.get(status, "")
+        return f"{color}{status.upper()}{reset}"
+
+    def cmd_status(self):
+        """Display current system status."""
+        data = self._read_health_data()
+
+        if "error" in data:
+            print(f"❌ Error: {data['error']}")
+            return 1
+
+        current_backend = data.get("current_backend", "unknown")
+        health_status = data.get("health_status", "unknown")
+        metrics = data.get("metrics", {})
+
+        print("\n═══════════════════════════════════════════════════════")
+        print("           Memory System Status Dashboard")
+        print("═══════════════════════════════════════════════════════\n")
+
+        # Current State
+        print(f"🔹 Current Backend:  {current_backend}")
+        print(f"🔹 Health Status:    {self._format_status_color(health_status)}")
+        print()
+
+        # 24h Statistics
+        print("📊 Statistics (Last 24 Hours)")
+        print("─────────────────────────────────────────────────────")
+        print(f"  Total Operations:  {metrics.get('total_operations', 0)}")
+        print(f"  Failover Count:    {metrics.get('failover_count', 0)}")
+        print(f"  Success Rate:      {metrics.get('success_rate', 0.0):.1f}%")
+        print(f"  Avg Latency:       {metrics.get('avg_latency_ms', 0.0):.0f}ms")
+        print()
+
+        # Recent Operations
+        history = data.get("history", [])
+        if history:
+            print("📝 Recent Operations (Last 5)")
+            print("─────────────────────────────────────────────────────")
+            for entry in history[-5:]:
+                timestamp = entry.get("timestamp", "unknown")
+                tool = entry.get("tool_name", "unknown")
+                backend = entry.get("backend", "unknown")
+                success = "✅" if entry.get("success", False) else "❌"
+                latency = entry.get("latency_ms", 0)
+
+                # Format timestamp
+                try:
+                    dt = datetime.fromisoformat(timestamp)
+                    time_str = dt.strftime("%H:%M:%S")
+                except:
+                    time_str = timestamp[:8]
+
+                print(f"  {success} {time_str} | {tool:20s} | {backend:10s} | {latency:4.0f}ms")
+            print()
+
+        print("═══════════════════════════════════════════════════════\n")
+        return 0
+
+    def cmd_health(self):
+        """Display detailed health metrics."""
+        data = self._read_health_data()
+
+        if "error" in data:
+            print(f"❌ Error: {data['error']}")
+            return 1
+
+        print("\n╔═══════════════════════════════════════════════════════╗")
+        print("║       Memory System - Detailed Health Report         ║")
+        print("╚═══════════════════════════════════════════════════════╝\n")
+
+        # System Info
+        print("📋 System Information")
+        print("─────────────────────────────────────────────────────")
+        print(f"  Version:           {data.get('version', 'unknown')}")
+        print(f"  Last Updated:      {data.get('last_updated', 'unknown')}")
+        print(f"  Current Backend:   {data.get('current_backend', 'unknown')}")
+        print(f"  Health Status:     {self._format_status_color(data.get('health_status', 'unknown'))}")
+        print()
+
+        # Metrics Breakdown
+        metrics = data.get("metrics", {})
+        print("📊 Metrics Breakdown")
+        print("─────────────────────────────────────────────────────")
+        print(f"  Total Operations:         {metrics.get('total_operations', 0)}")
+        print(f"  Successful Operations:    {metrics.get('successful_operations', 0)}")
+        print(f"  Failed Operations:        {metrics.get('failed_operations', 0)}")
+        print(f"  Failover Events:          {metrics.get('failover_count', 0)}")
+        print(f"  Success Rate:             {metrics.get('success_rate', 0.0):.2f}%")
+        print(f"  Average Latency:          {metrics.get('avg_latency_ms', 0.0):.2f}ms")
+        print(f"  Min Latency:              {metrics.get('min_latency_ms', 0.0):.2f}ms")
+        print(f"  Max Latency:              {metrics.get('max_latency_ms', 0.0):.2f}ms")
+        print()
+
+        # Tool Usage Breakdown
+        tool_stats = metrics.get('by_tool', {})
+        if tool_stats:
+            print("🔧 Tool Usage Breakdown")
+            print("─────────────────────────────────────────────────────")
+            for tool, count in sorted(tool_stats.items(), key=lambda x: x[1], reverse=True):
+                print(f"  {tool:20s}: {count:4d} operations")
+            print()
+
+        # Backend Usage
+        backend_stats = metrics.get('by_backend', {})
+        if backend_stats:
+            print("🖥️  Backend Usage")
+            print("─────────────────────────────────────────────────────")
+            for backend, count in backend_stats.items():
+                print(f"  {backend:15s}: {count:4d} operations")
+            print()
+
+        # Full History
+        history = data.get("history", [])
+        if history:
+            print(f"📜 Operation History ({len(history)} total entries)")
+            print("─────────────────────────────────────────────────────")
+            print("  Showing last 10 operations:\n")
+            for entry in history[-10:]:
+                timestamp = entry.get("timestamp", "unknown")
+                tool = entry.get("tool_name", "unknown")
+                backend = entry.get("backend", "unknown")
+                success = "✅ SUCCESS" if entry.get("success", False) else "❌ FAILED "
+                latency = entry.get("latency_ms", 0)
+
+                print(f"  {success} | {timestamp} | {tool:20s} | {backend:10s} | {latency:.2f}ms")
+            print()
+
+        print("═══════════════════════════════════════════════════════\n")
+        return 0
+
+    def cmd_reset(self):
+        """Reset health metrics."""
+        if self.health_file.exists():
+            backup_path = self.health_file.with_suffix('.json.bak')
+            self.health_file.rename(backup_path)
+            print(f"✅ Health metrics reset (backup saved to {backup_path})")
+        else:
+            print("ℹ️  No health metrics to reset")
+        return 0
+
+    def run(self, args: List[str]) -> int:
+        """Run CLI command."""
+        if len(args) < 2:
+            print("Usage: memory-tool <command>")
+            print("\nCommands:")
+            print("  status    - Show current system status")
+            print("  health    - Show detailed health metrics")
+            print("  reset     - Reset health metrics")
+            return 1
+
+        command = args[1]
+
+        if command == "status":
+            return self.cmd_status()
+        elif command == "health":
+            return self.cmd_health()
+        elif command == "reset":
+            return self.cmd_reset()
+        else:
+            print(f"❌ Unknown command: {command}")
+            return 1
+
+
+def main():
+    """Entry point."""
+    cli = MemoryToolCLI()
+    sys.exit(cli.run(sys.argv))
+
+
+if __name__ == "__main__":
+    main()

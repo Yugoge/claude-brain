@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "description": "Configuration for PDF learning material processing with adaptive chunking strategies",
+
+  "content_type_thresholds": {
+    "image_heavy": {
+      "description": "Picture books, image-heavy materials where images are the primary content",
+      "min_images_per_page": 3,
+      "max_text_chars_per_page": 200,
+      "chunk_size_visual": 1,
+      "chunk_size_text": 999,
+      "token_estimate_text_mode": 50,
+      "token_estimate_visual_mode": 1500
+    },
+    "text_heavy": {
+      "description": "Textbooks, articles, documents with primarily text content",
+      "max_images_per_page": 1,
+      "min_text_chars_per_page": 1500,
+      "chunk_size_visual": 10,
+      "chunk_size_text": 50,
+      "token_estimate_text_mode": 250,
+      "token_estimate_visual_mode": 500
+    },
+    "mixed": {
+      "description": "Mixed content with both text and images (technical manuals, illustrated books)",
+      "chunk_size_visual": 5,
+      "chunk_size_text": 20,
+      "token_estimate_text_mode": 150,
+      "token_estimate_visual_mode": 800
+    }
+  },
+
+  "learning_strategies": {
+    "image_heavy": {
+      "name": "Text Preview → Visual Study",
+      "description": "First preview all pages in text mode (if any text), then study 1 page at a time visually",
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Text Preview",
+          "mode": "text_only",
+          "chunk_size": "all_pages",
+          "purpose": "Quick scan to identify interesting pages"
+        },
+        {
+          "phase": 2,
+          "name": "Visual Study",
+          "mode": "visual",
+          "chunk_size": 1,
+          "purpose": "Deep learning with full images"
+        }
+      ],
+      "warnings": [
+        "Image-heavy content detected",
+        "Visual mode will load 1 page at a time to avoid API errors",
+        "Text mode may show limited content (images not processed)"
+      ]
+    },
+
+    "text_heavy": {
+      "name": "Direct Visual Study",
+      "description": "Directly study in visual mode with larger chunks (5-10 pages)",
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Visual Study",
+          "mode": "visual",
+          "chunk_size": 10,
+          "purpose": "Efficient learning of text-heavy material"
+        }
+      ],
+      "warnings": []
+    },
+
+    "mixed": {
+      "name": "Adaptive Chunking",
+      "description": "Moderate chunk size (3-5 pages) with visual mode",
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Visual Study",
+          "mode": "visual",
+          "chunk_size": 5,
+          "purpose": "Balanced approach for mixed content"
+        }
+      ],
+      "warnings": [
+        "Mixed content detected",
+        "Using moderate chunk size (5 pages)"
+      ]
+    }
+  },
+
+  "token_budget": {
+    "safe_total_per_request": 8000,
+    "warning_threshold": 5000,
+    "critical_threshold": 7000,
+    "reserve_for_dialogue": 2000
+  },
+
+  "user_options": {
+    "allow_manual_override": true,
+    "show_advanced_options": false,
+    "auto_select_strategy": true,
+    "remember_user_preferences": true
+  },
+
+  "emergency_fallback": {
+    "if_single_page_too_large": {
+      "action": "skip_page",
+      "message": "Page too large even for 1-page chunks. Skipping...",
+      "log_to": ".review/problematic-pages.log"
+    },
+    "if_no_text_extractable": {
+      "action": "warn_user",
+      "message": "No text found. Consider using OCR or manual entry for vocabulary.",
+      "suggest_alternative": "Use visual study mode to view images"
+    }
+  }
+}
