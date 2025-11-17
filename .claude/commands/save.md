@@ -293,9 +293,92 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 3.5: Rem Extraction Transparency
+### Step 3.5: Consult Domain Tutor for Typed Relations (NEW)
 
-**After extracting Rems**, YOU (main agent) MUST present them in user-friendly format (no code):
+**After extracting candidate Rems**, consult domain tutor to enrich with typed relations.
+
+**Purpose**: Enable semantic relationship discovery (e.g., "ask" → "inquire" as synonyms).
+
+**Step-by-step process**:
+
+1. **Scan existing concepts** in target domain:
+```bash
+# Get all existing Rem IDs in the domain
+existing_concepts=$(find knowledge-base/{isced_path}/ -name "*.md" -type f | \
+  grep -v "_templates" | \
+  xargs grep -h "^rem_id:" | \
+  sed 's/rem_id: //' | \
+  sort)
+```
+
+2. **Prepare tutor consultation prompt**:
+```
+For each extracted Rem:
+- Concept ID: {concept_id}
+- Title: {title}
+- Core points: {core_points}
+- Domain: {domain}
+
+Existing concepts in knowledge base:
+{existing_concepts_list}
+
+Provide typed_relations for each Rem based on RELATION_TYPES.md ontology.
+ONLY suggest relations to concepts in the existing list above.
+```
+
+3. **Call appropriate domain tutor**:
+```
+Use Task tool with:
+- subagent_type: "language-tutor" (for language domain)
+              OR "finance-tutor" (for finance domain)
+              OR "programming-tutor" (for programming domain)
+              OR "book-tutor" (for general/science domain)
+- prompt: [consultation prompt from step 2]
+- description: "Enrich Rems with typed relations"
+```
+
+4. **Receive tutor's JSON response** with `typed_relations` for each Rem:
+```json
+{
+  "rem_enhancements": [
+    {
+      "concept_id": "english-verb-ask",
+      "typed_relations": [
+        {
+          "to": "english-verb-inquire",
+          "type": "synonym",
+          "rationale": "Both mean to request information, 'inquire' is more formal"
+        },
+        {
+          "to": "english-question-formation",
+          "type": "uses",
+          "rationale": "Verb 'ask' is commonly used in question structures"
+        }
+      ]
+    }
+  ]
+}
+```
+
+5. **Merge tutor's typed_relations** into extracted Rems data structure.
+
+6. **Continue to Step 3.6** (validation will happen in Step 5.5).
+
+**Important notes**:
+- ✅ Tutor receives FULL list of existing concepts (enables synonym detection)
+- ✅ Tutor ONLY suggests relations to existing concepts (no hallucination)
+- ✅ Relations are typed (synonym, prerequisite_of, etc.) not generic "related"
+- ✅ Validation in Step 5.5 will filter out any invalid relations
+
+**If tutor consultation fails** (timeout, error):
+- Log warning: "⚠️ Tutor consultation failed, relations will be populated by backlinks rebuild"
+- Continue without typed_relations (backlinks rebuild will create generic links)
+
+---
+
+### Step 3.6: Rem Extraction Transparency
+
+**After extracting and enriching Rems**, YOU (main agent) MUST present them in user-friendly format (no code):
 
 **Subagent behavior**: May use NLP scripts, classification algorithms, graph analysis tools
 **Main agent behavior**: Show user the RESULTS (extracted Rems), not the PROCESS (code)
@@ -562,7 +645,7 @@ Where `{isced_path}` is determined from Step 2.5 classification:
 
 **Build complete Rem from tutor suggestions + main agent supplements**:
 
-If Rem came from tutor (Step 3.5), use tutor's enhanced fields:
+If Rem was enriched by tutor (Step 3.5), use tutor's enhanced fields:
 - `title`: Use tutor's academic title
 - `core_points`: Parse tutor's `core_content` (already formatted as bullet points)
 - `usage_scenario`: Use tutor's `usage_scenario_suggestion`
@@ -608,7 +691,7 @@ Main agent supplements missing fields:
 - Use ISCED code field instead of legacy domain field
 - 3 core points maximum (not 3-5)
 - Include: title, core points, usage scenario, mistakes, related Rems
-- Use tutor-enhanced fields when available (from Step 3.5):
+- Use tutor-enriched fields when available (from Step 3.5):
   - `title` from tutor's academic title
   - `core_points` from tutor's `core_content`
   - `usage_scenario` from tutor's `usage_scenario_suggestion`
