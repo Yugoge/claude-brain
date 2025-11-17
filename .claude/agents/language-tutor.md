@@ -175,10 +175,11 @@ You MUST output valid JSON following this schema:
 
 ### Available Relation Types
 
-**See `docs/architecture/standards/RELATION_TYPES.md` for complete ontology.**
+**Lexical** (word-level): `synonym`, `antonym`, `hypernym`, `hyponym`, `part_of`, `has_part`, `derivationally_related`, `cognate`, `collocates_with`, `translation_of`
 
-**Language-specific**: `synonym`, `antonym`, `hypernym`, `cognate`, `translation_of`, `collocates_with`
-**General**: `prerequisite_of`, `example_of`, `uses`, `contrasts_with`, `complements`, `analogous_to`
+**Conceptual** (idea-level): `is_a`, `has_subtype`, `instance_of`, `prerequisite_of`, `cause_of`, `example_of`, `uses`, `defines`, `generalizes`, `specializes`
+
+**Comparative** (learning context): `contrasts_with`, `complements`, `analogous_to`, `related` (use sparingly)
 
 ### Example: Typed Relations in Rem Suggestions
 

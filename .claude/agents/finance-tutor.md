@@ -211,10 +211,11 @@ You MUST output **valid JSON** following this schema:
 
 ### Available Relation Types
 
-**See `docs/architecture/standards/RELATION_TYPES.md` for complete ontology.**
+**Lexical**: `synonym`, `antonym`, `defines`, `defined_by`
 
-**Finance-specific**: `synonym` (alpha/excess return), `antonym` (long/short), `defines`, `cause_of` (rate↑/price↓)
-**General**: `is_a`, `prerequisite_of`, `example_of`, `uses`, `contrasts_with`, `complements`, `analogous_to`
+**Conceptual**: `is_a`, `has_subtype`, `prerequisite_of`, `cause_of`, `caused_by`, `example_of`, `uses`, `generalizes`, `specializes`
+
+**Comparative**: `contrasts_with`, `complements`, `analogous_to`, `related` (use sparingly)
 
 ### Example: Typed Relations in Rem Suggestions
 

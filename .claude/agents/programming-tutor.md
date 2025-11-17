@@ -133,10 +133,11 @@ You MUST output valid JSON (see `docs/architecture/subagent-consultation-schema.
 
 ### Available Relation Types
 
-**See `docs/architecture/standards/RELATION_TYPES.md` for complete ontology.**
+**Lexical**: `synonym`, `antonym`, `part_of`, `has_part`
 
-**Programming-specific**: `synonym` (function/subroutine), `antonym` (sync/async), `analogous_to` (decorator/annotation)
-**General**: `is_a`, `part_of`, `prerequisite_of`, `uses`, `example_of`, `contrasts_with`, `complements`
+**Conceptual**: `is_a`, `has_subtype`, `prerequisite_of`, `example_of`, `uses`, `used_by`, `generalizes`, `specializes`
+
+**Comparative**: `contrasts_with`, `complements`, `analogous_to`, `related` (use sparingly)
 
 ### Example: Typed Relations in Rem Suggestions
 

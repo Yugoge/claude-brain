@@ -170,9 +170,11 @@ You MUST output valid JSON following this schema (see `docs/architecture/subagen
 
 ### Available Relation Types
 
-**See `docs/architecture/standards/RELATION_TYPES.md` for complete ontology.**
+**Lexical**: `synonym`, `antonym`, `hypernym`, `hyponym`, `part_of`, `has_part`
 
-**Common**: `is_a`, `part_of`, `prerequisite_of`, `example_of`, `uses`, `contrasts_with`, `complements`, `analogous_to`, `cause_of`
+**Conceptual**: `is_a`, `has_subtype`, `prerequisite_of`, `cause_of`, `example_of`, `uses`, `defines`, `generalizes`, `specializes`
+
+**Comparative**: `contrasts_with`, `complements`, `analogous_to`, `related` (use sparingly)
 
 ### Example: Typed Relations in Rem Suggestions
 

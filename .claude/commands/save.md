@@ -293,86 +293,36 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 3.5: Consult Domain Tutor for Typed Relations (NEW)
+### Step 3.5: Enrich with Typed Relations via Domain Tutor (OPTIONAL)
 
-**After extracting candidate Rems**, consult domain tutor to enrich with typed relations.
+**Purpose**: Discover semantic relationships (e.g., "ask" ↔ "inquire" as synonyms).
 
-**Purpose**: Enable semantic relationship discovery (e.g., "ask" → "inquire" as synonyms).
+**Implementation** (simplified):
 
-**Step-by-step process**:
+1. **Get existing Rem IDs** in target domain using Glob tool:
+   ```
+   Glob: knowledge-base/{isced_path}/**/*.md
+   Read frontmatter rem_id from each file
+   ```
 
-1. **Scan existing concepts** in target domain:
-```bash
-# Get all existing Rem IDs in the domain
-existing_concepts=$(find knowledge-base/{isced_path}/ -name "*.md" -type f | \
-  grep -v "_templates" | \
-  xargs grep -h "^rem_id:" | \
-  sed 's/rem_id: //' | \
-  sort)
-```
+2. **Call domain tutor** with Task tool, providing:
+   - Extracted Rems (titles, core points)
+   - Existing Rem IDs in the domain
+   - Request: "Suggest typed_relations using types: synonym, prerequisite_of, contrasts_with, uses, etc."
 
-2. **Prepare tutor consultation prompt**:
-```
-For each extracted Rem:
-- Concept ID: {concept_id}
-- Title: {title}
-- Core points: {core_points}
-- Domain: {domain}
+3. **Tutor returns JSON** with typed_relations for each Rem:
+   ```json
+   {
+     "concept_id": "english-verb-ask",
+     "typed_relations": [
+       {"to": "english-verb-inquire", "type": "synonym", "rationale": "..."}
+     ]
+   }
+   ```
 
-Existing concepts in knowledge base:
-{existing_concepts_list}
+4. **Merge typed_relations** into Rem data (validation happens in Step 5.5).
 
-Provide typed_relations for each Rem based on RELATION_TYPES.md ontology.
-ONLY suggest relations to concepts in the existing list above.
-```
-
-3. **Call appropriate domain tutor**:
-```
-Use Task tool with:
-- subagent_type: "language-tutor" (for language domain)
-              OR "finance-tutor" (for finance domain)
-              OR "programming-tutor" (for programming domain)
-              OR "book-tutor" (for general/science domain)
-- prompt: [consultation prompt from step 2]
-- description: "Enrich Rems with typed relations"
-```
-
-4. **Receive tutor's JSON response** with `typed_relations` for each Rem:
-```json
-{
-  "rem_enhancements": [
-    {
-      "concept_id": "english-verb-ask",
-      "typed_relations": [
-        {
-          "to": "english-verb-inquire",
-          "type": "synonym",
-          "rationale": "Both mean to request information, 'inquire' is more formal"
-        },
-        {
-          "to": "english-question-formation",
-          "type": "uses",
-          "rationale": "Verb 'ask' is commonly used in question structures"
-        }
-      ]
-    }
-  ]
-}
-```
-
-5. **Merge tutor's typed_relations** into extracted Rems data structure.
-
-6. **Continue to Step 3.6** (validation will happen in Step 5.5).
-
-**Important notes**:
-- ✅ Tutor receives FULL list of existing concepts (enables synonym detection)
-- ✅ Tutor ONLY suggests relations to existing concepts (no hallucination)
-- ✅ Relations are typed (synonym, prerequisite_of, etc.) not generic "related"
-- ✅ Validation in Step 5.5 will filter out any invalid relations
-
-**If tutor consultation fails** (timeout, error):
-- Log warning: "⚠️ Tutor consultation failed, relations will be populated by backlinks rebuild"
-- Continue without typed_relations (backlinks rebuild will create generic links)
+**If tutor call fails**: Continue without typed_relations (backlinks rebuild will add generic links later).
 
 ---
 
