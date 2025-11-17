@@ -22,7 +22,7 @@ def main():
         print("✅ Instead, use existing script:", file=sys.stderr)
         print("  python3 scripts/archival/session_detector.py", file=sys.stderr)
         print("  python3 scripts/archival/concept_extractor.py", file=sys.stderr)
-        print("  python3 scripts/archival/process_tutor_response.py", file=sys.stderr)
+        print("  python3 scripts/archive/utilities/process_tutor_response.py", file=sys.stderr)
         print("", file=sys.stderr)
         print("See CLAUDE.md lines 77-90 for Script Usage Requirements", file=sys.stderr)
         sys.exit(1)  # Block execution

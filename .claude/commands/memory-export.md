@@ -36,7 +36,25 @@ Export memories to external file formats for backup, analysis, or transfer.
 
 ## Implementation
 
-Use `scripts/memory/memory-export.py` for implementation.
+Export memory graph using MCP tools:
+
+1. **Read full graph**:
+```
+mcp__memory-server__read_graph
+```
+
+2. **Format data**:
+   - JSON: Use graph data as-is
+   - CSV: Transform entities → rows, relations → separate table
+
+3. **Write to file**:
+```
+Write:
+  file_path: "{output_path}"
+  content: "{formatted_data}"
+```
+
+**Note**: This command uses MCP tools + Write tool, no Python script needed.
 
 ## Notes
 

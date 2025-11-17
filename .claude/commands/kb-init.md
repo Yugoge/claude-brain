@@ -50,7 +50,7 @@ Initialize or reinitialize the knowledge system for first-time use or after majo
 Execute the hardened initialization script:
 
 ```bash
-source venv/bin/activate && python scripts/kb-init.py "$@"
+source venv/bin/activate && python scripts/archive/utilities/kb-init.py "$@"
 ```
 
 Script Return Codes

@@ -34,7 +34,26 @@ Display comprehensive memory status including memory server health, storage usag
 
 ## Implementation
 
-Use `scripts/memory/memory-status.py` for implementation using the agent_memory_utils library.
+Query memory graph statistics using MCP tools:
+
+1. **Read full graph**:
+```
+mcp__memory-server__read_graph
+```
+
+2. **Calculate statistics**:
+   - Count entities by type
+   - Count relations
+   - Count observations
+   - Group by domain
+
+3. **Search recent memories** (optional):
+```
+mcp__memory-server__search_nodes:
+  query: "{domain}"  # If domain filter provided
+```
+
+**Note**: This command uses MCP tools directly, no Python script needed.
 
 ## Notes
 

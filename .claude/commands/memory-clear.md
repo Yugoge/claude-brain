@@ -33,7 +33,24 @@ WARNING: This command clears ALL memories from the knowledge graph. This is a nu
 
 ## Implementation
 
-Use `scripts/memory/memory-clear.py` for implementation.
+Clear all memory entities using MCP tools:
+
+1. **Read current graph** (for backup):
+```
+mcp__memory-server__read_graph
+```
+
+2. **Show warning** and require confirmation
+
+3. **Get all entity names** from graph
+
+4. **Delete all entities**:
+```
+mcp__memory-server__delete_entities:
+  entityNames: [all entity names from graph]
+```
+
+**Note**: This command uses MCP tools directly, no Python script needed.
 
 ## Notes
 

@@ -35,13 +35,13 @@ Generate an interactive knowledge graph visualization showing all concepts and t
 ### Step 1: Generate Graph Data
 
 ```bash
-source venv/bin/activate && python scripts/generate-graph-data.py [--domain DOMAIN] --force
+source venv/bin/activate && python scripts/knowledge-graph/generate-graph-data.py [--domain DOMAIN] --force
 ```
 
 ### Step 2: Generate Visualization HTML
 
 ```bash
-source venv/bin/activate && python scripts/generate-visualization-html.py
+source venv/bin/activate && python scripts/knowledge-graph/generate-visualization-html.py
 ```
 
 ### Step 3: Display Summary

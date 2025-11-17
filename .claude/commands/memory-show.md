@@ -37,7 +37,25 @@ Display memories in a human-readable format with optional filtering.
 
 ## Implementation
 
-Use `scripts/memory/memory-show.py` for implementation.
+Query memory entities using MCP tools:
+
+1. **Search memories** (if query/category/domain provided):
+```
+mcp__memory-server__search_nodes:
+  query: "{search_query}"  # Or "{category}" or "{domain}"
+```
+
+2. **Get full details** (if --detailed flag):
+```
+mcp__memory-server__open_nodes:
+  names: ["{entity_name_1}", "{entity_name_2}", ...]
+```
+
+3. **Format output**:
+   - Summary mode: Show entity names and types
+   - Detailed mode: Show full observations
+
+**Note**: This command uses MCP tools directly, no Python script needed.
 
 ## Notes
 

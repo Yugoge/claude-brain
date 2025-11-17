@@ -37,7 +37,24 @@ Remove specific memories from the knowledge graph by entity name, search query, 
 
 ## Implementation
 
-Use `scripts/memory/memory-forget.py` for implementation.
+Delete memory entities using MCP tools:
+
+1. **Search for matches**:
+```
+mcp__memory-server__search_nodes:
+  query: "{concept_name}"  # Or query/type/domain
+```
+
+2. **Show preview** and ask for confirmation
+
+3. **Delete entities**:
+```
+mcp__memory-server__delete_entities:
+  entityNames: ["{entity_1}", "{entity_2}", ...]
+```
+
+**Note**: MCP automatically removes orphaned relationships.
+**Note**: This command uses MCP tools directly, no Python script needed.
 
 This command modifies the memory graph by removing entities and their relationships.
 
