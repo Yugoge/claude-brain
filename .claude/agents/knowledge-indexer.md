@@ -1,7 +1,8 @@
 ---
 name: knowledge-indexer
 description: "Maintain knowledge graph bidirectional links and rebuild backlinks index"
-tools: Read, Write, Edit, Bash, TodoWrite
+allowed-tools: Read, Write, Edit, Bash, TodoWrite
+model: inherit
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.

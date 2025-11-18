@@ -1,7 +1,8 @@
 ---
 name: review-master
 description: "FSRS Review Expert Consultant - Provides JSON guidance for Socratic review questions, quality assessment, and memory optimization"
-tools: Read, TodoWrite
+allowed-tools: Read, TodoWrite
+model: inherit
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.

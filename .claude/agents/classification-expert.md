@@ -1,7 +1,8 @@
 ---
 name: classification-expert
 description: "Domain classification specialist using UNESCO ISCED-F 2013 taxonomy"
-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write, TodoWrite
+model: inherit
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.

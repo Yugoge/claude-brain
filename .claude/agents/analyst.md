@@ -1,7 +1,7 @@
 ---
 name: analyst
 description: "Universal AI assistant for comprehensive research, analysis, and problem-solving. Use for any question that needs web research, code execution, file operations, or deep analysis. Fully replaces Claude.ai web interface with complete tool access."
-tools: Read, Write, Edit, Bash, WebSearch, Glob, Grep, Task, SlashCommand, TodoWrite, mcp__playwright__*
+allowed-tools: Read, Write, Edit, Bash, WebSearch, Glob, Grep, Task, SlashCommand, TodoWrite, mcp__playwright__*
 model: inherit
 agent_type: standalone
 architecture_role: user-facing  # Directly interacts with user

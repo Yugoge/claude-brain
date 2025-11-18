@@ -43,6 +43,8 @@ You are the **orchestrator** for this command. Your job:
 
 ### Step 1: Validate Input & Check File Size + Content Type
 
+**⚠️ CRITICAL**: This step prevents oversized files from causing API errors. Incorrect content type detection = wrong extraction workflow = failed learning session.
+
 **File Validation**:
 - Verify file exists and is in `learning-materials/` directory
 - Run `scripts/learning-materials/check-file-size.py {file_path} --analyze-content --json` to get size and content type
@@ -100,10 +102,10 @@ You are the **orchestrator** for this command. Your job:
 
 **Phase 2: Visual Study (1 Page at a Time)**:
 - Parse user's page range selection
-- For each page: Use Step 2 (Dynamic Single-Page Extraction) below
+- For each page: Use Step 4.1 (Dynamic Single-Page Extraction) below
 - Load with full images, then cleanup temp file immediately
 
-### Step 2: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)
+### Step 4.1: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)
 
 **Purpose**: Load single PDF pages with full visual content using temporary files
 
@@ -132,7 +134,7 @@ You are the **orchestrator** for this command. Your job:
 
 **Performance**: ~2s per page (0.5s extraction + 1.5s read), acceptable for picture books
 
-### Step 4: Smart Material Loading (Size-Aware)
+### Step 4.2: Smart Material Loading (Size-Aware)
 
 **⚠️  PDF READING PROTOCOL (MANDATORY) ⚠️**
 ```
@@ -178,11 +180,18 @@ CORRECT WORKFLOW:
 
 ### Step 6: Select Appropriate Agent
 
+**⚠️ CRITICAL**: Selecting the wrong agent = mismatched domain expertise = poor learning outcomes.
+
 **Agent Mapping**:
 - `finance` → finance-tutor
 - `programming` → programming-tutor
 - `language` → language-tutor
 - `default` → book-tutor (books/reports)
+
+**Fallback strategy**:
+- If domain unclear → Use book-tutor (general learning)
+- If agent unavailable → Use book-tutor as fallback
+- If domain mismatch detected mid-session → Consult correct agent and pivot
 
 ### Step 6.5: Domain Focus Constraints
 
@@ -199,6 +208,8 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 
 ### Step 7: Consultation-Based Learning Session
 
+**⚠️ CRITICAL**: This is the core learning workflow. Skipping consultation phases = no Socratic teaching = passive content dump.
+
 **Architecture**: Main agent orchestrates learning using Task tool for expert consultation (book/language/finance/programming-tutor). Expert provides JSON guidance (learning plan, Socratic questions, concept extraction). User never sees consultation process - only natural teaching dialogue.
 
 **Code Presentation**: If consultant generates code for exercises/analysis, translate outputs to natural language. User should not see raw scripts unless debugging.
@@ -210,6 +221,11 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 - Include in prompt: Material, Current Section, Content Chunk, User Profile, Domain Focus Constraints (from Step 6.5)
 - Request JSON consultation: Learning plan, Socratic questioning (with domain_focus/question_type/domain_element_tested), Concept extraction, Success criteria, Strategy adjustments
 - Parse JSON result for consultation data
+
+**Fallback strategy**:
+- If consultant returns invalid JSON → Retry once with clarified prompt
+- If JSON missing required fields → Use minimal defaults (learning_plan: exploration phase)
+- If consultation fails twice → Proceed with direct teaching (no Socratic questions)
 
 #### PHASE 2: Socratic Dialogue Execution
 

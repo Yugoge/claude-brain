@@ -63,6 +63,8 @@ Rating Scale (1-4):
 
 ### Step 1: Load Rems and Show Timeline
 
+**⚠️ CRITICAL**: Loading incorrect Rems or skipping due dates = broken spaced repetition = memory decay.
+
 ```bash
 source venv/bin/activate && python scripts/review/run_review.py [args]
 ```
@@ -89,11 +91,18 @@ source venv/bin/activate && python scripts/review/run_review.py --days 14
 
 ### Step 2: Conduct Review Session (Main Agent Dialogue Loop)
 
+**⚠️ CRITICAL**: This is the core FSRS review workflow. Poor questioning = inaccurate self-ratings = suboptimal scheduling.
+
 **ARCHITECTURE**: Main agent (you) conducts the review dialogue directly with the user. Review-master is a **consultant agent** that provides JSON guidance.
 
 **For each Rem in the session, follow this loop**:
 
 #### 2.1 Consult Review-Master for Guidance
+
+**Fallback strategy**:
+- If review-master unavailable → Ask direct recall question: "What do you remember about {Rem title}?"
+- If JSON invalid → Use minimal guidance (ask for free recall, no hints)
+- If consultation fails → Proceed with basic review (show Rem content after user attempts recall)
 
 ```
 Use Task tool:
@@ -217,6 +226,8 @@ How would you rate your recall? (1-4)
 **If user disputes your assessment**: Accept their rating (FSRS adapts to user feedback)
 
 #### 2.6 Update FSRS Schedule
+
+**⚠️ CRITICAL**: Incorrect schedule updates = broken FSRS algorithm = review intervals too long/short.
 
 **CRITICAL**: Immediately update schedule after rating:
 

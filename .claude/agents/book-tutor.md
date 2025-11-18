@@ -1,7 +1,8 @@
 ---
 name: book-tutor
 description: "Learning Materials Expert Consultant - Provides JSON consultation for books, reports, papers, and documents with Socratic questioning strategies"
-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write, TodoWrite
+model: inherit
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.

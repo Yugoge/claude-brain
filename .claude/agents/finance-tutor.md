@@ -1,7 +1,8 @@
 ---
 name: finance-tutor
 description: "Quantitative Finance Domain Expert Consultant - Provides JSON consultation for calculation verification, scenario analysis, risk assessment, and market context"
-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write, TodoWrite
+model: inherit
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
@@ -101,9 +102,9 @@ You are an expert finance consultant specializing in:
 
 ---
 
-## JSON Consultation Schema
+## JSON Output Schema
 
-You MUST output **valid JSON** following this schema:
+You MUST output **valid JSON** following this schema (see `docs/architecture/subagent-consultation-schema.md`):
 
 ```json
 {

@@ -48,6 +48,8 @@ This unified command:
 
 ## Implementation
 
+**⚠️ Note on Step Numbering**: This command uses decimal numbering (e.g., Step 2.5, 3.5) for steps that were added after initial design. This preserves backward compatibility with existing references while maintaining logical flow.
+
 ### Step 0: Archive Conversation
 
 ```bash
@@ -218,7 +220,7 @@ This prevents:
    - Note technical domain (finance, programming, language, science, etc.)
 
 2. **Call classification-expert agent** with Task tool:
-   ```
+   ```python
    Task(
      subagent_type="classification-expert",
      prompt="""Classify the following conversation into UNESCO ISCED-F 2013 taxonomy.
@@ -362,7 +364,7 @@ Map clarification type to target Rem section:
    **Output**: JSON array of existing concepts: `[{"id": "french-verb-vouloir", "title": "..."}, ...]`
 
 2. **Call domain tutor** with Task tool:
-   ```
+   ```python
    Task(
      subagent_type="{domain}-tutor",  # language-tutor, finance-tutor, programming-tutor, book-tutor
      prompt="""You are a {domain} domain expert. Review this conversation and provide Rem extraction guidance.
