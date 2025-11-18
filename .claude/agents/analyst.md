@@ -75,25 +75,16 @@ You have access to ALL these tools:
 
 ### Memory Operations
 
-**Use `scripts/agent_memory_utils.py` for all memory operations:**
+**⚠️ CRITICAL**: Use `scripts/agent_memory_utils.py` for all memory operations. Do not skip memory queries.
 
-```python
-from scripts.agent_memory_utils import AgentMemory
+**Required workflow**:
+1. **Before answering**: Query memory via `AgentMemory().semantic_search(user_question, domain)`
+2. **Get user prefs**: Call `get_all_preferences()` to understand user context
+3. **After answering**: Extract concepts from answer via `extract_concepts_from_answer(answer)`
+4. **Save concepts**: Call `save_concept(name, domain, metadata)` for each concept
+5. **Link concepts**: Call `create_relationship(concept, related, relation_type)` to build graph
 
-memory = AgentMemory()
-
-# Query before answering
-results = memory.semantic_search(user_question, domain=domain)
-prefs = memory.get_all_preferences()
-
-# Save after answering
-concepts = memory.extract_concepts_from_answer(answer)
-for concept in concepts:
-    memory.save_concept(concept["name"], domain, metadata)
-    memory.create_relationship(concept["name"], related, "related_to")
-```
-
-**See `scripts/agent_memory_utils.py` for complete API documentation.**
+**API reference**: See `scripts/agent_memory_utils.py` for complete AgentMemory class documentation.
 
 ### Memory Context Usage
 

@@ -105,6 +105,8 @@ Extract arguments from `$ARGUMENTS`:
 
 #### Step 1.1: Detect Session Type
 
+**⚠️ CRITICAL**: Session type determines workflow (review vs learn). Wrong detection = incorrect Rem extraction.
+
 **Determine if this is a review session or learn/ask session**:
 
 ```bash
@@ -204,47 +206,97 @@ This prevents:
 
 ### Step 2.5: Domain Classification & ISCED Path Determination
 
-**NEW: Classify conversation domain to determine Rem storage paths**
+**⚠️ CRITICAL**: This step determines where Rems will be stored. Incorrect classification = wrong directory = broken knowledge graph.
 
-**Consult classification-expert agent** for ISCED taxonomy classification:
+**Purpose**: Classify conversation into UNESCO ISCED taxonomy to determine correct storage path for Rems.
 
-```
-Use Task tool with:
-- subagent_type: "classification-expert"
-- prompt: "Classify the following conversation into ISCED domain:
+**Step-by-step execution**:
 
-Conversation summary: {2-3 sentence summary of key topics discussed}
+1. **Analyze conversation context** to extract key topics:
+   - Identify 3-5 main concepts discussed
+   - Summarize conversation focus in 2-3 sentences
+   - Note technical domain (finance, programming, language, science, etc.)
 
-Main topics covered: {list 3-5 main concepts/questions from conversation}
+2. **Call classification-expert agent** with Task tool:
+   ```
+   Task(
+     subagent_type="classification-expert",
+     prompt="""Classify the following conversation into UNESCO ISCED-F 2013 taxonomy.
 
-Provide 3-level ISCED classification (broad, narrow, detailed) for organizing knowledge Rems."
-- description: "Classify conversation domain"
-```
+**Conversation Summary**:
+{2-3 sentence summary of what was discussed}
 
-**Receive JSON classification**:
-```json
-{
-  "domain": "finance",
-  "confidence": 95,
-  "sub_domain": "derivatives_pricing",
-  "rationale": "Conversation focused on financial derivatives pricing models",
-  "isced": {
-    "broad": "04",
-    "narrow": "041",
-    "detailed": "0412"
-  }
-}
-```
+**Main Topics Covered**:
+- {topic 1: e.g., "EUR3M curve calibration"}
+- {topic 2: e.g., "TKYER futures spread convention"}
+- {topic 3: e.g., "Bootstrap method for zero rates"}
+- {topic 4: ...}
+- {topic 5: ...}
 
-**Map ISCED codes to folder paths**:
-- `0412` (Finance, banking, insurance) → `knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
-- `0611` (Computer use) → `knowledge-base/06-information-and-communication-technologies-icts/061-ict-use/0611-computer-use/`
-- `0231` (Language acquisition) → `knowledge-base/02-arts-and-humanities/023-languages/0231-language-acquisition/`
-- `0533` (Physics) → `knowledge-base/05-natural-sciences-mathematics-and-statistics/053-physical-sciences/0533-physics/`
+**Your Task**: Provide 3-level ISCED classification (broad, narrow, detailed) for organizing knowledge Rems.
+
+**Output Format** (JSON only):
+{{
+  "domain": "<finance|programming|language|science|etc>",
+  "confidence": <0-100>,
+  "sub_domain": "<specific subdomain>",
+  "rationale": "<1 sentence explanation>",
+  "isced": {{
+    "broad": "<2-digit code>",
+    "narrow": "<3-digit code>",
+    "detailed": "<4-digit code>"
+  }}
+}}
+
+**Common ISCED Codes**:
+- 0412: Finance, banking, insurance
+- 0611: Computer use (programming)
+- 0231: Language acquisition
+- 0533: Physics
+- 0611: Software development
+""",
+     description="Classify conversation domain"
+   )
+   ```
+
+3. **Parse classification result** from agent response:
+   - Extract JSON from agent's final message
+   - Validate required fields: `domain`, `isced.broad`, `isced.narrow`, `isced.detailed`
+   - Check confidence level (warn if <70%)
+
+4. **Map ISCED codes to folder paths**:
+   ```bash
+   # Use lookup mapping (examples):
+   # 0412 → knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/
+   # 0611 → knowledge-base/06-information-and-communication-technologies-icts/061-ict-use/0611-computer-use/
+   # 0231 → knowledge-base/02-arts-and-humanities/023-languages/0231-language-acquisition/
+   # 0533 → knowledge-base/05-natural-sciences-mathematics-and-statistics/053-physical-sciences/0533-physics/
+   ```
+
+5. **Verify directory exists**:
+   ```bash
+   # Check if ISCED path exists in knowledge base
+   test -d "knowledge-base/{broad-folder}/{narrow-folder}/{detailed-folder}" || \
+     echo "⚠️  ISCED path not found - may need to create directory structure"
+   ```
+
+6. **Store classification result** in variables for later use:
+   - `$domain` = domain name (e.g., "finance")
+   - `$subdomain` = subdomain (e.g., "equity-derivatives")
+   - `$isced_path` = full ISCED code (e.g., "04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance")
+   - `$isced_detailed_path` = directory path for Step 6.1
+
+**Fallback strategy**:
+- If agent unavailable → Infer from conversation keywords (finance terms → 0412, code terms → 0611, etc.)
+- If confidence <50% → Ask user to confirm classification
+- If ISCED path missing → Create directory structure or use closest match
+
+**Output stored for**:
+- Step 3: Extract Concepts (determine subdomain)
+- Step 3.5: Enrich with Typed Relations (load existing concepts from domain)
+- Step 6.1: Create Knowledge Rems (determine file paths)
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
-
-**Store classification result** for use in Step 6.1 (Rem file creation).
 
 ### Step 3: Extract Concepts
 
@@ -293,36 +345,80 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 3.5: Enrich with Typed Relations via Domain Tutor (OPTIONAL)
+### Step 3.5: Enrich with Typed Relations via Domain Tutor (RECOMMENDED)
 
-**Purpose**: Discover semantic relationships (e.g., "ask" ↔ "inquire" as synonyms).
+**⚠️ IMPORTANT**: This step significantly improves Rem quality and relationship discovery. Only skip if domain is not [language|finance|programming|science].
 
-**Implementation** (simplified):
+**Purpose**: Discover semantic relationships (e.g., "ask" ↔ "inquire" as synonyms) and elevate Rem quality.
 
-1. **Get existing Rem IDs** in target domain using Glob tool:
-   ```
-   Glob: knowledge-base/{isced_path}/**/*.md
-   Read frontmatter rem_id from each file
-   ```
+**Step-by-step execution**:
 
-2. **Call domain tutor** with Task tool, providing:
-   - Extracted Rems (titles, core points)
-   - Existing Rem IDs in the domain
-   - Request: "Suggest typed_relations using types: synonym, prerequisite_of, contrasts_with, uses, etc."
-
-3. **Tutor returns JSON** with typed_relations for each Rem:
-   ```json
-   {
-     "concept_id": "english-verb-ask",
-     "typed_relations": [
-       {"to": "english-verb-inquire", "type": "synonym", "rationale": "..."}
-     ]
-   }
+1. **Load existing concepts in domain**:
+   ```bash
+   # Get list of existing Rem IDs for relation validation
+   python scripts/archival/get_domain_concepts.py --domain-path "{isced_detailed_path}"
    ```
 
-4. **Merge typed_relations** into Rem data (validation happens in Step 5.5).
+   **Output**: JSON array of existing concepts: `[{"id": "french-verb-vouloir", "title": "..."}, ...]`
 
-**If tutor call fails**: Continue without typed_relations (backlinks rebuild will add generic links later).
+2. **Call domain tutor** with Task tool:
+   ```
+   Task(
+     subagent_type="{domain}-tutor",  # language-tutor, finance-tutor, programming-tutor, book-tutor
+     prompt="""You are a {domain} domain expert. Review this conversation and provide Rem extraction guidance.
+
+**Knowledge Base Context** (existing concepts in {isced_path}):
+{existing_concepts_json}
+
+**CRITICAL RULES for Typed Relations**:
+1. ✅ ONLY suggest relations to concepts in the above list
+2. ✅ Use typed relations (synonym, prerequisite_of, etc.) NOT generic "related"
+3. ❌ NEVER hallucinate concept IDs not in the list
+
+**Candidate Concepts** (main agent's extraction):
+{candidate_rems_with_core_points}
+
+**Your Task**: Provide concept_extraction_guidance with typed_relations for each Rem.
+
+**Output Format** (JSON only):
+{{
+  "concept_extraction_guidance": {{
+    "rem_suggestions": [
+      {{
+        "concept_id": "<slug-id>",
+        "title": "<Academic/systematic title>",
+        "core_content": "<3 bullet points, use ** for bold terms>",
+        "typed_relations": [
+          {{"to": "<existing-id-from-list>", "type": "<synonym|prerequisite_of|etc>", "rationale": "..."}}
+        ],
+        "usage_scenario_suggestion": "<1-2 sentences>",
+        "common_mistakes_suggestion": ["❌ error → ✅ correction"],
+        "estimated_tokens": <120-150>
+      }}
+    ]
+  }}
+}}""",
+     description="Enrich Rems with typed relations"
+   )
+   ```
+
+3. **Process tutor response**:
+   - Parse JSON from tutor's final message
+   - Extract `concept_extraction_guidance.rem_suggestions` array
+   - Validate `typed_relations` against existing concepts list from Step 1
+   - Filter out any relations to non-existent concepts
+
+4. **Merge tutor's suggestions** into extracted Rems data structure (validation happens in Step 5.5).
+
+**Fallback strategy**:
+- If tutor unavailable → Use original candidate Rems
+- If JSON invalid → Log error, use original candidates
+- If required fields missing → Use defaults
+
+**Quality improvements expected**:
+- Language: Merge isolated words into systematic concepts
+- Finance: Add theoretical frameworks and formulas
+- Programming: Focus on design patterns vs syntax
 
 ---
 
@@ -485,6 +581,8 @@ Files: [N] Rems + 1 conversation + 2 index updates
 - Option 3 → Abort gracefully
 
 ### Step 5.5: Pre-creation Validation
+
+**⚠️ CRITICAL**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
 **ONLY after user approval**, run comprehensive validation before creating any files.
 
@@ -1031,13 +1129,20 @@ mcp__memory-server__create_relations:
 
 ### Step 7: Update Conversation Rem Links
 
+**⚠️ CRITICAL**: This step completes bidirectional links between conversations and Rems. Skipping breaks navigation.
+
+**Run update script** to add Rem links to conversation file:
+
 ```bash
 source venv/bin/activate && python scripts/archival/update-conversation-rems.py \
   "$archived_file" \
   "${created_rem_paths[@]}"
 ```
 
-Updates conversation's `rems_extracted` field with relative paths to created Rems (bidirectional navigation).
+**What this does**:
+- Updates conversation's `rems_extracted` frontmatter field with relative paths to all created Rems
+- Enables bidirectional navigation (Rem → Conversation, Conversation → Rems)
+- Required for complete knowledge graph integrity
 
 ---
 

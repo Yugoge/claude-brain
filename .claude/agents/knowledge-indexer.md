@@ -71,12 +71,21 @@ Scan for:
 
 ### 2. Taxonomy Classification
 
-**Use `scripts/knowledge-graph/indexing.py`**:
-- `load_taxonomy()` - Load `.taxonomy.json`
-- `detect_domain(file_path)` - Auto-detect domain from path
-- `apply_taxonomy(concept_path, domain)` - Generate taxonomy codes for frontmatter
+**⚠️ CRITICAL**: Every concept MUST have taxonomy classification. Use `scripts/knowledge-graph/indexing.py`.
 
-**Auto-tagging**: Detects domain → retrieves ISCED/Dewey codes → adds to frontmatter
+**Required workflow** (do not skip):
+1. Load taxonomy mappings: `load_taxonomy()`
+2. Detect domain from path: `detect_domain(concept_path)` → returns domain string
+3. Get taxonomy codes: `apply_taxonomy(concept_path, domain)` → returns dict with ISCED/Dewey codes
+4. Update concept frontmatter with returned taxonomy data
+
+**Expected output format**:
+```yaml
+taxonomy:
+  isced: ['0412']
+  dewey: ['332.6']
+  source: .taxonomy.json
+```
 
 ### 3. Index Generation
 
@@ -151,7 +160,11 @@ Maintain multiple index views:
 
 ### 5. Orphan Detection
 
-**Use `scripts/knowledge-graph/indexing.py`**: `find_orphans(backlinks)` returns concepts with no links.
+**Use `scripts/knowledge-graph/indexing.py`**: Call `find_orphans(backlinks)` to identify isolated concepts.
+
+**Returns**: List of concept IDs with no incoming or outgoing links.
+
+**Action required**: Alert user if orphans found, suggest linking to related concepts.
 
 ## Integration Points
 
@@ -193,30 +206,32 @@ Maintain multiple index views:
 
 ## Automatic Workflows
 
+**⚠️ IMPORTANT**: Use functions from `scripts/knowledge-graph/indexing.py` for all operations.
+
 ### On Concept Creation
 ```
-1. Extract all [[links]] from concept markdown
-2. Add concept to backlinks.json
+1. Extract all [[links]] from concept markdown (use extract_links)
+2. Add concept to backlinks.json (use sync_backlinks)
 3. Update linked concepts with backlinks
-4. Apply taxonomy classification
-5. Update domain index
+4. Apply taxonomy classification (use apply_taxonomy)
+5. Update domain index (use generate_domain_index)
 6. Update tag index
 ```
 
 ### On Concept Edit
 ```
 1. Detect link changes (diff old vs new)
-2. Sync bidirectional links
+2. Sync bidirectional links (use sync_backlinks)
 3. Regenerate affected indexes
 ```
 
 ### On Manual Reindex
 ```
 1. Scan all concept files
-2. Rebuild backlinks.json from scratch
+2. Rebuild backlinks.json from scratch (use rebuild-backlinks.py)
 3. Regenerate all index files
-4. Detect and report orphans
-5. Detect and report inconsistencies
+4. Detect and report orphans (use find_orphans)
+5. Detect and report inconsistencies (use check_bidirectional_consistency)
 ```
 
 ## Quality Checks
