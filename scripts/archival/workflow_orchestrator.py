@@ -59,14 +59,14 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 **Candidate Rems** ({len(candidates_summary)}):
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
 
-**Valid concept_id values** (use these EXACTLY in "concept_id" and "to" fields):
+**Valid concept_id values** (use these EXACTLY in "to" fields of typed_relations):
 {json.dumps(valid_concept_ids, ensure_ascii=False)}
 
 **Task**: Return JSON with typed_relations for each Rem.
 
 **Rules**:
-1. ONLY use concept_id values from the Valid concept_id list above (exact string match)
-2. In "to" field, ONLY reference IDs from the Valid concept_id list
+1. Use "concept_id" from Candidate Rems list (the new concepts being created)
+2. In "to" field, ONLY reference IDs from the Valid concept_id list above (existing concepts)
 3. DO NOT create composite, normalized, or descriptive IDs
 4. Use relation types: prerequisite_of, used_in, related_to, contrasts_with, example_of, member_of, extends
 5. Empty array if no strong pedagogical relations exist
