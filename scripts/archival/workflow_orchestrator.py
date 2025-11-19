@@ -46,7 +46,12 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
             "core_points": rem.get("core_points", [])
         })
 
+    # Extract valid IDs for validation
+    valid_concept_ids = [c["id"] for c in existing_concepts]
+
     prompt = f"""Domain expert: {domain}
+
+**CRITICAL**: Use EXACT concept_id values from the lists below. DO NOT create new IDs.
 
 **Existing Concepts** ({len(existing_list)}):
 {json.dumps(existing_list, indent=2, ensure_ascii=False)}
@@ -54,21 +59,26 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 **Candidate Rems** ({len(candidates_summary)}):
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
 
+**Valid concept_id values** (use these EXACTLY in "concept_id" and "to" fields):
+{json.dumps(valid_concept_ids, ensure_ascii=False)}
+
 **Task**: Return JSON with typed_relations for each Rem.
 
 **Rules**:
-1. ONLY link to concepts in existing list
-2. Use specific types: synonym, prerequisite_of, contrasts_with, etc.
-3. Empty array if no relations found
+1. ONLY use concept_id values from the Valid concept_id list above (exact string match)
+2. In "to" field, ONLY reference IDs from the Valid concept_id list
+3. DO NOT create composite, normalized, or descriptive IDs
+4. Use relation types: prerequisite_of, used_in, related_to, contrasts_with, example_of, member_of, extends
+5. Empty array if no strong pedagogical relations exist
 
 **Output Format**:
 {{
   "concept_extraction_guidance": {{
     "rem_suggestions": [
       {{
-        "concept_id": "rem-id",
+        "concept_id": "exact-id-from-valid-list",
         "typed_relations": [
-          {{"to": "existing-id", "type": "relation-type", "rationale": "why"}}
+          {{"to": "exact-id-from-valid-list", "type": "relation-type", "rationale": "brief reason"}}
         ]
       }}
     ]
@@ -76,6 +86,34 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 }}
 """
     return prompt
+
+
+def validate_tutor_response(tutor_response_json, valid_ids):
+    """
+    Validate that tutor response only uses IDs from valid_ids set.
+
+    Returns: (is_valid, error_messages)
+    """
+    errors = []
+    guidance = tutor_response_json.get("concept_extraction_guidance", {})
+    suggestions = guidance.get("rem_suggestions", [])
+
+    valid_ids_set = set(valid_ids)
+
+    for suggestion in suggestions:
+        concept_id = suggestion.get("concept_id")
+
+        # Check concept_id is valid
+        if concept_id not in valid_ids_set:
+            errors.append(f"Invalid concept_id: '{concept_id}' not in valid ID list")
+
+        # Check all "to" fields are valid
+        for relation in suggestion.get("typed_relations", []):
+            to_id = relation.get("to")
+            if to_id not in valid_ids_set:
+                errors.append(f"Invalid 'to' ID in {concept_id}: '{to_id}' not in valid ID list")
+
+    return (len(errors) == 0, errors)
 
 
 def merge_tutor_suggestions(candidate_rems, tutor_response_json):
@@ -141,6 +179,21 @@ def main():
             with open(args.tutor_response, 'r', encoding='utf-8') as f:
                 tutor_json = json.load(f)
             print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
+
+            # Validate tutor response IDs
+            valid_ids = [c["id"] for c in existing_concepts]
+            is_valid, errors = validate_tutor_response(tutor_json, valid_ids)
+
+            if not is_valid:
+                print(f"\n❌ Tutor response validation failed:", file=sys.stderr)
+                for error in errors[:10]:  # Show first 10 errors
+                    print(f"   - {error}", file=sys.stderr)
+                if len(errors) > 10:
+                    print(f"   ... and {len(errors) - 10} more errors", file=sys.stderr)
+                print("\n⚠️  Tutor must use EXACT IDs from the provided lists.", file=sys.stderr)
+                return 1
+
+            print(f"✓ Tutor response validated (all IDs match)", file=sys.stderr)
         else:
             # Automated mode: output prompt for main agent to call Task tool
             print("\n📋 TUTOR PROMPT (pass to Task tool):\n", file=sys.stderr)

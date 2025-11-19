@@ -43,17 +43,20 @@ Extract rem_id or domain path from `$ARGUMENTS`:
 
 ### Step 2: Load Target Rems
 
-```bash
-# Single Rem
-source venv/bin/activate && python scripts/archival/load_rem.py \
-  --rem-id "$rem_id" \
-  --output target_rem.json
+**Script**: `scripts/archival/list_rems_in_domain.py`
 
-# Domain (all Rems)
+**Usage**:
+```bash
 source venv/bin/activate && python scripts/archival/list_rems_in_domain.py \
   --domain-path "$domain_path" \
   --output target_rems.json
 ```
+
+**Required Parameters**:
+- `--domain-path`: Domain path relative to knowledge-base (e.g., "0231-language-acquisition")
+- `--output`: Output JSON file path
+
+**Output Format**: JSON array with `[{"id": "rem-id", "title": "Title", "file_path": "path.md"}, ...]`
 
 ### Step 3: Load Existing Concepts
 
@@ -105,17 +108,28 @@ Options:
 
 ### Step 6: Update Rem Files
 
+**Script**: `scripts/archival/add_typed_relations.py`
+
+**Usage**:
 ```bash
 source venv/bin/activate && python scripts/archival/add_typed_relations.py \
-  --rem-id "$rem_id" \
-  --relations "$relations_json"
+  --enriched-rems enriched_rems.json
 ```
 
-**Script automatically**:
-- Reads existing Rem file
+**Optional Parameters**:
+- `--dry-run`: Preview changes without writing files
+
+**Required Parameters**:
+- `--enriched-rems`: Path to enriched_rems.json (output from workflow_orchestrator.py)
+
+**Behavior**:
+- Reads existing Rem file content
 - Finds `## Related Rems` section
-- Appends new wikilinks with typed relations
-- Preserves existing content
+- Appends new wikilinks with typed relations (format: `- [[id]] {rel: type}`)
+- Skips relations that already exist (checks by concept ID)
+- Preserves all existing content (FSRS state, frontmatter, etc.)
+
+**Output**: Reports added/skipped relations for each Rem
 
 ### Step 7: Rebuild Backlinks
 

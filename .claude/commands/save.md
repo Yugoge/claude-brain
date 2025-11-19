@@ -364,16 +364,23 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
 
 **Script automatically**:
 1. Loads existing concepts from domain
-2. Builds tutor prompt with context
-3. Outputs prompt for Task tool call
+2. Extracts valid concept_id list for validation
+3. Builds tutor prompt with **CRITICAL** ID constraints
+4. Outputs prompt for Task tool call
+
+**Tutor prompt includes**:
+- "**CRITICAL**: Use EXACT concept_id values" warning
+- "**Valid concept_id values**" list (all available IDs)
+- Explicit rules: "DO NOT create composite, normalized, or descriptive IDs"
 
 **Then**:
 1. Call Task tool with `{domain}-tutor` using output prompt
 2. Save tutor JSON response to `tutor_response.json`
 3. Re-run orchestrator with `--tutor-response tutor_response.json`
-4. Script merges typed_relations into candidate Rems
+4. **Script validates tutor response** (checks all IDs match valid list)
+5. Script merges typed_relations into candidate Rems
 
-**Output**: `enriched_rems.json` with typed_relations added
+**Output**: `enriched_rems.json` with typed_relations added (all IDs validated)
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 
