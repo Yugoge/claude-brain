@@ -140,7 +140,7 @@ Critical:
 - Main agent receives guidance
 - User NEVER sees analyst's response
 
-### Step 2.5: Validate and Parse Analyst Response
+### Step 3: Validate and Parse Analyst Response
 
 **Before proceeding, validate the analyst's response**:
 
@@ -180,7 +180,7 @@ The analyst should have returned a JSON object. Parse and validate it:
 
 **Result**: You now have a `guidance` object (guaranteed to exist) to use in Step 3.
 
-### Step 3: Internalize Guidance and Respond Naturally
+### Step 4: Internalize Guidance and Respond Naturally
 
 Architecture: This command uses the Three-Party Architecture pattern:
 - You (main agent) orchestrate the conversation and are THE TEACHER visible to user
@@ -255,7 +255,7 @@ What do you think happens to an option's value as time passes if the underlying 
 User perceives: YOU generated this question naturally
 Reality: You internalized analyst's guidance and executed the strategy
 
-### Step 4: Multi-Turn Dialogue Loop
+### Step 5: Multi-Turn Dialogue Loop
 
 Conversation Flow:
 1. User responds to your question
@@ -372,7 +372,7 @@ Repeat this loop until:
 
 DO NOT prompt archival after FIRST response.
 
-### Step 5: Natural Conclusion Detection
+### Step 6: Natural Conclusion Detection
 
 Wait for EXPLICIT conclusion signals.
 
@@ -389,7 +389,7 @@ Weak signals (continue dialogue):
 
 Only proceed to Step 6 when you detect STRONG conclusion signal.
 
-### Step 6: Post-Conversation Archival Prompt
+### Step 7: Post-Conversation Archival Prompt
 
 ONLY NOW (after natural conclusion) prompt for archival:
 
@@ -410,7 +410,7 @@ Please choose 1, 2, or 3.
 
 Default recommendation: Option 2 (preview first)
 
-### Step 7: Handle Archival Response
+### Step 8: Handle Archival Response
 
 If user chooses 1 or 2:
 ```

@@ -112,26 +112,26 @@ You have access to ALL these tools:
 
 **IMPORTANT**: Follow this workflow for EVERY user question:
 
-### Step 0: Query MCP Memory (MANDATORY)
+### Step 1: Query MCP Memory (MANDATORY)
 
 Use `scripts/agent_memory_utils.py` to check memory before answering.
 
 **If memory found**: Incorporate context ("As we discussed...", "Building on [[concept]]...")
 
-### Step 1: Analyze Question
+### Step 2: Analyze Question
 Determine:
 - Domain (finance, programming, language, science, etc.)
 - Type (factual, how-to, conceptual, debugging, etc.)
 - Recency requirement (needs latest info?)
 
-### Step 2: Check Existing Knowledge
+### Step 3: Check Existing Knowledge
 ```
 Use Read tool to check:
 - knowledge-base/[domain]/concepts/ for related concepts
 - Mention existing [[concepts]] in your answer
 ```
 
-### Step 3: Research (REQUIRED for most questions)
+### Step 4: Research (REQUIRED for most questions)
 
 **CRITICAL: Determine search complexity FIRST**
 
@@ -162,25 +162,25 @@ Use Read tool to check:
 
 **YOU MUST use appropriate search method (SlashCommand OR WebSearch OR Playwright) unless the question is purely about user's local files.**
 
-### Step 4: Synthesize Answer
+### Step 5: Synthesize Answer
 Provide:
 - Clear, comprehensive explanation
 - Code examples if relevant (use Bash to test them!)
 - Practical applications
 - **Cite all sources with URLs**
 
-### Step 5: Save to Memory (MANDATORY)
+### Step 6: Save to Memory (MANDATORY)
 
 Use `scripts/agent_memory_utils.py` to save concepts and relationships after answering.
 
-### Step 6: Link to Knowledge Base
+### Step 7: Link to Knowledge Base
 ```
 If related concepts exist:
 - [[concept-1]] - Brief explanation
 - [[concept-2]] - Brief explanation
 ```
 
-### Step 7: Suggest Follow-ups
+### Step 8: Suggest Follow-ups
 ```
 Would you like me to:
 1. [Dig deeper into aspect X]

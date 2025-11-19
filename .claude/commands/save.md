@@ -70,7 +70,7 @@ This unified command:
 
 **⚠️ Note on Step Numbering**: This command uses decimal numbering (e.g., Step 2.5, 3.5) for steps that were added after initial design. This preserves backward compatibility with existing references while maintaining logical flow.
 
-### Step 0: Archive Conversation
+### Step 1: Archive Conversation
 
 ```bash
 # Default: Include subagent messages (full context)
@@ -103,7 +103,7 @@ These will be updated in Step 6.2 using information from the active conversation
 
 ---
 
-### Step 1: Parse Arguments & Detect Session Type
+### Step 2: Parse Arguments & Detect Session Type
 
 Extract arguments from `$ARGUMENTS`:
 
@@ -125,7 +125,7 @@ Extract arguments from `$ARGUMENTS`:
 
 ---
 
-#### Step 1.1: Detect Session Type
+#### Step 3: Detect Session Type
 
 **⚠️ CRITICAL**: Session type determines workflow (review vs learn). Wrong detection = incorrect Rem extraction.
 
@@ -154,7 +154,7 @@ test -f .review/history.json && echo "Review history exists"
 - Performance tracking
 - Returns session type ('review' or 'learn') and list of reviewed Rems
 
-### Step 2: Validate Conversation & Filter FSRS Tests
+### Step 4: Validate Conversation & Filter FSRS Tests
 
 **Phase 5 Optimization: Early Exit** - Use `scripts/archival/concept_extractor.py` to check if there's content worth extracting.
 
@@ -206,7 +206,7 @@ Archival is recommended for conversations with:
 
 ---
 
-#### Step 2.1: Filter FSRS Test Dialogues (Review Sessions Only)
+#### Step 5: Filter FSRS Test Dialogues (Review Sessions Only)
 
 **If session_type == "review"**, filter out FSRS test portions to avoid duplicate Rem creation:
 
@@ -226,7 +226,7 @@ This prevents:
 - ❌ Extracting test questions as "new concepts"
 - ❌ Confusing FSRS feedback with learning content
 
-### Step 2.5: Domain Classification & ISCED Path Determination
+### Step 6: Domain Classification & ISCED Path Determination
 
 **⚠️ CRITICAL**: This step determines where Rems will be stored. Incorrect classification = wrong directory = broken knowledge graph.
 
@@ -320,7 +320,7 @@ This prevents:
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
 
-### Step 3: Extract Concepts
+### Step 7: Extract Concepts
 
 **Main agent extraction process**:
 
@@ -350,7 +350,7 @@ This prevents:
 
 ---
 
-#### Step 3.1: Question Type Classification (Review Sessions Only)
+#### Step 8: Question Type Classification (Review Sessions Only)
 
 **If session_type == "review"**, classify each user question:
 
@@ -367,7 +367,7 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 3.5: Enrich with Typed Relations via Domain Tutor (MANDATORY)
+### Step 9: Enrich with Typed Relations via Domain Tutor (MANDATORY)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science] domains.
 
@@ -418,7 +418,7 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
 
 ---
 
-### Step 3.6: Rem Extraction Transparency
+### Step 10: Rem Extraction Transparency
 
 **After extracting and enriching Rems**, YOU (main agent) MUST present them in user-friendly format (no code):
 
@@ -465,7 +465,7 @@ If YOU used any helper scripts during Rem extraction, READ the results and trans
 
 **Why**: User is in a chat interface focused on their learning, not system internals. Extraction tools are implementation details, not user-facing content.
 
-### Step 4: Generate Preview (Format depends on session type)
+### Step 11: Generate Preview (Format depends on session type)
 
 **Two preview formats**:
 1. **Learn/Ask sessions**: Ultra-compact 1-line previews (original format)
@@ -473,7 +473,7 @@ If YOU used any helper scripts during Rem extraction, READ the results and trans
 
 ---
 
-#### Step 4.1: Learn/Ask Session Preview (Original Format)
+#### Step 12: Learn/Ask Session Preview (Original Format)
 
 **For EACH concept**, generate 1-line preview:
 
@@ -486,7 +486,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 
 ---
 
-#### Step 4.2: Review Session Preview (Three-Section Format)
+#### Step 13: Review Session Preview (Three-Section Format)
 
 **For review sessions**, show:
 - ✅ **Section 1**: Reviewed Rems (FSRS already saved)
@@ -549,7 +549,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 </options>
 ```
 
-### Step 5: User Confirmation
+### Step 14: User Confirmation
 
 Wait for explicit approval before creating files.
 
@@ -576,7 +576,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
 - Option 2 → Iterate, re-present
 - Option 3 → Abort gracefully
 
-### Step 5.5: Pre-creation Validation
+### Step 15: Pre-creation Validation
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
@@ -598,7 +598,7 @@ source venv/bin/activate && python scripts/archival/preflight_checker.py \
 **Stage 2: Comprehensive Validation**
 
 ```bash
-python scripts/archival/pre_creation_validator.py \
+source venv/bin/activate && python scripts/archival/pre_creation_validator.py \
   --concepts-json enriched_rems.json \
   --domain-path "$isced_detailed_path" \
   --source-file "$archived_file"
@@ -615,7 +615,7 @@ python scripts/archival/pre_creation_validator.py \
 
 **If both stages pass** → Proceed to Step 6
 
-### Step 6: Create Files
+### Step 16: Create Files
 
 **ONLY after user approval**, create files in this order:
 
@@ -689,7 +689,7 @@ If Rem was enriched by tutor (Step 3.5), use tutor's enhanced fields:
 
 **Validate typed_relations before writing**:
 ```bash
-python scripts/archival/validate_relations.py \
+source venv/bin/activate && python scripts/archival/validate_relations.py \
   --relations-json '{tutor_typed_relations_json}' \
   --domain-path "{isced_detailed_path}" \
   --verbose
@@ -918,7 +918,7 @@ archived_file=$(python3 scripts/archival/normalize_conversation.py ...)
 **Run incremental update** (token-optimized):
 
 ```bash
-python scripts/knowledge-graph/update-backlinks-incremental.py rem-id-1 rem-id-2 ...
+source venv/bin/activate && python scripts/knowledge-graph/update-backlinks-incremental.py rem-id-1 rem-id-2 ...
 ```
 
 **Incremental update**:
@@ -926,7 +926,7 @@ python scripts/knowledge-graph/update-backlinks-incremental.py rem-id-1 rem-id-2
 - Updates bidirectional links for new concepts
 - 70% token reduction vs full rebuild
 
-**Fallback**: If incremental fails, run `python scripts/knowledge-graph/rebuild-backlinks.py`
+**Fallback**: If incremental fails, run `source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py`
 
 **🔒 SAFETY MECHANISMS (Automatic)**:
 
@@ -962,7 +962,7 @@ source venv/bin/activate && python scripts/archival/update-conversation-index.py
 **Run link normalization** (converts `[[id]]` to `[Title](path.md)`):
 
 ```bash
-python scripts/knowledge-graph/normalize-links.py --mode replace --verbose
+source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --mode replace --verbose
 ```
 
 **What it does**:
@@ -984,7 +984,7 @@ python scripts/knowledge-graph/normalize-links.py --mode replace --verbose
 **Preview two-hop inferences** (dry-run first):
 
 ```bash
-python scripts/knowledge-graph/materialize-inferred-links.py --dry-run --verbose
+source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --dry-run --verbose
 ```
 
 **If inferences found**, present preview to user:
@@ -1013,7 +1013,7 @@ Materialize these inferred links?
 
 **If user approves**, run actual materialization:
 ```bash
-python scripts/knowledge-graph/materialize-inferred-links.py --verbose
+source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --verbose
 ```
 
 **If user skips or no inferences found**, continue to Step 6.7.
@@ -1115,7 +1115,7 @@ mcp__memory-server__create_relations:
 
 ---
 
-### Step 7: Update Conversation Rem Links
+### Step 17: Update Conversation Rem Links
 
 **⚠️ CRITICAL**: This step completes bidirectional links between conversations and Rems. Skipping breaks navigation.
 
@@ -1134,7 +1134,7 @@ source venv/bin/activate && python scripts/archival/update-conversation-rems.py 
 
 ---
 
-### Step 8: Auto-generate Statistics & Visualizations
+### Step 18: Auto-generate Statistics & Visualizations
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step provides immediate feedback on learning progress and knowledge graph state.
 
@@ -1142,7 +1142,7 @@ Provide immediate feedback on learning progress without requiring user to manual
 
 This step is automatic and executes after all Rems are created and synced to FSRS.
 
-#### Step 8.1: Generate Learning Analytics
+#### Step 19: Generate Learning Analytics
 
 Run the analytics generation script:
 
@@ -1164,7 +1164,7 @@ source venv/bin/activate && python scripts/analytics/generate-analytics.py --per
    Cache saved: .review/analytics-cache.json
 ```
 
-#### Step 8.2: Generate Interactive Visualizations
+#### Step 20: Generate Interactive Visualizations
 
 **First, generate the knowledge graph data**:
 
@@ -1192,7 +1192,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
    Edges: {M} relationships
 ```
 
-#### Step 8.3: Display Summary to User
+#### Step 21: Display Summary to User
 
 **Present the auto-generated artifacts**:
 
@@ -1237,7 +1237,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 **Note**: This step is automatic, non-blocking, and does not require user approval. Failures are logged but do not stop the archival process.
 
-### Step 9: Completion Report
+### Step 22: Completion Report
 
 **After all operations complete**, provide:
 

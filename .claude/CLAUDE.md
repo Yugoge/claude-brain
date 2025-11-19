@@ -106,7 +106,7 @@ See individual command files for complete implementation examples with proper im
 - ❌ Assume file size alone indicates safety
 
 **ALWAYS:**
-- ✅ Run `python scripts/estimate_tokens.py <file>` before reading PDFs
+- ✅ Run `source venv/bin/activate && python scripts/estimate_tokens.py <file>` before reading PDFs
 - ✅ Compress PDFs >10MB before learning
 - ✅ Use `extract-pdf-chunk.py` for ALL PDF reading
 
@@ -119,4 +119,4 @@ See individual command files for complete implementation examples with proper im
 - **Chats index**: `chats/index.json` tracks archived conversations with `metadata` aggregates
   - See `docs/architecture/conversation-index.md` for schema details
 - **Rebuild utilities**:
-  - `python scripts/knowledge-graph/rebuild-backlinks.py` - Rebuild bidirectional links
+  - `source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py` - Rebuild bidirectional links

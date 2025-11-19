@@ -125,7 +125,7 @@ You are the **orchestrator** for this command. Your job:
 - For each page: Use Step 4.1 (Dynamic Single-Page Extraction) below
 - Load with full images, then cleanup temp file immediately
 
-### Step 4.1: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)
+### Step 5: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)
 
 **Purpose**: Load single PDF pages with full visual content using temporary files
 
@@ -154,7 +154,7 @@ You are the **orchestrator** for this command. Your job:
 
 **Performance**: ~2s per page (0.5s extraction + 1.5s read), acceptable for picture books
 
-### Step 4.2: Smart Material Loading (Size-Aware)
+### Step 6: Smart Material Loading (Size-Aware)
 
 **⚠️  PDF READING PROTOCOL (MANDATORY) ⚠️**
 ```
@@ -192,13 +192,13 @@ CORRECT WORKFLOW:
 - **PDF (safe)**: `scripts/learning-materials/extract-pdf-chunk.py '{file}' --mode pages --pages 1-{total} --json` (NEVER use Read on PDFs!)
 - **First time**: Extract TOC and update progress file
 
-### Step 5: Determine Chunk to Learn
+### Step 7: Determine Chunk to Learn
 
 - Get `current_position` from progress file (e.g., "Page 42", "Chapter 3")
 - Calculate chunk boundaries using semantic strategy (break at section/paragraph)
 - Extract chunk: `content[chunk_start:chunk_end]`
 
-### Step 6: Select Appropriate Agent
+### Step 8: Select Appropriate Agent
 
 **⚠️ CRITICAL**: Selecting the wrong agent = mismatched domain expertise = poor learning outcomes.
 
@@ -213,7 +213,7 @@ CORRECT WORKFLOW:
 - If agent unavailable → Use book-tutor as fallback
 - If domain mismatch detected mid-session → Consult correct agent and pivot
 
-### Step 6.5: Domain Focus Constraints
+### Step 9: Domain Focus Constraints
 
 Questions must test DOMAIN SKILLS, not content knowledge.
 
@@ -226,7 +226,7 @@ Domain-specific focus areas for consultation prompts:
 
 Validate questions test skills, not facts/history. If invalid, re-consult for correction.
 
-### Step 7: Consultation-Based Learning Session
+### Step 10: Consultation-Based Learning Session
 
 **⚠️ CRITICAL**: This is the core learning workflow. Skipping consultation phases = no Socratic teaching = passive content dump.
 
@@ -371,7 +371,7 @@ Process:
 - Update progress file: new position, learned concepts, session count
 - Task call to `knowledge-indexer` to update indexes after session
 
-### Step 8: Post-Session Actions
+### Step 11: Post-Session Actions
 
 - Update material index with progress percentage
 - Log session to history (material, duration, concepts, progress delta)
@@ -390,7 +390,7 @@ Without this step, your learning won't be saved as Rems.
 </options>
 ```
 
-### Step 9: User-Facing Output
+### Step 12: User-Facing Output
 
 Generate custom welcome summary and greetings based on progress file content and session state.
 

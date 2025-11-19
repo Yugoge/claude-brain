@@ -103,9 +103,8 @@ def validate_tutor_response(tutor_response_json, valid_ids):
     for suggestion in suggestions:
         concept_id = suggestion.get("concept_id")
 
-        # Check concept_id is valid
-        if concept_id not in valid_ids_set:
-            errors.append(f"Invalid concept_id: '{concept_id}' not in valid ID list")
+        # NOTE: Do NOT validate concept_id itself - these are NEW candidate Rems being created
+        # Only validate that typed_relations reference existing concepts
 
         # Check all "to" fields are valid
         for relation in suggestion.get("typed_relations", []):
