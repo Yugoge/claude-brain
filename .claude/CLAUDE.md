@@ -25,7 +25,8 @@ knowledge-system/
 ## Core Commands
 
 - `/learn <file-path>` - Start interactive Socratic learning from a material
-- **`/save [topic]`** - **One-stop-shop**: Extract concepts as ultra-minimal Rems + maintain graph + auto-sync to FSRS
+- **`/save [topic]`** - **One-stop-shop**: Extract concepts as ultra-minimal Rems + discover typed relations + maintain graph + auto-sync to FSRS
+- `/discover-relations <rem-id | --domain path>` - Discover typed relations for existing Rems using domain tutors
 - `/review [topic]` - Review knowledge using FSRS algorithm (1-4 rating scale)
 - `/sync-rems` - Manually sync all Rems to review schedule (auto-called by `/save`)
 - `/progress [topic]` - View learning progress
@@ -57,6 +58,7 @@ knowledge-system/
 5. User responses are evaluated and learning progress tracked
 6. At session end, user runs `/save` which:
    - Extracts concepts from conversation as ultra-minimal Rems (100-120 tokens)
+   - **Discovers typed relations via domain tutors (mandatory for core domains)**
    - Normalizes wikilinks (`[[id]]` → `[Title](path.md)`)
    - Rebuilds backlinks index with typed relations
    - Optionally materializes inferred links (with preview)

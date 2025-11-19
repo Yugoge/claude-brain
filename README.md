@@ -57,6 +57,7 @@ The AI tutor will:
 
 This one command will:
 - Extract concepts as ultra-minimal Rems (100-120 tokens)
+- Discover typed relations via domain tutors (mandatory for core domains)
 - Normalize wikilinks automatically
 - Rebuild knowledge graph with typed relations
 - Sync to FSRS review schedule
@@ -70,7 +71,18 @@ This one command will:
 /review [[concept-id]]     # Review specific concept
 ```
 
-### 6. Track Progress
+### 6. Discover Relations (Optional)
+
+For existing Rems without typed relations, use:
+
+```bash
+/discover-relations csharp-null-conditional-operator  # Single Rem
+/discover-relations --domain 0611-computer-use        # All Rems in domain
+```
+
+This retrospectively discovers semantic relationships (synonyms, prerequisites, contrasts) using domain tutors.
+
+### 7. Track Progress
 
 ```bash
 /progress                  # Overall progress
@@ -84,6 +96,7 @@ This one command will:
 |---------|-------------|
 | `/learn <file-path>` | Start interactive Socratic learning session |
 | `/save [topic]` | Extract concepts, maintain graph, archive conversation (all-in-one) |
+| `/discover-relations <rem-id\|--domain path>` | Discover typed relations for existing Rems |
 | `/review [domain\|concept-id]` | Review concepts using FSRS algorithm |
 | `/sync-rems` | Manually sync Rems to review schedule (auto-called by `/save`) |
 | `/progress [domain\|file-path]` | View learning progress and analytics |
@@ -267,6 +280,10 @@ The system supports typed concept relationships:
 - **Lexical**: synonym, antonym, hypernym, hyponym, part_of
 - **Conceptual**: is_a, prerequisite_of, cause_of, example_of
 - **Comparative**: contrasts_with, analogous_to, related
+
+**Discovery Methods**:
+- **Automatic**: During `/save` (mandatory for programming, language, finance, science)
+- **Manual**: Run `/discover-relations` on existing Rems
 
 **See**: `docs/architecture/standards/RELATION_TYPES.md`
 
