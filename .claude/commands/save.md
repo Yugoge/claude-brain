@@ -349,9 +349,16 @@ Map clarification type to target Rem section:
 
 ### Step 3.5: Enrich with Typed Relations via Domain Tutor (MANDATORY)
 
-**⚠️ CRITICAL**: This step is NOW MANDATORY for [programming|language|finance|science] domains.
+**⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science] domains.
 
 **Purpose**: Discover typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts.
+
+**Candidate Rems JSON Schema** (create before calling orchestrator):
+```json
+[{"id": "rem-slug", "title": "Title", "core_points": ["p1", "p2", "p3"]}]
+```
+- Use `"id"` field (not `"rem_id"` or `"concept_id"`)
+- Main agent creates this JSON from extracted concepts
 
 **Execution Method**: Use orchestrator script:
 
