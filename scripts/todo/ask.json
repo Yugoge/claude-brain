@@ -1,42 +1,34 @@
 [
   {
-    "content": "Step 1: Parse Question",
-    "activeForm": "Step 1: Parse Question",
-    "status": "pending"
+    "step": "1",
+    "title": "Parse Question"
   },
   {
-    "content": "Step 2: Initial Analyst Consultation",
-    "activeForm": "Step 2: Initial Analyst Consultation",
-    "status": "pending"
+    "step": "2",
+    "title": "Initial Analyst Consultation"
   },
   {
-    "content": "Step 2.5: Validate and Parse Analyst Response",
-    "activeForm": "Step 2.5: Validate and Parse Analyst Response",
-    "status": "pending"
+    "step": "2.5",
+    "title": "Validate and Parse Analyst Response"
   },
   {
-    "content": "Step 3: Internalize Guidance and Respond Naturally",
-    "activeForm": "Step 3: Internalize Guidance and Respond Naturally",
-    "status": "pending"
+    "step": "3",
+    "title": "Internalize Guidance and Respond Naturally"
   },
   {
-    "content": "Step 4: Multi-Turn Dialogue Loop",
-    "activeForm": "Step 4: Multi-Turn Dialogue Loop",
-    "status": "pending"
+    "step": "4",
+    "title": "Multi-Turn Dialogue Loop"
   },
   {
-    "content": "Step 5: Natural Conclusion Detection",
-    "activeForm": "Step 5: Natural Conclusion Detection",
-    "status": "pending"
+    "step": "5",
+    "title": "Natural Conclusion Detection"
   },
   {
-    "content": "Step 6: Post-Conversation Archival Prompt",
-    "activeForm": "Step 6: Post-Conversation Archival Prompt",
-    "status": "pending"
+    "step": "6",
+    "title": "Post-Conversation Archival Prompt"
   },
   {
-    "content": "Step 7: Handle Archival Response",
-    "activeForm": "Step 7: Handle Archival Response",
-    "status": "pending"
+    "step": "7",
+    "title": "Handle Archival Response"
   }
 ]

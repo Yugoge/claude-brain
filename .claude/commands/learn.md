@@ -12,24 +12,6 @@ Start an interactive learning session with a material using Socratic dialogue.
 
 
 
-## Step 0: Initialize Workflow Checklist
-
-**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
-
-```bash
-cat scripts/todo/learn.json
-```
-
-Then create TodoWrite with all steps from JSON (status: "pending").
-
-**Rules**:
-- Mark `in_progress` BEFORE starting each step
-- Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all must reach `completed` or `cancelled`
-
----
-
-
 ## Usage
 
 ```

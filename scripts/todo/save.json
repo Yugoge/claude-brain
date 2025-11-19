@@ -1,112 +1,90 @@
 [
   {
-    "content": "Step 0: Archive Conversation",
-    "activeForm": "Step 0: Archive Conversation",
-    "status": "pending"
+    "step": "0",
+    "title": "Archive Conversation"
   },
   {
-    "content": "Step 1: Parse Arguments & Detect Session Type",
-    "activeForm": "Step 1: Parse Arguments & Detect Session Type",
-    "status": "pending"
+    "step": "1",
+    "title": "Parse Arguments & Detect Session Type"
   },
   {
-    "content": "Step 1.1: Detect Session Type",
-    "activeForm": "Step 1.1: Detect Session Type",
-    "status": "pending"
+    "step": "1.1",
+    "title": "Detect Session Type"
   },
   {
-    "content": "Step 2: Validate Conversation & Filter FSRS Tests",
-    "activeForm": "Step 2: Validate Conversation & Filter FSRS Tests",
-    "status": "pending"
+    "step": "2",
+    "title": "Validate Conversation & Filter FSRS Tests"
   },
   {
-    "content": "Step 2.1: Filter FSRS Test Dialogues",
-    "activeForm": "Step 2.1: Filter FSRS Test Dialogues",
-    "status": "pending"
+    "step": "2.1",
+    "title": "Filter FSRS Test Dialogues"
   },
   {
-    "content": "Step 2.5: Domain Classification & ISCED Path Determination",
-    "activeForm": "Step 2.5: Domain Classification & ISCED Path Determination",
-    "status": "pending"
+    "step": "2.5",
+    "title": "Domain Classification & ISCED Path Determination"
   },
   {
-    "content": "Step 3: Extract Concepts",
-    "activeForm": "Step 3: Extract Concepts",
-    "status": "pending"
+    "step": "3",
+    "title": "Extract Concepts"
   },
   {
-    "content": "Step 3.1: Question Type Classification",
-    "activeForm": "Step 3.1: Question Type Classification",
-    "status": "pending"
+    "step": "3.1",
+    "title": "Question Type Classification"
   },
   {
-    "content": "Step 3.5: Enrich with Typed Relations via Domain Tutor",
-    "activeForm": "Step 3.5: Enrich with Typed Relations via Domain Tutor",
-    "status": "pending"
+    "step": "3.5",
+    "title": "Enrich with Typed Relations via Domain Tutor"
   },
   {
-    "content": "Step 3.6: Rem Extraction Transparency",
-    "activeForm": "Step 3.6: Rem Extraction Transparency",
-    "status": "pending"
+    "step": "3.6",
+    "title": "Rem Extraction Transparency"
   },
   {
-    "content": "Step 4: Generate Preview",
-    "activeForm": "Step 4: Generate Preview",
-    "status": "pending"
+    "step": "4",
+    "title": "Generate Preview"
   },
   {
-    "content": "Step 4.1: Learn/Ask Session Preview",
-    "activeForm": "Step 4.1: Learn/Ask Session Preview",
-    "status": "pending"
+    "step": "4.1",
+    "title": "Learn/Ask Session Preview"
   },
   {
-    "content": "Step 4.2: Review Session Preview",
-    "activeForm": "Step 4.2: Review Session Preview",
-    "status": "pending"
+    "step": "4.2",
+    "title": "Review Session Preview"
   },
   {
-    "content": "Step 5: User Confirmation",
-    "activeForm": "Step 5: User Confirmation",
-    "status": "pending"
+    "step": "5",
+    "title": "User Confirmation"
   },
   {
-    "content": "Step 5.5: Pre-creation Validation",
-    "activeForm": "Step 5.5: Pre-creation Validation",
-    "status": "pending"
+    "step": "5.5",
+    "title": "Pre-creation Validation"
   },
   {
-    "content": "Step 6: Create Files",
-    "activeForm": "Step 6: Create Files",
-    "status": "pending"
+    "step": "6",
+    "title": "Create Files"
   },
   {
-    "content": "Step 7: Update Conversation Rem Links",
-    "activeForm": "Step 7: Update Conversation Rem Links",
-    "status": "pending"
+    "step": "7",
+    "title": "Update Conversation Rem Links"
   },
   {
-    "content": "Step 8: Auto-generate Statistics & Visualizations",
-    "activeForm": "Step 8: Auto-generate Statistics & Visualizations",
-    "status": "pending"
+    "step": "8",
+    "title": "Auto-generate Statistics & Visualizations"
   },
   {
-    "content": "Step 8.1: Generate Learning Analytics",
-    "activeForm": "Step 8.1: Generate Learning Analytics",
-    "status": "pending"
+    "step": "8.1",
+    "title": "Generate Learning Analytics"
   },
   {
-    "content": "Step 8.2: Generate Interactive Visualizations",
-    "activeForm": "Step 8.2: Generate Interactive Visualizations",
-    "status": "pending"
+    "step": "8.2",
+    "title": "Generate Interactive Visualizations"
   },
   {
-    "content": "Step 8.3: Display Summary to User",
-    "activeForm": "Step 8.3: Display Summary to User",
-    "status": "pending"
+    "step": "8.3",
+    "title": "Display Summary to User"
   },
   {
-    "content": "Step 9: Completion Report",
-    "activeForm": "Step 9: Completion Report",
-    "status": "pending"
+    "step": "9",
+    "title": "Completion Report"
   }
 ]

@@ -1,17 +1,14 @@
 [
   {
-    "content": "Step 1: Load Rems and Show Timeline",
-    "activeForm": "Step 1: Load Rems and Show Timeline",
-    "status": "pending"
+    "step": "1",
+    "title": "Load Rems and Show Timeline"
   },
   {
-    "content": "Step 2: Conduct Review Session",
-    "activeForm": "Step 2: Conduct Review Session",
-    "status": "pending"
+    "step": "2",
+    "title": "Conduct Review Session"
   },
   {
-    "content": "Step 3: Post-Session Summary",
-    "activeForm": "Step 3: Post-Session Summary",
-    "status": "pending"
+    "step": "3",
+    "title": "Post-Session Summary"
   }
 ]

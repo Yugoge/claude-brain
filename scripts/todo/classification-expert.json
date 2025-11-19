@@ -1,27 +1,22 @@
 [
   {
-    "content": "Step 1: Load Taxonomy Reference",
-    "activeForm": "Step 1: Load Taxonomy Reference",
-    "status": "pending"
+    "step": "1",
+    "title": "Load Taxonomy Reference"
   },
   {
-    "content": "Step 2: Analyze Question Semantics",
-    "activeForm": "Step 2: Analyze Question Semantics",
-    "status": "pending"
+    "step": "2",
+    "title": "Analyze Question Semantics"
   },
   {
-    "content": "Step 3: Classify with Confidence Scoring",
-    "activeForm": "Step 3: Classify with Confidence Scoring",
-    "status": "pending"
+    "step": "3",
+    "title": "Classify with Confidence Scoring"
   },
   {
-    "content": "Step 4: Map to ISCED Taxonomy Codes",
-    "activeForm": "Step 4: Map to ISCED Taxonomy Codes",
-    "status": "pending"
+    "step": "4",
+    "title": "Map to ISCED Taxonomy Codes"
   },
   {
-    "content": "Step 5: Generate Rationale",
-    "activeForm": "Step 5: Generate Rationale",
-    "status": "pending"
+    "step": "5",
+    "title": "Generate Rationale"
   }
 ]

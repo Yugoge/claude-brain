@@ -1,42 +1,34 @@
 [
   {
-    "content": "Step 1: Parse Arguments",
-    "activeForm": "Step 1: Parse Arguments",
-    "status": "pending"
+    "step": "1",
+    "title": "Parse Arguments"
   },
   {
-    "content": "Step 2: Load Target Rems",
-    "activeForm": "Step 2: Load Target Rems",
-    "status": "pending"
+    "step": "2",
+    "title": "Load Target Rems"
   },
   {
-    "content": "Step 3: Load Existing Concepts",
-    "activeForm": "Step 3: Load Existing Concepts",
-    "status": "pending"
+    "step": "3",
+    "title": "Load Existing Concepts"
   },
   {
-    "content": "Step 4: Call Domain Tutor",
-    "activeForm": "Step 4: Call Domain Tutor",
-    "status": "pending"
+    "step": "4",
+    "title": "Call Domain Tutor"
   },
   {
-    "content": "Step 5: Present Preview",
-    "activeForm": "Step 5: Present Preview",
-    "status": "pending"
+    "step": "5",
+    "title": "Present Preview"
   },
   {
-    "content": "Step 6: Update Rem Files",
-    "activeForm": "Step 6: Update Rem Files",
-    "status": "pending"
+    "step": "6",
+    "title": "Update Rem Files"
   },
   {
-    "content": "Step 7: Rebuild Backlinks",
-    "activeForm": "Step 7: Rebuild Backlinks",
-    "status": "pending"
+    "step": "7",
+    "title": "Rebuild Backlinks"
   },
   {
-    "content": "Step 8: Normalize Links",
-    "activeForm": "Step 8: Normalize Links",
-    "status": "pending"
+    "step": "8",
+    "title": "Normalize Links"
   }
 ]

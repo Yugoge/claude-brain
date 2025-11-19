@@ -1,22 +1,18 @@
 [
   {
-    "content": "Step 1: Generate Analytics",
-    "activeForm": "Step 1: Generate Analytics",
-    "status": "pending"
+    "step": "1",
+    "title": "Generate Analytics"
   },
   {
-    "content": "Step 2: Load Analytics Cache",
-    "activeForm": "Step 2: Load Analytics Cache",
-    "status": "pending"
+    "step": "2",
+    "title": "Load Analytics Cache"
   },
   {
-    "content": "Step 3: Create React Dashboard",
-    "activeForm": "Step 3: Create React Dashboard",
-    "status": "pending"
+    "step": "3",
+    "title": "Create React Dashboard"
   },
   {
-    "content": "Step 4: Display Summary Statistics",
-    "activeForm": "Step 4: Display Summary Statistics",
-    "status": "pending"
+    "step": "4",
+    "title": "Display Summary Statistics"
   }
 ]

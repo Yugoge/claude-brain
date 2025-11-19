@@ -12,24 +12,6 @@ Generate an interactive knowledge graph visualization showing all concepts and t
 
 
 
-## Step 0: Initialize Workflow Checklist
-
-**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
-
-```bash
-cat scripts/todo/visualize.json
-```
-
-Then create TodoWrite with all steps from JSON (status: "pending").
-
-**Rules**:
-- Mark `in_progress` BEFORE starting each step
-- Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all must reach `completed` or `cancelled`
-
----
-
-
 ## Usage
 
 ```

@@ -1,62 +1,50 @@
 [
   {
-    "content": "Step 1: Validate Input & Check File Size + Content Type",
-    "activeForm": "Step 1: Validate Input & Check File Size + Content Type",
-    "status": "pending"
+    "step": "1",
+    "title": "Validate Input & Check File Size + Content Type"
   },
   {
-    "content": "Step 2: Detect Material Type & Domain",
-    "activeForm": "Step 2: Detect Material Type & Domain",
-    "status": "pending"
+    "step": "2",
+    "title": "Detect Material Type & Domain"
   },
   {
-    "content": "Step 3: Load or Create Progress File",
-    "activeForm": "Step 3: Load or Create Progress File",
-    "status": "pending"
+    "step": "3",
+    "title": "Load or Create Progress File"
   },
   {
-    "content": "Step 4: Image-Heavy PDF Workflow",
-    "activeForm": "Step 4: Image-Heavy PDF Workflow",
-    "status": "pending"
+    "step": "4",
+    "title": "Image-Heavy PDF Workflow"
   },
   {
-    "content": "Step 4.1: Dynamic Single-Page PDF Extraction",
-    "activeForm": "Step 4.1: Dynamic Single-Page PDF Extraction",
-    "status": "pending"
+    "step": "4.1",
+    "title": "Dynamic Single-Page PDF Extraction"
   },
   {
-    "content": "Step 4.2: Smart Material Loading",
-    "activeForm": "Step 4.2: Smart Material Loading",
-    "status": "pending"
+    "step": "4.2",
+    "title": "Smart Material Loading"
   },
   {
-    "content": "Step 5: Determine Chunk to Learn",
-    "activeForm": "Step 5: Determine Chunk to Learn",
-    "status": "pending"
+    "step": "5",
+    "title": "Determine Chunk to Learn"
   },
   {
-    "content": "Step 6: Select Appropriate Agent",
-    "activeForm": "Step 6: Select Appropriate Agent",
-    "status": "pending"
+    "step": "6",
+    "title": "Select Appropriate Agent"
   },
   {
-    "content": "Step 6.5: Domain Focus Constraints",
-    "activeForm": "Step 6.5: Domain Focus Constraints",
-    "status": "pending"
+    "step": "6.5",
+    "title": "Domain Focus Constraints"
   },
   {
-    "content": "Step 7: Consultation-Based Learning Session",
-    "activeForm": "Step 7: Consultation-Based Learning Session",
-    "status": "pending"
+    "step": "7",
+    "title": "Consultation-Based Learning Session"
   },
   {
-    "content": "Step 8: Post-Session Actions",
-    "activeForm": "Step 8: Post-Session Actions",
-    "status": "pending"
+    "step": "8",
+    "title": "Post-Session Actions"
   },
   {
-    "content": "Step 9: User-Facing Output",
-    "activeForm": "Step 9: User-Facing Output",
-    "status": "pending"
+    "step": "9",
+    "title": "User-Facing Output"
   }
 ]
