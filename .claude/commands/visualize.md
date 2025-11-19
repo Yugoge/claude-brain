@@ -11,23 +11,21 @@ argument-hint: "[domain]"
 Generate an interactive knowledge graph visualization showing all concepts and their relationships.
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Generate Graph Data", "activeForm": "Step 1: Generate Graph Data", "status": "pending"},
-  {"content": "Step 2: Generate Visualization HTML", "activeForm": "Step 2: Generate Visualization HTML", "status": "pending"},
-  {"content": "Step 3: Display Summary", "activeForm": "Step 3: Display Summary", "status": "pending"}
-])
+```bash
+cat scripts/todo/visualize.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---
 

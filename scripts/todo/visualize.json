@@ -1,0 +1,17 @@
+[
+  {
+    "content": "Step 1: Generate Graph Data",
+    "activeForm": "Step 1: Generate Graph Data",
+    "status": "pending"
+  },
+  {
+    "content": "Step 2: Generate Visualization HTML",
+    "activeForm": "Step 2: Generate Visualization HTML",
+    "status": "pending"
+  },
+  {
+    "content": "Step 3: Display Summary",
+    "activeForm": "Step 3: Display Summary",
+    "status": "pending"
+  }
+]

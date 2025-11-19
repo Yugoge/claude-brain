@@ -11,32 +11,21 @@ argument-hint: "[file-path]"
 Start an interactive learning session with a material using Socratic dialogue.
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Validate Input & Check File Size + Content Type", "activeForm": "Step 1: Validate Input & Check File Size + Content Type", "status": "pending"},
-  {"content": "Step 2: Detect Material Type & Domain", "activeForm": "Step 2: Detect Material Type & Domain", "status": "pending"},
-  {"content": "Step 3: Load or Create Progress File", "activeForm": "Step 3: Load or Create Progress File", "status": "pending"},
-  {"content": "Step 4: Image-Heavy PDF Workflow", "activeForm": "Step 4: Image-Heavy PDF Workflow", "status": "pending"},
-  {"content": "Step 4.1: Dynamic Single-Page PDF Extraction", "activeForm": "Step 4.1: Dynamic Single-Page PDF Extraction", "status": "pending"},
-  {"content": "Step 4.2: Smart Material Loading", "activeForm": "Step 4.2: Smart Material Loading", "status": "pending"},
-  {"content": "Step 5: Determine Chunk to Learn", "activeForm": "Step 5: Determine Chunk to Learn", "status": "pending"},
-  {"content": "Step 6: Select Appropriate Agent", "activeForm": "Step 6: Select Appropriate Agent", "status": "pending"},
-  {"content": "Step 6.5: Domain Focus Constraints", "activeForm": "Step 6.5: Domain Focus Constraints", "status": "pending"},
-  {"content": "Step 7: Consultation-Based Learning Session", "activeForm": "Step 7: Consultation-Based Learning Session", "status": "pending"},
-  {"content": "Step 8: Post-Session Actions", "activeForm": "Step 8: Post-Session Actions", "status": "pending"},
-  {"content": "Step 9: User-Facing Output", "activeForm": "Step 9: User-Facing Output", "status": "pending"}
-])
+```bash
+cat scripts/todo/learn.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---
 

@@ -11,23 +11,21 @@ argument-hint: "[domain | [[rem-id]]]"
 Start an interactive review session using spaced repetition (FSRS algorithm).
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Load Rems and Show Timeline", "activeForm": "Step 1: Load Rems and Show Timeline", "status": "pending"},
-  {"content": "Step 2: Conduct Review Session", "activeForm": "Step 2: Conduct Review Session", "status": "pending"},
-  {"content": "Step 3: Post-Session Summary", "activeForm": "Step 3: Post-Session Summary", "status": "pending"}
-])
+```bash
+cat scripts/todo/review.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---
 

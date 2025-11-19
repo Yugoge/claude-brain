@@ -10,28 +10,21 @@ model: inherit
 Retrospectively discover typed relations for existing Rems using domain tutor.
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Parse Arguments", "activeForm": "Step 1: Parse Arguments", "status": "pending"},
-  {"content": "Step 2: Load Target Rems", "activeForm": "Step 2: Load Target Rems", "status": "pending"},
-  {"content": "Step 3: Load Existing Concepts", "activeForm": "Step 3: Load Existing Concepts", "status": "pending"},
-  {"content": "Step 4: Call Domain Tutor", "activeForm": "Step 4: Call Domain Tutor", "status": "pending"},
-  {"content": "Step 5: Present Preview", "activeForm": "Step 5: Present Preview", "status": "pending"},
-  {"content": "Step 6: Update Rem Files", "activeForm": "Step 6: Update Rem Files", "status": "pending"},
-  {"content": "Step 7: Rebuild Backlinks", "activeForm": "Step 7: Rebuild Backlinks", "status": "pending"},
-  {"content": "Step 8: Normalize Links", "activeForm": "Step 8: Normalize Links", "status": "pending"}
-])
+```bash
+cat scripts/todo/discover-relations.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---
 

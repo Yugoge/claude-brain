@@ -1,0 +1,27 @@
+[
+  {
+    "content": "Step 1: Load Taxonomy Reference",
+    "activeForm": "Step 1: Load Taxonomy Reference",
+    "status": "pending"
+  },
+  {
+    "content": "Step 2: Analyze Question Semantics",
+    "activeForm": "Step 2: Analyze Question Semantics",
+    "status": "pending"
+  },
+  {
+    "content": "Step 3: Classify with Confidence Scoring",
+    "activeForm": "Step 3: Classify with Confidence Scoring",
+    "status": "pending"
+  },
+  {
+    "content": "Step 4: Map to ISCED Taxonomy Codes",
+    "activeForm": "Step 4: Map to ISCED Taxonomy Codes",
+    "status": "pending"
+  },
+  {
+    "content": "Step 5: Generate Rationale",
+    "activeForm": "Step 5: Generate Rationale",
+    "status": "pending"
+  }
+]

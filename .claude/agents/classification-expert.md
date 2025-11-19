@@ -223,24 +223,20 @@ These files contain:
 - Story 5.2 - Ask Command UX Fixes
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Load Taxonomy Reference", "activeForm": "Step 1: Load Taxonomy Reference", "status": "pending"},
-  {"content": "Step 2: Analyze Question Semantics", "activeForm": "Step 2: Analyze Question Semantics", "status": "pending"},
-  {"content": "Step 3: Classify with Confidence Scoring", "activeForm": "Step 3: Classify with Confidence Scoring", "status": "pending"},
-  {"content": "Step 4: Map to ISCED Taxonomy Codes", "activeForm": "Step 4: Map to ISCED Taxonomy Codes", "status": "pending"},
-  {"content": "Step 5: Generate Rationale", "activeForm": "Step 5: Generate Rationale", "status": "pending"}
-])
+```bash
+cat scripts/todo/classification-expert.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---

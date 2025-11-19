@@ -11,24 +11,21 @@ argument-hint: "[domain] [period]"
 Display comprehensive learning analytics with interactive visualizations.
 
 
+
 ## Step 0: Initialize Workflow Checklist
 
-**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+**IMMEDIATELY after command invocation**, load and execute preloaded TodoList:
 
-```python
-TodoWrite([
-  {"content": "Step 1: Generate Analytics", "activeForm": "Step 1: Generate Analytics", "status": "pending"},
-  {"content": "Step 2: Load Analytics Cache", "activeForm": "Step 2: Load Analytics Cache", "status": "pending"},
-  {"content": "Step 3: Create React Dashboard", "activeForm": "Step 3: Create React Dashboard", "status": "pending"},
-  {"content": "Step 4: Display Summary Statistics", "activeForm": "Step 4: Display Summary Statistics", "status": "pending"}
-])
+```bash
+cat scripts/todo/stats.json
 ```
+
+Then create TodoWrite with all steps from JSON (status: "pending").
 
 **Rules**:
 - Mark `in_progress` BEFORE starting each step
 - Mark `completed` IMMEDIATELY after finishing
-- NEVER skip steps - all todos must reach `completed` or `cancelled`
-- User sees real-time progress via todo list
+- NEVER skip steps - all must reach `completed` or `cancelled`
 
 ---
 
