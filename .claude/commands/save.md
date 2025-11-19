@@ -347,75 +347,35 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 3.5: Enrich with Typed Relations via Domain Tutor (RECOMMENDED)
+### Step 3.5: Enrich with Typed Relations via Domain Tutor (MANDATORY)
 
-**⚠️ IMPORTANT**: This step significantly improves Rem quality and relationship discovery. Only skip if domain is not [language|finance|programming|science].
+**⚠️ CRITICAL**: This step is NOW MANDATORY for [programming|language|finance|science] domains.
 
-**Purpose**: Discover semantic relationships (e.g., "ask" ↔ "inquire" as synonyms) and elevate Rem quality.
+**Purpose**: Discover typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts.
 
-**Step-by-step execution**:
+**Execution Method**: Use orchestrator script:
 
-1. **Load existing concepts in domain**:
-   ```bash
-   # Get list of existing Rem IDs for relation validation
-   python scripts/archival/get_domain_concepts.py --domain-path "{isced_detailed_path}"
-   ```
+```bash
+source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
+  --domain "$domain" \
+  --isced-path "$isced_detailed_path" \
+  --candidate-rems candidate_rems.json
+```
 
-   **Output**: JSON array of existing concepts: `[{"id": "french-verb-vouloir", "title": "..."}, ...]`
+**Script automatically**:
+1. Loads existing concepts from domain
+2. Builds tutor prompt with context
+3. Outputs prompt for Task tool call
 
-2. **Call domain tutor** with Task tool:
-   ```python
-   Task(
-     subagent_type="{domain}-tutor",  # language-tutor, finance-tutor, programming-tutor, book-tutor
-     prompt="""You are a {domain} domain expert. Review this conversation and provide Rem extraction guidance.
+**Then**:
+1. Call Task tool with `{domain}-tutor` using output prompt
+2. Save tutor JSON response to `tutor_response.json`
+3. Re-run orchestrator with `--tutor-response tutor_response.json`
+4. Script merges typed_relations into candidate Rems
 
-**Knowledge Base Context** (existing concepts in {isced_path}):
-{existing_concepts_json}
+**Output**: `enriched_rems.json` with typed_relations added
 
-**CRITICAL RULES for Typed Relations**:
-1. ✅ ONLY suggest relations to concepts in the above list
-2. ✅ Use typed relations (synonym, prerequisite_of, etc.) NOT generic "related"
-3. ❌ NEVER hallucinate concept IDs not in the list
-
-**Candidate Concepts** (main agent's extraction):
-{candidate_rems_with_core_points}
-
-**Your Task**: Provide concept_extraction_guidance with typed_relations for each Rem.
-
-**Output Format** (JSON only):
-{{
-  "concept_extraction_guidance": {{
-    "rem_suggestions": [
-      {{
-        "concept_id": "<slug-id>",
-        "title": "<Academic/systematic title>",
-        "core_content": "<3 bullet points, use ** for bold terms>",
-        "typed_relations": [
-          {{"to": "<existing-id-from-list>", "type": "<synonym|prerequisite_of|etc>", "rationale": "..."}}
-        ],
-        "usage_scenario_suggestion": "<1-2 sentences>",
-        "common_mistakes_suggestion": ["❌ error → ✅ correction"],
-        "estimated_tokens": <120-150>
-      }}
-    ]
-  }}
-}}""",
-     description="Enrich Rems with typed relations"
-   )
-   ```
-
-3. **Process tutor response**:
-   - Parse JSON from tutor's final message
-   - Extract `concept_extraction_guidance.rem_suggestions` array
-   - Validate `typed_relations` against existing concepts list from Step 1
-   - Filter out any relations to non-existent concepts
-
-4. **Merge tutor's suggestions** into extracted Rems data structure (validation happens in Step 5.5).
-
-**Fallback strategy**:
-- If tutor unavailable → Use original candidate Rems
-- If JSON invalid → Log error, use original candidates
-- If required fields missing → Use defaults
+**Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 
 **Quality improvements expected**:
 - Language: Merge isolated words into systematic concepts
@@ -586,50 +546,40 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 **⚠️ CRITICAL**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
-**ONLY after user approval**, run comprehensive validation before creating any files.
+**ONLY after user approval**, run two-stage validation:
 
-**Single script validates everything**:
+**Stage 1: Step 3.5 Execution Check** (Mandatory for programming|language|finance|science)
+
+```bash
+source venv/bin/activate && python scripts/archival/preflight_checker.py \
+  --enriched-rems enriched_rems.json \
+  --domain "$domain"
+```
+
+**Exit codes**:
+- `0` = Pass → Continue to Stage 2
+- `1` = Warnings (empty typed_relations) → Continue with warning
+- `2` = Critical (missing typed_relations field) → BLOCK, re-run Step 3.5
+
+**Stage 2: Comprehensive Validation**
 
 ```bash
 python scripts/archival/pre_creation_validator.py \
-  --concepts-json "$extracted_rems_json" \
+  --concepts-json enriched_rems.json \
   --domain-path "$isced_detailed_path" \
   --source-file "$archived_file"
 ```
 
-**Exit codes**:
-- `0` = All passed → Proceed to Step 6
-- `1` = Warnings → Show warnings, ask user to confirm/abort
-- `2` = Critical errors → BLOCK Step 6, show errors, return to Step 4
+**Validates**:
+1. Typed relations target existence
+2. Duplicate detection (Jaccard >60%)
+3. rem_id collision check
+4. Frontmatter schema
+5. ISCED path existence
 
-**What it validates**:
-1. ✅ **Typed relations**: Target concepts exist, relation types valid (auto-fixes invalid)
-2. ✅ **Duplicates**: Jaccard similarity >60% triggers warning (non-blocking)
-3. ✅ **rem_id collision**: Blocks if rem_id already exists in backlinks.json
-4. ✅ **Frontmatter schema**: All required fields present (rem_id, subdomain, isced, created, source)
-5. ✅ **ISCED path**: Directory structure exists in knowledge-base/
-6. ✅ **Source file**: Conversation file exists (warning only)
+**Exit codes**: 0=Pass, 1=Warnings, 2=Critical errors
 
-**Auto-fixes applied**:
-- Invalid relation targets → removed
-- Invalid relation types → changed to 'related'
-- Results stored back in `$extracted_rems_json`
-
-**Error handling**:
-```bash
-validation_exit_code=$?
-
-if [ $validation_exit_code -eq 2 ]; then
-    echo "❌ Validation failed with critical errors. Cannot proceed."
-    echo "Please fix the issues and run /save again."
-    exit 1
-elif [ $validation_exit_code -eq 1 ]; then
-    echo "⚠️  Validation passed with warnings."
-    # Ask user: Proceed anyway? (yes/no)
-fi
-```
-
-**If validation passes** → Proceed to Step 6 (Create Files)
+**If both stages pass** → Proceed to Step 6
 
 ### Step 6: Create Files
 
