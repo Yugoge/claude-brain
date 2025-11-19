@@ -99,6 +99,13 @@ source venv/bin/activate && python scripts/review/run_review.py --days 14
 
 #### 2.1 Consult Review-Master for Guidance
 
+**Load linked context**:
+```bash
+source venv/bin/activate && python scripts/review/get_linked_rems.py {rem_id}
+```
+
+Parse JSON and extract linked_rems for consultation.
+
 **Fallback strategy**:
 - If review-master unavailable → Ask direct recall question: "What do you remember about {Rem title}?"
 - If JSON invalid → Use minimal guidance (ask for free recall, no hints)
@@ -127,12 +134,21 @@ Use Task tool:
         \"review_count\": {review_count}
       }
     },
+    \"linked_context\": {
+      \"linked_rems\": [{\"id\": \"...\", \"type\": \"...\", \"direction\": \"...\"}],
+      \"summary\": {\"total\": N, \"by_type\": {...}}
+    },
     \"session_context\": {
       \"total_rems\": {total},
       \"current_index\": {N},
       \"mode\": \"{mode}\"
     }
   }
+
+  Use linked_context to enrich questions:
+  - Reference prerequisites for foundational context
+  - Contrast with antonyms/contrasts_with for differentiation
+  - Use examples for concrete understanding
 
   Return JSON guidance as specified in your instructions.
   "
@@ -250,7 +266,9 @@ FSRS Update:
 
 **Contextual messages**:
 - Rating 1: "⚠️ This needs more attention. Reviewing again tomorrow."
+  - If has_prerequisite links exist: "💡 Consider reviewing: {prerequisite titles}"
 - Rating 2: "You got it with effort. Keep practicing."
+  - If has_prerequisite links exist: "💡 Foundation: {prerequisite titles}"
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
@@ -364,6 +382,7 @@ Would you like to do a focused review session on these?
 - Use `/save` after review to capture new concepts from your questions
 - FSRS Algorithm Benefits: 30-50% fewer reviews, adaptive difficulty modeling (0-10 scale), personalized scheduling, memory stability tracking
 - Goal: Long-term retention through scientifically optimized spaced repetition and active recall
+- **Linked Review**: System automatically loads typed relations (prerequisites, contrasts, examples) for context-aware questions. Low ratings trigger prerequisite suggestions.
 - Review-master agent uses `scripts/review/review_scheduler.py` (ReviewScheduler class)
 - Import pattern: `sys.path.append('scripts/review')` then `from review_scheduler import ReviewScheduler`
 - Call `scheduler.schedule_review(concept, rating)` after each review
