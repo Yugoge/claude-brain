@@ -13,6 +13,23 @@ Generate an interactive knowledge graph visualization showing all concepts and t
 
 
 
+
+## Step 0: Initialize Workflow Checklist
+
+**Load todos from**: `scripts/todo/visualize.py`
+
+Execute via venv:
+```bash
+source venv/bin/activate && python scripts/todo/visualize.py
+```
+
+Use output to create TodoWrite with all workflow steps.
+
+**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
+
+---
+
+
 ## Usage
 
 ```

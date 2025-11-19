@@ -43,11 +43,11 @@ source venv/bin/activate && python scripts/memory/check-memory-server.py && \
 echo "" && \
 echo "2. Storage Detection:" && \
 echo "────────────────────────────────────" && \
-python scripts/memory/detect_mcp_storage.py && \
+source venv/bin/activate && python scripts/memory/detect_mcp_storage.py && \
 echo "" && \
 echo "3. Error Diagnosis:" && \
 echo "────────────────────────────────────" && \
-python scripts/memory/diagnose_mcp_error.py
+source venv/bin/activate && python scripts/memory/diagnose_mcp_error.py
 ```
 
 ### Individual Diagnostics

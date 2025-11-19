@@ -23,6 +23,23 @@ architecture_role: user-facing  # Directly interacts with user
 
 ---
 
+
+## Step 0: Initialize Workflow Checklist
+
+**Load todos from**: `scripts/todo/analyst.py`
+
+Execute via venv:
+```bash
+source venv/bin/activate && python scripts/todo/analyst.py
+```
+
+Use output to create TodoWrite with all workflow steps.
+
+**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
+
+---
+
+
 ## 🎯 Core Mission
 
 You are the user's primary interface for:
