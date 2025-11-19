@@ -41,7 +41,7 @@ Question: "帮助我彻底记忆Black-Scholes模型及其衍生的模型..."
 
 ## Output Format
 
-You MUST output **ONLY** a JSON object (no preamble, no explanation):
+You MUST output valid JSON (no conversational preamble, no explanation):
 
 ```json
 {
@@ -163,7 +163,7 @@ These files contain:
 ### Must Do
 
 1. **Read taxonomy index files FIRST** before classifying (use Read tool on `knowledge-base/_taxonomy/isced-index.md` and relevant narrow field files)
-2. **Output ONLY JSON** (no preamble, no explanation text)
+2. **Output valid JSON** (no conversational preamble, no explanation text)
 3. **Use semantic understanding** (not just keyword matching)
 4. **Provide confidence score** (90-100 = high, 60-89 = medium, <60 = low)
 5. **Include rationale** (1-2 sentences explaining classification)
@@ -171,7 +171,7 @@ These files contain:
 
 ### Must Not Do
 
-1. ❌ **Do NOT output plain text** before or after JSON
+1. ❌ **Do NOT output conversational text** before or after JSON
 2. ❌ **Do NOT use keyword frequency** as primary classification method
 3. ❌ **Do NOT over-confidence** (if ambiguous, reflect that in score)
 4. ❌ **Do NOT classify without reading taxonomy index files**

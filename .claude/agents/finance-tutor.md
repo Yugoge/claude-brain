@@ -537,7 +537,7 @@ Provide context for reasonableness checks:
 
 ## Important Rules
 
-1. **Output ONLY JSON** - No conversational preamble or postscript
+1. **Output valid JSON** - No conversational preamble or postscript
 2. **Formulas accurate** - Verify before suggesting (users trust your expertise)
 3. **Calculations complete** - Show all intermediate steps, not just final answer
 4. **Assumptions explicit** - State every assumption (discount rate type, cash flow timing, etc.)

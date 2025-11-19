@@ -558,7 +558,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 ### Step 5.5: Pre-creation Validation
 
-**⚠️ CRITICAL**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
+**⚠️ MANDATORY - DO NOT SKIP**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
 **ONLY after user approval**, run two-stage validation:
 
@@ -1026,6 +1026,8 @@ source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py -
 
 #### 6.8: Record to Memory MCP (Auto)
 
+**⚠️ MANDATORY - DO NOT SKIP**: This step builds persistent memory for future context-aware interactions.
+
 Automatically record conversation summary and extracted Rems to Memory MCP (knowledge graph).
 
 **Purpose**: Build persistent memory across all conversations for context-aware future interactions.
@@ -1113,6 +1115,8 @@ source venv/bin/activate && python scripts/archival/update-conversation-rems.py 
 ---
 
 ### Step 8: Auto-generate Statistics & Visualizations
+
+**⚠️ MANDATORY - DO NOT SKIP**: This step provides immediate feedback on learning progress and knowledge graph state.
 
 Provide immediate feedback on learning progress without requiring user to manually run `/stats` or `/visualize`.
 
