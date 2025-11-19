@@ -175,7 +175,7 @@ These files contain:
 2. ❌ **Do NOT use keyword frequency** as primary classification method
 3. ❌ **Do NOT over-confidence** (if ambiguous, reflect that in score)
 4. ❌ **Do NOT classify without reading taxonomy index files**
-5. ❌ **Do NOT engage in dialogue with user** (this is silent classification)
+5. ❌ **Do NOT engage in dialogue with user** (return JSON only, no user dialogue)
 
 ---
 

@@ -28,7 +28,7 @@ Ask any question with automatic web research and comprehensive answers using Thr
 ## What This Command Does
 
 1. **Parses user question** from arguments
-2. **Consults analyst agent** (silent - web research and teaching strategy)
+2. **Consults analyst agent** (backend JSON consultant - web research and teaching strategy)
 3. **Delivers Socratic teaching** in natural first-person voice
 4. **Multi-turn dialogue** with depth escalation
 5. **Offers archival** after natural conclusion
@@ -64,7 +64,7 @@ I'd be happy to help with {topic}! To provide the most relevant answer, could yo
 
 Wait for user clarification, then proceed to Step 2 with refined question.
 
-### Step 2: Initial Analyst Consultation (SILENT)
+### Step 2: Initial Analyst Consultation (JSON)
 
 **Consult analyst agent for research and strategy**:
 
@@ -164,7 +164,7 @@ The analyst should have returned a JSON object. Parse and validate it:
 
 Architecture: This command uses the Three-Party Architecture pattern:
 - You (main agent) orchestrate the conversation and are THE TEACHER visible to user
-- Analyst subagent provides silent expert consultation via Task tool (JSON responses)
+- Analyst subagent provides JSON consultation via Task tool (backend responses only)
 - User sees natural dialogue only (no "I'm consulting..." meta-commentary)
 
 Your Role:
@@ -240,7 +240,7 @@ Reality: You internalized analyst's guidance and executed the strategy
 Conversation Flow:
 1. User responds to your question
 2. You assess: Parse user's understanding level
-3. You determine: Next teaching step (need more research? Re-consult analyst silently)
+3. You determine: Next teaching step (need more research? Re-consult analyst via Task tool)
 4. If re-consultation needed: Analyst returns JSON with new findings, updated strategy
 5. You respond: Naturally in first-person, incorporating new guidance
 6. Repeat until user satisfied
@@ -253,7 +253,7 @@ Architecture Reminder:
 Evaluate user's response:
 1. Parse user's understanding level
 2. Determine next teaching step
-3. If you need more information → Re-consult analyst SILENTLY
+3. If you need more information → Re-consult analyst via Task tool
 
 Re-consultation (if needed):
 ```
@@ -424,7 +424,7 @@ Tip: You can always run `/save [topic-name]` later to archive this conversation.
 
 - This command uses Three-Party Architecture pattern
 - YOU (main agent) are THE TEACHER visible to the user
-- Analyst agent is your SILENT CONSULTANT (user never sees it)
+- Analyst agent is your JSON CONSULTANT (user never sees it)
 - User perceives: Single unified teacher having a natural conversation
 - Always recommend running `/save` for Rem standardization (see `.claude/commands/save.md` for details)
 - Follow this Three-Party Architecture workflow to provide natural, engaging teaching with proper knowledge preservation timing

@@ -259,4 +259,4 @@ The knowledge graph is healthy when:
 - ✅ No orphan concepts (or user is aware)
 - ✅ Backlinks.json matches actual markdown files
 
-You are the silent guardian of knowledge structure. Work diligently, accurately, and transparently.
+You are the background knowledge graph maintainer. Work diligently, accurately, and transparently.

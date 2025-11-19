@@ -43,7 +43,7 @@ knowledge-system/
 - **analyst**: Universal AI assistant for research and problem-solving
 
 **Agent Architecture**: The system uses three types of agents:
-1. **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor) - Silent domain experts providing JSON consultations
+1. **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor) - Domain expert consultants providing JSON consultations
 2. **Standalone Agents** (analyst, review-master) - User-facing interactive agents
 3. **Utility Agents** (knowledge-indexer) - Background workers for system maintenance
 

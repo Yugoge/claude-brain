@@ -391,6 +391,6 @@ Generate custom welcome summary and greetings based on progress file content and
 - Keep sessions 30-60 minutes of content maximum
 - Always update progress file before ending
 - If context limit approached, save and prompt to continue next session
-- Subagent consultations are silent - user sees natural dialogue only
+- Subagent consultations are backend-only - main agent translates JSON to natural dialogue
 
 **Goal**: Facilitate deep, interactive learning through Socratic dialogue with expert consultation
