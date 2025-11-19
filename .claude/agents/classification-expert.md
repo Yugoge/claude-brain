@@ -221,3 +221,26 @@ These files contain:
 - `knowledge-base/_taxonomy/` - ISCED-F 2013 taxonomy files
 - `docs/architecture/agent-classification.md` - Agent type definitions
 - Story 5.2 - Ask Command UX Fixes
+
+
+## Step 0: Initialize Workflow Checklist
+
+**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+
+```python
+TodoWrite([
+  {"content": "Step 1: Load Taxonomy Reference", "activeForm": "Step 1: Load Taxonomy Reference", "status": "pending"},
+  {"content": "Step 2: Analyze Question Semantics", "activeForm": "Step 2: Analyze Question Semantics", "status": "pending"},
+  {"content": "Step 3: Classify with Confidence Scoring", "activeForm": "Step 3: Classify with Confidence Scoring", "status": "pending"},
+  {"content": "Step 4: Map to ISCED Taxonomy Codes", "activeForm": "Step 4: Map to ISCED Taxonomy Codes", "status": "pending"},
+  {"content": "Step 5: Generate Rationale", "activeForm": "Step 5: Generate Rationale", "status": "pending"}
+])
+```
+
+**Rules**:
+- Mark `in_progress` BEFORE starting each step
+- Mark `completed` IMMEDIATELY after finishing
+- NEVER skip steps - all todos must reach `completed` or `cancelled`
+- User sees real-time progress via todo list
+
+---

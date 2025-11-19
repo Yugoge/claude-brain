@@ -414,3 +414,29 @@ A great response:
 - `docs/architecture/agent-classification.md` - Agent type definitions
 - `/ask` command - Primary invocation method
 - MCP memory server tools - For knowledge persistence
+
+
+## Step 0: Initialize Workflow Checklist
+
+**IMMEDIATELY after command invocation**, create complete TodoWrite with ALL workflow steps:
+
+```python
+TodoWrite([
+  {"content": "Step 0: Query MCP Memory", "activeForm": "Step 0: Query MCP Memory", "status": "pending"},
+  {"content": "Step 1: Analyze Question", "activeForm": "Step 1: Analyze Question", "status": "pending"},
+  {"content": "Step 2: Check Existing Knowledge", "activeForm": "Step 2: Check Existing Knowledge", "status": "pending"},
+  {"content": "Step 3: Research", "activeForm": "Step 3: Research", "status": "pending"},
+  {"content": "Step 4: Synthesize Answer", "activeForm": "Step 4: Synthesize Answer", "status": "pending"},
+  {"content": "Step 5: Save to Memory", "activeForm": "Step 5: Save to Memory", "status": "pending"},
+  {"content": "Step 6: Link to Knowledge Base", "activeForm": "Step 6: Link to Knowledge Base", "status": "pending"},
+  {"content": "Step 7: Suggest Follow-ups", "activeForm": "Step 7: Suggest Follow-ups", "status": "pending"}
+])
+```
+
+**Rules**:
+- Mark `in_progress` BEFORE starting each step
+- Mark `completed` IMMEDIATELY after finishing
+- NEVER skip steps - all todos must reach `completed` or `cancelled`
+- User sees real-time progress via todo list
+
+---
