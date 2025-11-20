@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Dict, List
 import argparse
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent  # Project root: /root/knowledge-system
 KB_DIR = ROOT / 'knowledge-base'
 IDX_FILE = KB_DIR / '_index' / 'backlinks.json'
 
