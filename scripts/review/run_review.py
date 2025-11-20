@@ -62,15 +62,18 @@ def resolve_content_path(domain: str, rem_id: str) -> str:
             # Fall back to first match
             return str(matches[0])
 
-    # Fallback: Fuzzy match by checking if filename contains all rem_id parts
-    # Example: rem_id "fx-pricing-shift-types" matches "041-fx-derivatives-pricing-shift-types.md"
-    all_md_files = list(kb_root.glob("**/*.md"))
+    # Fallback: Fuzzy match by checking if filename contains most rem_id parts
+    # Example: rem_id "fx-greeks-delta-vs-fxdelta" matches "040-fx-derivatives-delta-vs-fxdelta.md"
+    # (greeks→derivatives substitution)
+    # Require at least 70% of parts to match (handles subdomain/category swaps)
+    all_md_files = list(kb_root.glob(f"{domain}/*.md"))  # Restrict to correct domain
     for md_file in all_md_files:
         filename_lower = md_file.stem.lower()
-        # Check if all rem_id parts appear in filename (in any order)
-        if all(part in filename_lower for part in rem_id_parts):
-            if domain in str(md_file):
-                return str(md_file)
+        matching_parts = sum(1 for part in rem_id_parts if part in filename_lower)
+        match_ratio = matching_parts / len(rem_id_parts) if rem_id_parts else 0
+        # Require 70% match + domain match
+        if match_ratio >= 0.7:
+            return str(md_file)
 
     # Legacy .rem.md extension (same logic)
     for pattern in [f"**/*-{rem_id}.rem.md", f"**/{rem_id}.rem.md", f"**/*{rem_id}*.rem.md"]:
