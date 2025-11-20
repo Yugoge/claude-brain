@@ -464,6 +464,54 @@ N. [Title] → [1-line summary] → path/to/file.md
 
 Use `scripts/archival/preview_generator.py` to generate structured three-section preview showing reviewed Rems, new concepts, and proposed updates.
 
+**Format**:
+```
+📊 Review Session Analysis
+
+✅ Reviewed Rems (FSRS Updated): {N}
+  1. [[{rem-id-1}]] - Rating: {rating} ({label})
+  2. [[{rem-id-2}]] - Rating: {rating} ({label})
+  ...
+
+💡 New Concepts Discovered: {M}
+
+1. **{Concept Title}** (Type {B|C|D}: {Extension|Comparison|Application})
+   Source: Turn {N} - "{user_question}"
+   Core points:
+   - {Point 1}
+   - {Point 2}
+   - {Point 3}
+   File: knowledge-base/{domain}/concepts/{slug}.md
+
+2. **{Concept Title 2}** ...
+
+⚙️ Rem Updates (Clarifications): {K}
+
+  1. **[[{rem-id}]]** - {clarification_type} clarification
+     Source: Turn {N} - "{user_question}"
+     Target section: {target_section}
+
+     Diff preview:
+     OLD: "{old_content_snippet}"
+     NEW: "{old_content_snippet} {clarification_text}"
+
+     File: knowledge-base/{domain}/concepts/{rem-id}.md
+
+📊 Summary:
+  - Reviewed: {N} Rems (FSRS progress saved)
+  - Create: {M} new Rems (Type B/C/D)
+  - Update: {K} existing Rems (Type A clarifications)
+  - Archive: 1 conversation file
+
+<options>
+  <option>Approve All (Create {M} + Update {K})</option>
+  <option>Create Only ( - Skip Updates)</option>
+  <option>Update Only ( - Skip New)</option>
+  <option>Modify</option>
+  <option>Cancel</option>
+</options>
+```
+
 ### Step 13: User Confirmation
 
 Wait for explicit approval before creating files.
@@ -870,7 +918,21 @@ source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --
 source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --dry-run --verbose
 ```
 
-**If inferences found**, present count and ask user to approve materialization.
+**If inferences found**, present preview to user:
+
+```
+🧠 Found {N} potential inferred links:
+
+📝 rem-1.md
+  + [[related-rem]] {rel: inferred, via: intermediate-rem}
+
+📝 rem-2.md
+  + [[another-rem]] {rel: inferred, via: bridge-rem}
+
+⚠️  WARNING: This will modify {M} Rem files
+
+Materialize these inferred links?
+```
 
 **Options**:
 ```xml
@@ -1040,7 +1102,23 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 ### Step 27: Display Summary to User
 
-Inform user that analytics and visualization files have been generated (knowledge-graph.html and analytics cache).
+**Present the auto-generated artifacts**:
+
+```
+📊 Learning Analytics Auto-Generated:
+
+📈 Interactive Dashboard:
+   → knowledge-graph.html
+
+   Open in browser to explore:
+   - Knowledge graph with {N} concepts
+   - Interactive node exploration
+   - Relationship visualization
+   - Domain-based clustering
+
+💡 Tip: Run /stats to see detailed analytics dashboard
+       Run /visualize to regenerate the knowledge graph
+```
 
 **Handle edge cases**:
 
@@ -1069,16 +1147,64 @@ Inform user that analytics and visualization files have been generated (knowledg
 
 ### Step 28: Completion Report
 
-Provide comprehensive summary covering:
-- Created Rems (file paths)
-- Updated Rems (if review session)
-- Saved conversation path
-- Graph maintenance status (backlinks, normalization, inferred links)
-- FSRS sync status
-- Memory MCP status
-- Analytics/visualization generation status
-- Knowledge base statistics
-- Performance metrics (execution time breakdown)
+**After all operations complete**, provide:
+
+**Phase 5: Track and report performance metrics** - `scripts/archival/workflow_orchestrator.py` handles timing for all steps.
+
+```
+✅ Conversation Archived & Graph Updated
+
+📝 Created Rems ({N} concepts):
+   [list file paths]
+
+{✏️  Updated Rems ({M} clarifications):
+   [list updated Rem IDs]
+   📊 Update Summary:
+     ✅ Updated: {success_count}
+     ⏭️  Skipped: {skipped_count}
+     ❌ Errors: {error_count}
+}
+
+💬 Saved Conversation:
+   {conversation file path}
+   {Session Type: review | learn | ask}
+
+🔗 Graph Maintenance:
+   ✅ Links normalized ({M} files updated)
+   ✅ Backlinks rebuilt ({total concepts} in graph)
+   {✅ Inferred links materialized ({K} links, {L} files) | ⏭  Skipped}
+
+📅 Review Schedule:
+   ✅ Rems synced to FSRS schedule
+   📊 {N} new Rems added (total: {total in schedule})
+   🗓️  First review: {tomorrow's date}
+
+🧠 Memory MCP:
+   {✅ Conversation + {N} concepts recorded | ⚠️ MCP unavailable (skipped)}
+   📊 Total memory entities: {count}
+
+📊 Analytics & Visualizations:
+   {✅ Analytics generated: .review/analytics-cache.json | ⚠️ Generation failed}
+   {✅ Knowledge graph created: knowledge-graph.html | ⚠️ Generation failed}
+   💡 Tip: Open knowledge-graph.html in browser to explore
+
+📊 Knowledge Base Status:
+   Total Rems: {count}
+   Total conversations: {count}
+   {For review sessions: Rems reviewed: {reviewed_count}}
+
+⏱️  Performance Metrics (Phase 5):
+   Total time: {total_time:.2f}s
+   - Session detection: {session_detection_time:.2f}s
+   - FSRS filtering: {fsrs_filter_time:.2f}s
+   - Concept extraction: {extraction_time:.2f}s
+   - Preview generation: {preview_time:.2f}s
+   - File creation: {file_creation_time:.2f}s
+   - Index updates: {index_update_time:.2f}s
+   - Stats & visualization: {stats_viz_time:.2f}s
+
+Next: /review (tomorrow to review new concepts!)
+```
 
 ## Conversation Discovery
 
