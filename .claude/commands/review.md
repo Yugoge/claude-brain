@@ -109,7 +109,28 @@ source venv/bin/activate && python scripts/review/run_review.py --days 14
 
 **Note**: Path resolution prefers `.md` and falls back to `.rem.md` when content still uses the legacy extension.
 
-### Step 2: Conduct Review Session (Main Agent Dialogue Loop)
+### Step 2: Read Rem File Content
+
+**⚠️ CRITICAL**: Always read Rem file before consulting review-master or asking questions.
+
+**For each Rem in session**:
+
+```
+Use Read tool: {rem_path_from_run_review_json}
+```
+
+**Parse and validate**:
+- Frontmatter: `rem_id`, `title`, `domain`, `created`
+- Content sections: Core Memory Points, Usage Scenario, Related Rems
+- Check for missing/incomplete content
+
+**Purpose**: Verify Rem content before generating questions. Ensures questions align with actual knowledge structure, not just JSON guidance assumptions.
+
+**Integration**: Pass Rem content to review-master for context-aware question generation (Step 3.1).
+
+---
+
+### Step 3: Conduct Review Session (Main Agent Dialogue Loop)
 
 **⚠️ CRITICAL**: This is the core FSRS review workflow. Poor questioning = inaccurate self-ratings = suboptimal scheduling.
 
@@ -117,7 +138,7 @@ source venv/bin/activate && python scripts/review/run_review.py --days 14
 
 **For each Rem in the session, follow this loop**:
 
-#### 2.1 Consult Review-Master for Guidance
+#### 3.1 Consult Review-Master for Guidance
 
 **Load linked context**:
 ```bash
@@ -198,7 +219,7 @@ Use Task tool:
 }
 ```
 
-#### 2.2 Present Question to User (First-Person Voice)
+#### 3.2 Present Question to User (First-Person Voice)
 
 **Parse JSON guidance and ask question naturally**:
 
@@ -216,11 +237,11 @@ Let's review: {rem_title}
 - ❌ Never third-person: "The review-master asks..."
 - ❌ No meta-commentary: "I'm consulting the agent..."
 
-#### 2.3 Listen to User Response
+#### 3.3 Listen to User Response
 
 Wait for user to answer the question.
 
-#### 2.4 Evaluate Response Quality
+#### 3.4 Evaluate Response Quality
 
 **Compare user response to quality_assessment_guide from JSON**:
 
@@ -234,7 +255,7 @@ Wait for user to answer the question.
 - Rating 2: Matches rating_2_indicators from JSON
 - Rating 1: Matches rating_1_indicators from JSON
 
-#### 2.5 Provide Feedback and Ask for Self-Rating
+#### 3.5 Provide Feedback and Ask for Self-Rating
 
 **If response is strong** (Quality 3-4):
 ```
@@ -261,7 +282,7 @@ How would you rate your recall? (1-4)
 
 **If user disputes your assessment**: Accept their rating (FSRS adapts to user feedback)
 
-#### 2.6 Update FSRS Schedule
+#### 3.6 Update FSRS Schedule
 
 **⚠️ CRITICAL**: Incorrect schedule updates = broken FSRS algorithm = review intervals too long/short.
 
@@ -292,23 +313,23 @@ FSRS Update:
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
-#### 2.7 Move to Next Rem
+#### 3.7 Move to Next Rem
 
 **Progress indicator**:
 ```
 [{N}/{total}] {N} reviewed, {remaining} remaining
 ```
 
-**Repeat steps 2.1-2.7 for all Rems in session.**
+**Repeat steps 3.1-3.7 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
-- Show partial session summary (see Step 3)
+- Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules
 
 ---
 
-### Step 3: Post-Session Summary
+### Step 4: Post-Session Summary
 
 After all Rems reviewed (or early exit):
 
