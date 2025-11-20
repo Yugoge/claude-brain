@@ -14,7 +14,7 @@ Start an interactive learning session with a material using Socratic dialogue.
 
 
 
-## Step 0: Initialize Workflow Checklist
+### Step 0: Initialize Workflow Checklist
 
 **Load todos from**: `scripts/todo/learn.py`
 

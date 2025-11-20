@@ -13,7 +13,7 @@ Retrospectively discover typed relations for existing Rems using domain tutor.
 
 
 
-## Step 0: Initialize Workflow Checklist
+### Step 0: Initialize Workflow Checklist
 
 **Load todos from**: `scripts/todo/discover-relations.py`
 
@@ -154,8 +154,10 @@ source venv/bin/activate && python scripts/archival/add_typed_relations.py \
 ### Step 7: Rebuild Backlinks
 
 ```bash
-source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py
+source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py --cleanup-backups 5
 ```
+
+**Cleanup policy**: Keeps 5 most recent backups, deletes older ones automatically
 
 ### Step 8: Normalize Links
 

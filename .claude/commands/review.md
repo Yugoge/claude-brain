@@ -14,7 +14,7 @@ Start an interactive review session using spaced repetition (FSRS algorithm).
 
 
 
-## Step 0: Initialize Workflow Checklist
+### Step 0: Initialize Workflow Checklist
 
 **Load todos from**: `scripts/todo/review.py`
 

@@ -109,7 +109,7 @@ source venv/bin/activate && python scripts/add-missing-rem-ids.py [--execute]
 **Benefits**: Better compatibility, clearer references
 
 ```bash
-source venv/bin/activate && python scripts/convert-wikilinks.py [--execute]
+source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --mode replace
 ```
 
 - Dry-run by default, use `--execute` to apply

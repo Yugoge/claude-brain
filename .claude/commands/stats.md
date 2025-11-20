@@ -57,14 +57,14 @@ Use output to create TodoWrite with all workflow steps.
 ## What This Command Does
 
 1. **Parses arguments** to determine domain filter and time period
-2. **Generates analytics** using `scripts/generate-analytics.py`
+2. **Generates analytics** using `scripts/analytics/generate-analytics.py`
 3. **Creates React dashboard** artifact with Chart.js visualizations
 4. **Displays interactive charts** with tooltips and click events
 
 ### Step 1: Generate Analytics
 
 ```bash
-source venv/bin/activate && python scripts/generate-analytics.py --domain <domain> --period <days>
+source venv/bin/activate && python scripts/analytics/generate-analytics.py --domain <domain> --period <days>
 ```
 
 ### Step 2: Load Analytics Cache

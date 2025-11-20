@@ -14,10 +14,22 @@ def get_todos():
         list[dict]: Todo items with content, activeForm, status
     """
     return [
-    {"content": "Step 1: Load Rems and Show Timeline", "activeForm": "Step 1: Load Rems and Show Timeline", "status": "pending"},
-    {"content": "Step 2: Conduct Review Session", "activeForm": "Step 2: Conduct Review Session", "status": "pending"},
-    {"content": "Step 3: Post-Session Summary", "activeForm": "Step 3: Post-Session Summary", "status": "pending"}
-    ]
+    {
+        "content": "Step 1: Load Rems and Show Timeline",
+        "activeForm": "Step 1: Load Rems and Show Timeline",
+        "status": "pending"
+    },
+    {
+        "content": "Step 2: Conduct Review Session (Main Agent Dialogue Loop)",
+        "activeForm": "Step 2: Conduct Review Session (Main Agent Dialogue Loop)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 3: Post-Session Summary",
+        "activeForm": "Step 3: Post-Session Summary",
+        "status": "pending"
+    }
+]
 
 
 if __name__ == "__main__":

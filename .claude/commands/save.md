@@ -15,7 +15,7 @@ Save learning sessions by extracting valuable Rems as ultra-minimal knowledge Re
 
 
 
-## Step 0: Initialize Workflow Checklist
+### Step 0: Initialize Workflow Checklist
 
 **Load todos from**: `scripts/todo/save.py`
 
@@ -125,7 +125,7 @@ Extract arguments from `$ARGUMENTS`:
 
 ---
 
-#### Step 3: Detect Session Type
+### Step 3: Detect Session Type
 
 **⚠️ CRITICAL**: Session type determines workflow (review vs learn). Wrong detection = incorrect Rem extraction.
 
@@ -206,7 +206,7 @@ Archival is recommended for conversations with:
 
 ---
 
-#### Step 5: Filter FSRS Test Dialogues (Review Sessions Only)
+### Step 5: Filter FSRS Test Dialogues (Review Sessions Only)
 
 **If session_type == "review"**, filter out FSRS test portions to avoid duplicate Rem creation:
 
@@ -350,7 +350,7 @@ This prevents:
 
 ---
 
-#### Step 8: Question Type Classification (Review Sessions Only)
+### Step 8: Question Type Classification (Review Sessions Only)
 
 **If session_type == "review"**, classify each user question:
 
@@ -473,7 +473,7 @@ If YOU used any helper scripts during Rem extraction, READ the results and trans
 
 ---
 
-#### Step 12: Learn/Ask Session Preview (Original Format)
+### Step 12: Learn/Ask Session Preview (Original Format)
 
 **For EACH concept**, generate 1-line preview:
 
@@ -486,7 +486,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 
 ---
 
-#### Step 13: Review Session Preview (Three-Section Format)
+### Step 13: Review Session Preview (Three-Section Format)
 
 **For review sessions**, show:
 - ✅ **Section 1**: Reviewed Rems (FSRS already saved)
@@ -629,7 +629,7 @@ source venv/bin/activate && python scripts/archival/pre_validator_light.py \
 
 ---
 
-#### 6.1: Create Knowledge Rems
+### Step 17: Create Knowledge Rems
 
 **⚠️ PREREQUISITE**: Step 6.2a must complete first (see above).
 
@@ -810,7 +810,7 @@ When creating the `## Related Rems` section in Rem files:
 - `## Related Rems` in body = bidirectional links to other knowledge concepts
 - Mixing these two creates broken navigation and defeats the knowledge graph
 
-#### 6.1a: Update Existing Rems (Review Sessions with Type A Clarifications)
+### Step 18: Update Existing Rems (Review Sessions with Type A Clarifications)
 
 **If session_type == "review" AND user approved Rem updates**, update existing Rem files:
 
@@ -878,13 +878,13 @@ For each Rem update, validate before applying:
 - `## Usage Scenario`
 - `## My Mistakes`
 
-#### 6.2: Create Conversation Archive
+### Step 19: Create Conversation Archive
 
 **Initial file created by `chat_archiver.py` in Step 0** with placeholder metadata.
 
 This step enriches the file with actual metadata from the conversation.
 
-#### 6.2a: Normalize and Rename Conversation File
+### Step 20: Normalize and Rename Conversation File
 
 **Run normalization script** to update front matter and rename file to standard format:
 
@@ -912,7 +912,7 @@ python3 scripts/archival/normalize_conversation.py "$archived_file" \
 archived_file=$(python3 scripts/archival/normalize_conversation.py ...)
 ```
 
-#### 6.3: Update Backlinks Index
+### Step 21: Update Backlinks Index
 
 **Run incremental update** (token-optimized):
 
@@ -925,7 +925,13 @@ source venv/bin/activate && python scripts/knowledge-graph/update-backlinks-incr
 - Updates bidirectional links for new concepts
 - 70% token reduction vs full rebuild
 
-**Fallback**: If incremental fails, run `source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py`
+**Fallback**: If incremental fails, run full rebuild with automatic cleanup:
+
+```bash
+source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py --cleanup-backups 5
+```
+
+**Cleanup policy**: Keeps 5 most recent backups, deletes older ones to prevent accumulation
 
 **🔒 SAFETY MECHANISMS (Automatic)**:
 
@@ -941,7 +947,7 @@ source venv/bin/activate && python scripts/knowledge-graph/update-backlinks-incr
    - Non-blocking warning (logs cycle paths)
    - Prevents graph navigation issues
 
-#### 6.4: Update Conversation Index
+### Step 22: Update Conversation Index
 
 ```bash
 source venv/bin/activate && python scripts/archival/update-conversation-index.py \
@@ -956,7 +962,7 @@ source venv/bin/activate && python scripts/archival/update-conversation-index.py
   --rems {rems_extracted_count}
 ```
 
-#### 6.5: Normalize Wikilinks
+### Step 23: Normalize Wikilinks
 
 **Run link normalization** (converts `[[id]]` to `[Title](path.md)`):
 
@@ -978,7 +984,7 @@ source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --
 ✅ Links normalized
 ```
 
-#### 6.6: Materialize Inferred Links (Optional)
+### Step 24: Materialize Inferred Links (Optional)
 
 **Preview two-hop inferences** (dry-run first):
 
@@ -1017,7 +1023,7 @@ source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-
 
 **If user skips or no inferences found**, continue to Step 6.7.
 
-#### 6.7: Sync Rems to Review Schedule (Auto)
+### Step 25: Sync Rems to Review Schedule (Auto)
 
 Automatically add newly created Rems to the review schedule using FSRS.
 
@@ -1043,7 +1049,7 @@ source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py -
   - 30-second timeout with retry logic
   - Protects FSRS data from corruption during parallel sync operations
 
-#### 6.8: Record to Memory MCP (Auto)
+### Step 26: Record to Memory MCP (Auto)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step builds persistent memory for future context-aware interactions.
 
@@ -1114,7 +1120,7 @@ mcp__memory-server__create_relations:
 
 ---
 
-### Step 17: Update Conversation Rem Links
+### Step 27: Update Conversation Rem Links
 
 **⚠️ CRITICAL**: This step completes bidirectional links between conversations and Rems. Skipping breaks navigation.
 
@@ -1133,7 +1139,7 @@ source venv/bin/activate && python scripts/archival/update-conversation-rems.py 
 
 ---
 
-### Step 18: Auto-generate Statistics & Visualizations
+### Step 28: Auto-generate Statistics & Visualizations
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step provides immediate feedback on learning progress and knowledge graph state.
 
@@ -1141,7 +1147,7 @@ Provide immediate feedback on learning progress without requiring user to manual
 
 This step is automatic and executes after all Rems are created and synced to FSRS.
 
-#### Step 19: Generate Learning Analytics
+### Step 29: Generate Learning Analytics
 
 Run the analytics generation script:
 
@@ -1163,7 +1169,7 @@ source venv/bin/activate && python scripts/analytics/generate-analytics.py --per
    Cache saved: .review/analytics-cache.json
 ```
 
-#### Step 20: Generate Interactive Visualizations
+### Step 30: Generate Interactive Visualizations
 
 **First, generate the knowledge graph data**:
 
@@ -1191,7 +1197,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
    Edges: {M} relationships
 ```
 
-#### Step 21: Display Summary to User
+### Step 31: Display Summary to User
 
 **Present the auto-generated artifacts**:
 
@@ -1236,7 +1242,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 **Note**: This step is automatic, non-blocking, and does not require user approval. Failures are logged but do not stop the archival process.
 
-### Step 22: Completion Report
+### Step 32: Completion Report
 
 **After all operations complete**, provide:
 
