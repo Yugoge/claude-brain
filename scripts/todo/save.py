@@ -2,7 +2,8 @@
 """
 Preloaded TodoList for save workflow.
 
-Auto-generated from workflow steps extraction.
+Auto-generated from .claude/commands/save.md by scripts/todo/generate_save_todos.py
+DO NOT EDIT MANUALLY - edit save.md and re-run generator script.
 """
 
 
@@ -15,6 +16,11 @@ def get_todos():
     """
     return [
     {
+        "content": "Step 0: Initialize Workflow Checklist",
+        "activeForm": "Step 0: Initialize Workflow Checklist",
+        "status": "pending"
+    },
+    {
         "content": "Step 1: Archive Conversation",
         "activeForm": "Step 1: Archive Conversation",
         "status": "pending"
@@ -25,153 +31,133 @@ def get_todos():
         "status": "pending"
     },
     {
-        "content": "Step 3: Detect Session Type",
-        "activeForm": "Step 3: Detect Session Type",
+        "content": "Step 3: Session Validation",
+        "activeForm": "Step 3: Session Validation",
         "status": "pending"
     },
     {
-        "content": "Step 4: Validate Conversation & Filter FSRS Tests",
-        "activeForm": "Step 4: Validate Conversation & Filter FSRS Tests",
+        "content": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
+        "activeForm": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
         "status": "pending"
     },
     {
-        "content": "Step 5: Filter FSRS Test Dialogues (Review Sessions Only)",
-        "activeForm": "Step 5: Filter FSRS Test Dialogues (Review Sessions Only)",
+        "content": "Step 5: Domain Classification & ISCED Path Determination",
+        "activeForm": "Step 5: Domain Classification & ISCED Path Determination",
         "status": "pending"
     },
     {
-        "content": "Step 6: Domain Classification & ISCED Path Determination",
-        "activeForm": "Step 6: Domain Classification & ISCED Path Determination",
+        "content": "Step 6: Extract Concepts",
+        "activeForm": "Step 6: Extract Concepts",
         "status": "pending"
     },
     {
-        "content": "Step 7: Extract Concepts",
-        "activeForm": "Step 7: Extract Concepts",
+        "content": "Step 7: Question Type Classification (Review Sessions Only)",
+        "activeForm": "Step 7: Question Type Classification (Review Sessions Only)",
         "status": "pending"
     },
     {
-        "content": "Step 8: Question Type Classification (Review Sessions Only)",
-        "activeForm": "Step 8: Question Type Classification (Review Sessions Only)",
+        "content": "Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
+        "activeForm": "Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
         "status": "pending"
     },
     {
-        "content": "Step 9: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
-        "activeForm": "Step 9: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
+        "content": "Step 9: Rem Extraction Transparency",
+        "activeForm": "Step 9: Rem Extraction Transparency",
         "status": "pending"
     },
     {
-        "content": "Step 10: Rem Extraction Transparency",
-        "activeForm": "Step 10: Rem Extraction Transparency",
+        "content": "Step 10: Generate Preview (Format depends on session type)",
+        "activeForm": "Step 10: Generate Preview (Format depends on session type)",
         "status": "pending"
     },
     {
-        "content": "Step 11: Generate Preview (Format depends on session type)",
-        "activeForm": "Step 11: Generate Preview (Format depends on session type)",
+        "content": "Step 11: Learn/Ask Session Preview (Original Format)",
+        "activeForm": "Step 11: Learn/Ask Session Preview (Original Format)",
         "status": "pending"
     },
     {
-        "content": "Step 12: Learn/Ask Session Preview (Original Format)",
-        "activeForm": "Step 12: Learn/Ask Session Preview (Original Format)",
+        "content": "Step 12: Review Session Preview (Three-Section Format)",
+        "activeForm": "Step 12: Review Session Preview (Three-Section Format)",
         "status": "pending"
     },
     {
-        "content": "Step 13: Review Session Preview (Three-Section Format)",
-        "activeForm": "Step 13: Review Session Preview (Three-Section Format)",
+        "content": "Step 13: User Confirmation",
+        "activeForm": "Step 13: User Confirmation",
         "status": "pending"
     },
     {
-        "content": "Step 14: User Confirmation",
-        "activeForm": "Step 14: User Confirmation",
+        "content": "Step 14: Pre-creation Validation",
+        "activeForm": "Step 14: Pre-creation Validation",
         "status": "pending"
     },
     {
-        "content": "Step 15: Pre-creation Validation",
-        "activeForm": "Step 15: Pre-creation Validation",
+        "content": "Step 15: Create Files",
+        "activeForm": "Step 15: Create Files",
         "status": "pending"
     },
     {
-        "content": "Step 16: Create Files",
-        "activeForm": "Step 16: Create Files",
+        "content": "Step 16: Create Knowledge Rems",
+        "activeForm": "Step 16: Create Knowledge Rems",
         "status": "pending"
     },
     {
-        "content": "Step 17: Create Knowledge Rems",
-        "activeForm": "Step 17: Create Knowledge Rems",
+        "content": "Step 17: Update Existing Rems (Review Sessions with Type A Clarifications)",
+        "activeForm": "Step 17: Update Existing Rems (Review Sessions with Type A Clarifications)",
         "status": "pending"
     },
     {
-        "content": "Step 18: Update Existing Rems (Review Sessions with Type A Clarifications)",
-        "activeForm": "Step 18: Update Existing Rems (Review Sessions with Type A Clarifications)",
+        "content": "Step 18: Create Conversation Archive",
+        "activeForm": "Step 18: Create Conversation Archive",
         "status": "pending"
     },
     {
-        "content": "Step 19: Create Conversation Archive",
-        "activeForm": "Step 19: Create Conversation Archive",
+        "content": "Step 19: Normalize and Rename Conversation File",
+        "activeForm": "Step 19: Normalize and Rename Conversation File",
         "status": "pending"
     },
     {
-        "content": "Step 20: Normalize and Rename Conversation File",
-        "activeForm": "Step 20: Normalize and Rename Conversation File",
+        "content": "Step 20: Update Knowledge Graph",
+        "activeForm": "Step 20: Update Knowledge Graph",
         "status": "pending"
     },
     {
-        "content": "Step 21: Update Backlinks Index",
-        "activeForm": "Step 21: Update Backlinks Index",
+        "content": "Step 21: Materialize Inferred Links (Optional)",
+        "activeForm": "Step 21: Materialize Inferred Links (Optional)",
         "status": "pending"
     },
     {
-        "content": "Step 22: Update Conversation Index",
-        "activeForm": "Step 22: Update Conversation Index",
+        "content": "Step 22: Sync Rems to Review Schedule (Auto)",
+        "activeForm": "Step 22: Sync Rems to Review Schedule (Auto)",
         "status": "pending"
     },
     {
-        "content": "Step 23: Normalize Wikilinks",
-        "activeForm": "Step 23: Normalize Wikilinks",
+        "content": "Step 23: Record to Memory MCP (Auto)",
+        "activeForm": "Step 23: Record to Memory MCP (Auto)",
         "status": "pending"
     },
     {
-        "content": "Step 24: Materialize Inferred Links (Optional)",
-        "activeForm": "Step 24: Materialize Inferred Links (Optional)",
+        "content": "Step 24: Update Conversation Rem Links",
+        "activeForm": "Step 24: Update Conversation Rem Links",
         "status": "pending"
     },
     {
-        "content": "Step 25: Sync Rems to Review Schedule (Auto)",
-        "activeForm": "Step 25: Sync Rems to Review Schedule (Auto)",
+        "content": "Step 25: Auto-generate Statistics & Visualizations",
+        "activeForm": "Step 25: Auto-generate Statistics & Visualizations",
         "status": "pending"
     },
     {
-        "content": "Step 26: Record to Memory MCP (Auto)",
-        "activeForm": "Step 26: Record to Memory MCP (Auto)",
+        "content": "Step 26: Generate Analytics & Visualizations",
+        "activeForm": "Step 26: Generate Analytics & Visualizations",
         "status": "pending"
     },
     {
-        "content": "Step 27: Update Conversation Rem Links",
-        "activeForm": "Step 27: Update Conversation Rem Links",
+        "content": "Step 27: Display Summary to User",
+        "activeForm": "Step 27: Display Summary to User",
         "status": "pending"
     },
     {
-        "content": "Step 28: Auto-generate Statistics & Visualizations",
-        "activeForm": "Step 28: Auto-generate Statistics & Visualizations",
-        "status": "pending"
-    },
-    {
-        "content": "Step 29: Generate Learning Analytics",
-        "activeForm": "Step 29: Generate Learning Analytics",
-        "status": "pending"
-    },
-    {
-        "content": "Step 30: Generate Interactive Visualizations",
-        "activeForm": "Step 30: Generate Interactive Visualizations",
-        "status": "pending"
-    },
-    {
-        "content": "Step 31: Display Summary to User",
-        "activeForm": "Step 31: Display Summary to User",
-        "status": "pending"
-    },
-    {
-        "content": "Step 32: Completion Report",
-        "activeForm": "Step 32: Completion Report",
+        "content": "Step 28: Completion Report",
+        "activeForm": "Step 28: Completion Report",
         "status": "pending"
     }
 ]

@@ -29,28 +29,56 @@ from pathlib import Path
 def resolve_content_path(domain: str, rem_id: str) -> str:
     """
     Resolve the actual path to a Rem file by searching recursively.
+    Handles files with numeric prefixes and subdomain insertion.
+    Examples:
+      rem_id: fx-pricing-shift-types
+      filename: 041-fx-derivatives-pricing-shift-types.md (subdomain inserted)
     Prefers .md extension, falls back to .rem.md for legacy files.
     """
     kb_root = Path("knowledge-base")
 
-    # Search recursively for the Rem file
-    for pattern in [f"**/*{rem_id}.md", f"**/{rem_id}.md"]:
+    # Extract potential parts for flexible matching
+    # rem_id may be missing subdomain that appears in filename
+    # Strategy: Search by substring after removing common delimiters
+    rem_id_parts = rem_id.replace('-', ' ').split()
+
+    # Pattern priority:
+    # 1. Exact match with optional numeric prefix: NNN-{rem_id}.md
+    # 2. Exact match without prefix: {rem_id}.md
+    # 3. Filename contains all words from rem_id (handles subdomain insertion)
+    patterns = [
+        f"**/*-{rem_id}.md",     # Match: 041-fx-pricing-shift-types.md
+        f"**/{rem_id}.md",        # Match: fx-pricing-shift-types.md
+        f"**/*{rem_id}*.md",      # Match: any file containing rem_id
+    ]
+
+    for pattern in patterns:
         matches = list(kb_root.glob(pattern))
         if matches:
-            # Prefer files that match the domain
-            for match in matches:
-                if domain in str(match):
-                    return str(match)
-            # Fall back to first match if domain doesn't match
+            # Prefer domain match, then shortest path
+            domain_matches = [m for m in matches if domain in str(m)]
+            if domain_matches:
+                return str(sorted(domain_matches, key=lambda x: len(str(x)))[0])
+            # Fall back to first match
             return str(matches[0])
 
-    # Legacy .rem.md extension
-    for pattern in [f"**/*{rem_id}.rem.md", f"**/{rem_id}.rem.md"]:
+    # Fallback: Fuzzy match by checking if filename contains all rem_id parts
+    # Example: rem_id "fx-pricing-shift-types" matches "041-fx-derivatives-pricing-shift-types.md"
+    all_md_files = list(kb_root.glob("**/*.md"))
+    for md_file in all_md_files:
+        filename_lower = md_file.stem.lower()
+        # Check if all rem_id parts appear in filename (in any order)
+        if all(part in filename_lower for part in rem_id_parts):
+            if domain in str(md_file):
+                return str(md_file)
+
+    # Legacy .rem.md extension (same logic)
+    for pattern in [f"**/*-{rem_id}.rem.md", f"**/{rem_id}.rem.md", f"**/*{rem_id}*.rem.md"]:
         matches = list(kb_root.glob(pattern))
         if matches:
-            for match in matches:
-                if domain in str(match):
-                    return str(match)
+            domain_matches = [m for m in matches if domain in str(m)]
+            if domain_matches:
+                return str(sorted(domain_matches, key=lambda x: len(str(x)))[0])
             return str(matches[0])
 
     # File not found - return expected path for error reporting
