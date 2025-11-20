@@ -375,9 +375,9 @@ Map clarification type to target Rem section:
 
 **Candidate Rems JSON Schema** (create before calling orchestrator):
 ```json
-[{"id": "rem-slug", "title": "Title", "core_points": ["p1", "p2", "p3"]}]
+[{"rem_id": "rem-slug", "title": "Title", "core_points": ["p1", "p2", "p3"]}]
 ```
-- Use `"id"` field (not `"rem_id"` or `"concept_id"`)
+- Use `"rem_id"` field (unified standard since 2025-11-07)
 - Main agent creates this JSON from extracted concepts
 
 **Execution Method**: Use orchestrator script:
@@ -595,21 +595,20 @@ source venv/bin/activate && python scripts/archival/preflight_checker.py \
 - `1` = Warnings (empty typed_relations) → Continue with warning
 - `2` = Critical (missing typed_relations field) → BLOCK, re-run Step 3.5
 
-**Stage 2: Comprehensive Validation**
+**Stage 2: Lightweight Pre-Creation Validation**
 
 ```bash
-source venv/bin/activate && python scripts/archival/pre_creation_validator.py \
-  --concepts-json enriched_rems.json \
-  --domain-path "$isced_detailed_path" \
-  --source-file "$archived_file"
+source venv/bin/activate && python scripts/archival/pre_validator_light.py \
+  --enriched-rems /tmp/enriched_rems_final.json \
+  --domain-path "$isced_detailed_path"
 ```
 
-**Validates**:
-1. Typed relations target existence
-2. Duplicate detection (Jaccard >60%)
-3. rem_id collision check
-4. Frontmatter schema
-5. ISCED path existence
+**Validates** (only what can be checked BEFORE file creation):
+1. rem_id uniqueness (no collisions)
+2. Typed relations target existence
+3. Duplicate detection (Jaccard >60%)
+
+**Does NOT validate**: subdomain, isced, created, source (added during Step 16.1)
 
 **Exit codes**: 0=Pass, 1=Warnings, 2=Critical errors
 

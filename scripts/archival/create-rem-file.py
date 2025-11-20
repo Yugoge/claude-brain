@@ -62,8 +62,8 @@ def format_related_rems(related_rems: list) -> str:
     lines = []
     for rem in related_rems:
         if isinstance(rem, dict):
-            # Format: {"id": "rem-id", "rel": "synonym"}
-            rem_id = rem.get('id', '')
+            # Format: {"rem_id": "rem-id", "rel": "synonym"} or legacy {"id": "rem-id", "rel": "synonym"}
+            rem_id = rem.get('rem_id') or rem.get('id', '')
             rel_type = rem.get('rel', 'related')
             lines.append(f"- [[{rem_id}]] {{rel: {rel_type}}}")
         elif isinstance(rem, str):

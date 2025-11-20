@@ -43,7 +43,7 @@ def extract_domain_concepts(backlinks_data, domain_path):
         domain_path: ISCED domain path (e.g., "0231-language-acquisition")
 
     Returns:
-        List of {"id": concept_id, "title": title} dicts
+        List of {"rem_id": concept_id, "title": title} dicts
     """
     concepts = []
     concepts_meta = backlinks_data.get('concepts', {})
@@ -54,12 +54,12 @@ def extract_domain_concepts(backlinks_data, domain_path):
         # Check if this concept belongs to the specified domain
         if domain_path in file_path:
             concepts.append({
-                'id': concept_id,
+                'rem_id': concept_id,
                 'title': meta.get('title', concept_id),
                 'file': file_path
             })
 
-    return sorted(concepts, key=lambda x: x['id'])
+    return sorted(concepts, key=lambda x: x['rem_id'])
 
 
 def main():
@@ -90,7 +90,7 @@ def main():
             # Compact format (for logging)
             print(f"Found {len(concepts)} concepts in {args.domain_path}:")
             for concept in concepts[:10]:  # Show first 10
-                print(f"  - {concept['id']}: {concept['title']}")
+                print(f"  - {concept['rem_id']}: {concept['title']}")
             if len(concepts) > 10:
                 print(f"  ... and {len(concepts) - 10} more")
 

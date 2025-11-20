@@ -97,7 +97,7 @@ def list_rems_in_domain(domain_path: str) -> list:
         List of dicts with rem metadata:
         [
             {
-                "id": "rem-id",
+                "rem_id": "rem-id",
                 "title": "Rem Title",
                 "file_path": "knowledge-base/.../file.md"
             },
@@ -132,7 +132,7 @@ def list_rems_in_domain(domain_path: str) -> list:
             title = extract_title_from_content(md_file)
 
         rems.append({
-            "id": rem_id,
+            "rem_id": rem_id,
             "title": title,
             "file_path": str(md_file.relative_to(ROOT))
         })

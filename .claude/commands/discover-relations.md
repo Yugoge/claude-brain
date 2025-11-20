@@ -76,7 +76,7 @@ source venv/bin/activate && python scripts/archival/list_rems_in_domain.py \
 - `--domain-path`: Domain path relative to knowledge-base (e.g., "0231-language-acquisition")
 - `--output`: Output JSON file path
 
-**Output Format**: JSON array with `[{"id": "rem-id", "title": "Title", "file_path": "path.md"}, ...]`
+**Output Format**: JSON array with `[{"rem_id": "rem-id", "title": "Title", "file_path": "path.md"}, ...]`
 
 ### Step 3: Load Existing Concepts
 

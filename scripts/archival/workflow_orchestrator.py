@@ -36,18 +36,18 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 
     Returns: JSON-formatted prompt string
     """
-    existing_list = [{"id": c["id"], "title": c["title"]} for c in existing_concepts]
+    existing_list = [{"rem_id": c["rem_id"], "title": c["title"]} for c in existing_concepts]
 
     candidates_summary = []
     for rem in candidate_rems:
         candidates_summary.append({
-            "concept_id": rem["id"],
+            "concept_id": rem["rem_id"],
             "title": rem["title"],
             "core_points": rem.get("core_points", [])
         })
 
     # Extract valid IDs for validation
-    valid_concept_ids = [c["id"] for c in existing_concepts]
+    valid_concept_ids = [c["rem_id"] for c in existing_concepts]
 
     prompt = f"""Domain expert: {domain}
 
@@ -59,7 +59,7 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 **Candidate Rems** ({len(candidates_summary)}):
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
 
-**Valid concept_id values** (use these EXACTLY in "to" fields of typed_relations):
+**Valid rem_id values** (use these EXACTLY in "to" fields of typed_relations):
 {json.dumps(valid_concept_ids, ensure_ascii=False)}
 
 **Task**: Return JSON with typed_relations for each Rem.
@@ -135,7 +135,7 @@ def merge_tutor_suggestions(candidate_rems, tutor_response_json):
     tutor_map = {s["concept_id"]: s for s in suggestions}
 
     for rem in candidate_rems:
-        rem_id = rem["id"]
+        rem_id = rem["rem_id"]
         enriched_rem = rem.copy()
 
         # Add typed_relations from tutor
@@ -180,7 +180,7 @@ def main():
             print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
 
             # Validate tutor response IDs
-            valid_ids = [c["id"] for c in existing_concepts]
+            valid_ids = [c["rem_id"] for c in existing_concepts]
             is_valid, errors = validate_tutor_response(tutor_json, valid_ids)
 
             if not is_valid:
