@@ -124,82 +124,58 @@ Extract arguments from `$ARGUMENTS`:
 
 ---
 
-### Step 3: Detect Session Type
+### Step 3: Session Validation
 
-**⚠️ CRITICAL**: Session type determines workflow (review vs learn). Wrong detection = incorrect Rem extraction.
+**⚠️ CRITICAL**: Comprehensive validation determines workflow viability. Failures here prevent incorrect extraction.
 
-**Use session detector script** for comprehensive detection:
+**Run two validation scripts in sequence**:
 
 ```bash
+# 1. Detect session type with confidence scoring
 source venv/bin/activate && python scripts/archival/session_detector.py
-```
 
-**Script provides**:
-- Multi-indicator confidence scoring (FSRS patterns, turn count, technical keywords, Rem references)
-- Confidence levels: HIGH (≥80%), MEDIUM (50-80%), LOW (<50%)
-- Warns user if confidence < 50%
-- Lazy loading optimization (only reads history file if exists)
-- Returns session type ('review' or 'learn' or 'ask') and list of reviewed Rems
-
-**Session detection returns**:
-- `session_type`: "review" or "learn" or "ask"
-- `rems_reviewed`: List of Rem IDs if review session
-- `confidence`: Float 0.0-1.0
-- `fsrs_progress_saved`: Boolean flag
-
-**Fallback** (if script fails): Simple history file check:
-```bash
-test -f .review/history.json && echo "review" || echo "learn"
-```
-
-### Step 4: Validate Conversation & Filter FSRS Tests
-
-**Use concept extractor for early exit** optimization:
-
-```bash
+# 2. Validate conversation meets archival criteria
 source venv/bin/activate && python scripts/archival/concept_extractor.py --check-only
 ```
 
-**Script performs 3 safety checks**:
+**Session Detector provides**:
+- Multi-indicator confidence scoring (FSRS patterns, turn count, technical keywords, Rem refs)
+- Confidence levels: HIGH (≥80%), MEDIUM (50-80%), LOW (<50%)
+- Warns if confidence < 50%
+- Lazy loading (only reads history file if exists)
+- Returns: `session_type` ("review"|"learn"|"ask"), `rems_reviewed` list, `confidence` float, `fsrs_progress_saved` bool
 
-1. **Token Limit Protection**:
-   - Maximum: 150k tokens (safe limit)
-   - Warns at 100k tokens (83% threshold)
-   - Exit code 2 if exceeded → Suggest splitting session
-
-2. **Duplicate Detection**:
-   - Scans existing knowledge base for similar Rem titles
-   - Jaccard similarity 60% threshold
-   - Non-blocking warning (user decides)
-
-3. **Conversation Length Check**:
-   - Minimum 3 substantial turns required
-   - Exit code 1 if <3 turns → Skip archival
+**Concept Extractor checks**:
+1. **Token Limit**: Max 150k (warns at 100k) → Exit code 2 if exceeded
+2. **Duplicates**: Jaccard 60% similarity → Non-blocking warning
+3. **Length**: Min 3 substantial turns → Exit code 1 if too short
 
 **Exit codes**:
-- `0` = Pass validation → Continue to Step 5
-- `1` = Too short → Skip with message
-- `2` = Token limit exceeded → Block with error
+- `0` = Pass → Continue to Step 4
+- `1` = Too short → Skip archival
+- `2` = Token limit → Block with error
 
-**If validation fails** (exit code 1 or 2), display:
+**If validation fails**:
 ```
 This conversation doesn't meet archival criteria:
-- Reason: [Too short | Token limit exceeded | No technical content]
+- Reason: [Too short | Token exceeded | Low confidence]
 
-Archival is recommended for conversations with:
+Archival requires:
 - 3+ substantial turns
-- Technical concepts or detailed explanations
 - Token count <150k (current: {N}k)
+- Session type confidence ≥50%
 ```
 
-**Fallback** (if script unavailable): Manual checks
-1. Count turns (≥3 required)
-2. Check `chats/index.json` for duplicates
-3. Verify technical content present
+**Fallback** (if scripts fail):
+```bash
+# Simple checks
+test -f .review/history.json && echo "review" || echo "learn"
+# Manual: Count turns, check chats/index.json, verify content
+```
 
 ---
 
-### Step 5: Filter FSRS Test Dialogues (Review Sessions Only)
+### Step 4: Filter FSRS Test Dialogues (Review Sessions Only)
 
 **If session_type == "review"**, filter out FSRS test portions to avoid duplicate Rem creation:
 
@@ -219,7 +195,7 @@ This prevents:
 - ❌ Extracting test questions as "new concepts"
 - ❌ Confusing FSRS feedback with learning content
 
-### Step 6: Domain Classification & ISCED Path Determination
+### Step 5: Domain Classification & ISCED Path Determination
 
 **⚠️ CRITICAL**: This step determines where Rems will be stored. Incorrect classification = wrong directory = broken knowledge graph.
 
@@ -313,7 +289,7 @@ This prevents:
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
 
-### Step 7: Extract Concepts
+### Step 6: Extract Concepts
 
 **Main agent extraction process**:
 
@@ -343,7 +319,7 @@ This prevents:
 
 ---
 
-### Step 8: Question Type Classification (Review Sessions Only)
+### Step 7: Question Type Classification (Review Sessions Only)
 
 **If session_type == "review"**, classify each user question:
 
@@ -360,7 +336,7 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 9: Enrich with Typed Relations via Domain Tutor (MANDATORY)
+### Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science] domains.
 
@@ -411,7 +387,7 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
 
 ---
 
-### Step 10: Rem Extraction Transparency
+### Step 9: Rem Extraction Transparency
 
 **After extracting and enriching Rems**, YOU (main agent) MUST present them in user-friendly format (no code):
 
@@ -458,7 +434,7 @@ If YOU used any helper scripts during Rem extraction, READ the results and trans
 
 **Why**: User is in a chat interface focused on their learning, not system internals. Extraction tools are implementation details, not user-facing content.
 
-### Step 11: Generate Preview (Format depends on session type)
+### Step 10: Generate Preview (Format depends on session type)
 
 **Two preview formats**:
 1. **Learn/Ask sessions**: Ultra-compact 1-line previews (original format)
@@ -466,7 +442,7 @@ If YOU used any helper scripts during Rem extraction, READ the results and trans
 
 ---
 
-### Step 12: Learn/Ask Session Preview (Original Format)
+### Step 11: Learn/Ask Session Preview (Original Format)
 
 **For EACH concept**, generate 1-line preview:
 
@@ -479,7 +455,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 
 ---
 
-### Step 13: Review Session Preview (Three-Section Format)
+### Step 12: Review Session Preview (Three-Section Format)
 
 **For review sessions**, show:
 - ✅ **Section 1**: Reviewed Rems (FSRS already saved)
@@ -542,7 +518,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 </options>
 ```
 
-### Step 14: User Confirmation
+### Step 13: User Confirmation
 
 Wait for explicit approval before creating files.
 
@@ -569,7 +545,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
 - Option 2 → Iterate, re-present
 - Option 3 → Abort gracefully
 
-### Step 15: Pre-creation Validation
+### Step 14: Pre-creation Validation
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
@@ -607,7 +583,7 @@ source venv/bin/activate && python scripts/archival/pre_validator_light.py \
 
 **If both stages pass** → Proceed to Step 6
 
-### Step 16: Create Files
+### Step 15: Create Files
 
 **ONLY after user approval**, create files in this order:
 
@@ -622,7 +598,7 @@ source venv/bin/activate && python scripts/archival/pre_validator_light.py \
 
 ---
 
-### Step 17: Create Knowledge Rems
+### Step 16: Create Knowledge Rems
 
 **⚠️ PREREQUISITE**: Step 20 must complete first (see above).
 
@@ -747,7 +723,7 @@ Where:
 
 **Handling Related Rems Section:**
 
-**IMPORTANT**: Always write Related Rems as **wikilinks** during creation (Step 17). They will be automatically converted to markdown links in Step 23 (Normalize Wikilinks).
+**IMPORTANT**: Always write Related Rems as **wikilinks** during creation (Step 17). They will be automatically converted to markdown links in Step 20 (Update Knowledge Graph).
 
 When creating the `## Related Rems` section in Rem files:
 
@@ -763,7 +739,7 @@ When creating the `## Related Rems` section in Rem files:
      - [[french-adjective-agreement]] {rel: prerequisite_of}
      - [[french-negation-ne-pas]] {rel: contrasts_with}
      ```
-   - After Step 23 normalize-links.py, becomes:
+   - After Step 20 normalize-links.py, becomes:
      ```markdown
      ## Related Rems
 
@@ -803,7 +779,7 @@ When creating the `## Related Rems` section in Rem files:
 - `## Related Rems` in body = bidirectional links to other knowledge concepts
 - Mixing these two creates broken navigation and defeats the knowledge graph
 
-### Step 18: Update Existing Rems (Review Sessions with Type A Clarifications)
+### Step 17: Update Existing Rems (Review Sessions with Type A Clarifications)
 
 **If session_type == "review" AND user approved Rem updates**, update existing Rem files:
 
@@ -871,13 +847,13 @@ For each Rem update, validate before applying:
 - `## Usage Scenario`
 - `## My Mistakes`
 
-### Step 19: Create Conversation Archive
+### Step 18: Create Conversation Archive
 
 **Initial file created by `chat_archiver.py` in Step 0** with placeholder metadata.
 
 This step enriches the file with actual metadata from the conversation.
 
-### Step 20: Normalize and Rename Conversation File
+### Step 19: Normalize and Rename Conversation File
 
 **Run normalization script** to update front matter and rename file to standard format:
 
@@ -905,79 +881,42 @@ python3 scripts/archival/normalize_conversation.py "$archived_file" \
 archived_file=$(python3 scripts/archival/normalize_conversation.py ...)
 ```
 
-### Step 21: Update Backlinks Index
+### Step 20: Update Knowledge Graph
 
-**Run incremental update** (token-optimized):
+**Run three graph maintenance operations sequentially**:
 
 ```bash
+# 1. Update backlinks (incremental, fallback to full rebuild)
 source venv/bin/activate && python scripts/knowledge-graph/update-backlinks-incremental.py rem-id-1 rem-id-2 ...
-```
 
-**Incremental update**:
-- Only processes new Rems (not entire knowledge base)
-- Updates bidirectional links for new concepts
-- 70% token reduction vs full rebuild
-
-**Fallback**: If incremental fails, run full rebuild with automatic cleanup:
-
-```bash
-source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py --cleanup-backups 5
-```
-
-**Cleanup policy**: Keeps 5 most recent backups, deletes older ones to prevent accumulation
-
-**🔒 SAFETY MECHANISMS (Automatic)**:
-
-1. **File Locking** (`utils/file_lock.py`):
-   - Prevents concurrent write conflicts to `backlinks.json`
-   - Uses POSIX fcntl locks (exclusive access)
-   - 60-second timeout with automatic cleanup
-   - Protects data integrity during parallel operations
-
-2. **Cycle Detection** (`rebuild-backlinks.py:detect_cycles()`):
-   - DFS-based circular reference detection
-   - Identifies cycles like A→B→C→A
-   - Non-blocking warning (logs cycle paths)
-   - Prevents graph navigation issues
-
-### Step 22: Update Conversation Index
-
-```bash
+# 2. Update conversation index
 source venv/bin/activate && python scripts/archival/update-conversation-index.py \
-  --id "{conversation-id}" \
-  --title "{Conversation Title}" \
-  --date "{YYYY-MM-DD}" \
-  --file "{relative/path/to/conversation.md}" \
-  --agent "{agent}" \
-  --domain "{domain}" \
-  --session-type "{session_type}" \
-  --turns {turn_count} \
-  --rems {rems_extracted_count}
-```
+  --id "{conversation-id}" --title "{Conversation Title}" --date "{YYYY-MM-DD}" \
+  --file "{relative/path/to/conversation.md}" --agent "{agent}" --domain "{domain}" \
+  --session-type "{session_type}" --turns {turn_count} --rems {rems_extracted_count}
 
-### Step 23: Normalize Wikilinks
-
-**Run link normalization** (converts `[[id]]` to `[Title](path.md)`):
-
-```bash
+# 3. Normalize wikilinks to markdown links
 source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --mode replace --verbose
 ```
 
-**What it does**:
-- Converts wikilinks in newly created Rems to clickable markdown links
-- Preserves typed relation suffixes: `[[id]] {rel: synonym}` → `[Title](path.md) {rel: synonym}`
-- Idempotent operation (safe to run multiple times)
+**Backlinks update** (70% token reduction vs full rebuild):
+- Incremental: Only processes new Rems
+- Fallback: Full rebuild if incremental fails (`rebuild-backlinks.py --cleanup-backups 5`)
+- Safety: File locking (60s timeout), cycle detection (A→B→C→A warnings)
 
-**Output**:
+**Wikilinks normalization**:
+- Converts `[[id]]` → `[Title](path.md)`
+- Preserves typed relations: `{rel: synonym}` suffixes intact
+- Idempotent (safe to run multiple times)
+
+**Expected output**:
 ```
-🔗 Normalizing wikilinks...
-   Updated: knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/multi-asset-portfolio.md
-   Updated: knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/us-exceptionalism.md
-   Processed {N} files, updated {M}
-✅ Links normalized
+✅ Backlinks updated (1 new concept)
+✅ Conversation index updated
+🔗 Links normalized (Processed {N} files, updated {M})
 ```
 
-### Step 24: Materialize Inferred Links (Optional)
+### Step 21: Materialize Inferred Links (Optional)
 
 **Preview two-hop inferences** (dry-run first):
 
@@ -1014,9 +953,9 @@ Materialize these inferred links?
 source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --verbose
 ```
 
-**If user skips or no inferences found**, continue to Step 25.
+**If user skips or no inferences found**, continue to Step 22.
 
-### Step 25: Sync Rems to Review Schedule (Auto)
+### Step 22: Sync Rems to Review Schedule (Auto)
 
 Automatically add newly created Rems to the review schedule using FSRS.
 
@@ -1042,7 +981,7 @@ source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py -
   - 30-second timeout with retry logic
   - Protects FSRS data from corruption during parallel sync operations
 
-### Step 26: Record to Memory MCP (Auto)
+### Step 23: Record to Memory MCP (Auto)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step builds persistent memory for future context-aware interactions.
 
@@ -1113,7 +1052,7 @@ mcp__memory-server__create_relations:
 
 ---
 
-### Step 27: Update Conversation Rem Links
+### Step 24: Update Conversation Rem Links
 
 **⚠️ CRITICAL**: This step completes bidirectional links between conversations and Rems. Skipping breaks navigation.
 
@@ -1132,7 +1071,7 @@ source venv/bin/activate && python scripts/archival/update-conversation-rems.py 
 
 ---
 
-### Step 28: Auto-generate Statistics & Visualizations
+### Step 25: Auto-generate Statistics & Visualizations
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step provides immediate feedback on learning progress and knowledge graph state.
 
@@ -1140,57 +1079,34 @@ Provide immediate feedback on learning progress without requiring user to manual
 
 This step is automatic and executes after all Rems are created and synced to FSRS.
 
-### Step 29: Generate Learning Analytics
+### Step 26: Generate Analytics & Visualizations
 
-Run the analytics generation script:
+**Run analytics and visualization generation in sequence**:
 
 ```bash
+# 1. Generate learning analytics
 source venv/bin/activate && python scripts/analytics/generate-analytics.py --period 30
-```
 
-**What this does**:
-- Generates comprehensive learning analytics from FSRS review data
-- Creates `.review/analytics-cache.json` with metrics
-- Calculates retention curves, learning velocity, mastery levels
-- Analyzes review adherence and time distribution
-
-**Expected output**:
-```
-📊 Analytics generated successfully
-   Period: Last 30 days
-   Concepts analyzed: {N}
-   Cache saved: .review/analytics-cache.json
-```
-
-### Step 30: Generate Interactive Visualizations
-
-**First, generate the knowledge graph data**:
-
-```bash
+# 2. Generate knowledge graph data
 source venv/bin/activate && python scripts/knowledge-graph/generate-graph-data.py --force
-```
 
-**Then, create the visualization HTML**:
-
-```bash
+# 3. Create interactive visualization HTML
 source venv/bin/activate && python scripts/knowledge-graph/generate-visualization-html.py
 ```
 
 **What this does**:
-- Creates interactive D3.js force-directed graph
-- Generates `knowledge-graph.html` in project root
-- Shows all Rems and their relationships
-- Enables interactive exploration (click nodes, search, filter)
+- **Analytics**: Generates FSRS metrics (retention curves, learning velocity, mastery levels, review adherence) → `.review/analytics-cache.json`
+- **Graph data**: Processes knowledge base to extract nodes and relationships
+- **Visualization**: Creates interactive D3.js force-directed graph → `knowledge-graph.html`
 
 **Expected output**:
 ```
-📈 Knowledge graph visualization created
+📊 Analytics generated (Period: Last 30 days, Concepts: {N})
+📈 Knowledge graph created (Nodes: {N}, Edges: {M})
    File: knowledge-graph.html
-   Nodes: {N} concepts
-   Edges: {M} relationships
 ```
 
-### Step 31: Display Summary to User
+### Step 27: Display Summary to User
 
 **Present the auto-generated artifacts**:
 
@@ -1235,7 +1151,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 **Note**: This step is automatic, non-blocking, and does not require user approval. Failures are logged but do not stop the archival process.
 
-### Step 32: Completion Report
+### Step 28: Completion Report
 
 **After all operations complete**, provide:
 
@@ -1342,7 +1258,7 @@ If user provides topic name:
 - Update chats/index.json with metadata aggregates
 - Preview inferred links before materializing (dry-run first)
 - Allow user to skip inferred link materialization
-- Auto-sync new Rems to FSRS review schedule (Step 25)
+- Auto-sync new Rems to FSRS review schedule (Step 22)
 - Validate conversation meets archival criteria
 - Use kebab-case for file names (remove special characters)
 - Respect user's explicit instructions about what to extract
@@ -1370,19 +1286,18 @@ If user provides topic name:
 
 **Target**: <4,000 tokens per archival (with full graph maintenance)
 
-**Enhanced Breakdown**:
+**Enhanced Breakdown** (after P1 optimization - 28 steps):
 - Concept extraction: ~800 tokens (streamlined prompts)
 - Preview generation (7 Rems × 20 tokens): ~140 tokens (ultra-compact)
 - User approval workflow: ~100 tokens (concise format)
 - Rem file creation (7 Rems × 100 tokens): ~700 tokens (ultra-minimal template)
 - Conversation archive: ~800 tokens (compressed format)
-- Index updates: ~300 tokens (incremental backlinks + direct edit)
-- Link normalization: ~200 tokens (script execution + output)
+- Graph updates (merged): ~250 tokens (backlinks + index + normalize combined)
 - Inferred link materialization (optional): ~400 tokens (preview + confirmation)
 - FSRS schedule sync: ~150 tokens (auto-sync new Rems)
-- Stats & visualization generation: ~250 tokens (auto-generate analytics + graph)
+- Analytics & visualizations (merged): ~200 tokens (combined generation)
 - Enhanced completion report: ~300 tokens (graph + review + analytics status)
-- **Total**: ~4,140 tokens ✅ (3.5% over 4,000 target, acceptable for automation value)
+- **Total**: ~3,840 tokens ✅ (4% under 4,000 target, 7% reduction from 4,140)
 
 **Optimization techniques applied**:
 1. Streamlined extraction prompts (imperatives, bullet points, no filler)
@@ -1392,11 +1307,12 @@ If user provides topic name:
 5. Direct JSON manipulation (Edit tool vs read-modify-write)
 6. Idempotent graph operations (safe to run multiple times)
 7. Optional materialization (user can skip to save tokens)
+8. **Step consolidation (P1)**: Merged related operations (32→28 steps, ~300 token savings)
 
 **Comparison with separate commands**:
 - OLD: `/archive-conversation` (2,840) + `/learn-finalize` (500-800) = 3,340-3,640 tokens
-- NEW: Enhanced `/save` = 3,640 tokens (unified workflow)
-- Benefit: Same token cost, simpler UX (one command vs two)
+- NEW: Enhanced `/save` (after P1) = 3,840 tokens (unified workflow with full automation)
+- Benefit: Slightly higher token cost (+200-500), but simpler UX + auto-stats + auto-viz
 
 ## Success Criteria
 
@@ -1411,7 +1327,7 @@ A successful archival with full graph maintenance:
 - Inferred links previewed and optionally materialized
 - Stats and visualizations auto-generated (no manual intervention)
 - Comprehensive completion report with graph stats and analytics
-- Token consumption ~4,140 (typical with all features including automation)
+- Token consumption ~3,840 (typical with all features including automation, after P1 optimization)
 
 Edge cases handled:
 - No conversation found → Helpful message
