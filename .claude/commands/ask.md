@@ -306,7 +306,7 @@ Use Task tool with:
   "
 ```
 
-Receive new guidance → Validate (Step 2.5 logic) → Internalize → Respond naturally
+Receive new guidance → Validate (Step 2 logic) → Internalize → Respond naturally
 
 **Re-consultation Decision Framework**:
 

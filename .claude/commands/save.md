@@ -68,7 +68,6 @@ This unified command:
 
 ## Implementation
 
-**⚠️ Note on Step Numbering**: This command uses decimal numbering (e.g., Step 2.5, 3.5) for steps that were added after initial design. This preserves backward compatibility with existing references while maintaining logical flow.
 
 ### Step 1: Archive Conversation
 
@@ -91,7 +90,7 @@ archived_file=$(python3 scripts/services/chat_archiver.py --no-include-subagents
    - Example: `# Title` in content → `## Title` (since role labels are `### User`)
 4. Optionally filters out subagent messages if `--no-include-subagents` is used
 
-Store `archived_file` for Step 6.1 (Rem source) and Step 7 (conversation rems_extracted update).
+Store `archived_file` for Step 17 (Rem source) and Step 7 (conversation rems_extracted update).
 
 **IMPORTANT**: The archived file contains placeholder metadata that MUST be enriched from active context:
 - `id`: Generic `conversation-{date}` → Needs meaningful topic-based ID
@@ -99,7 +98,7 @@ Store `archived_file` for Step 6.1 (Rem source) and Step 7 (conversation rems_ex
 - `domain`: Generic "general" → Needs actual domain classification
 - `summary`: Placeholder text → Needs real summary from conversation
 
-These will be updated in Step 6.2 using information from the active conversation context.
+These will be updated in Step 20 using information from the active conversation context.
 
 ---
 
@@ -306,7 +305,7 @@ This prevents:
    - `$domain` = domain name (e.g., "finance")
    - `$subdomain` = subdomain (e.g., "equity-derivatives")
    - `$isced_path` = full ISCED code (e.g., "04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance")
-   - `$isced_detailed_path` = directory path for Step 6.1
+   - `$isced_detailed_path` = directory path for Step 17
 
 **Fallback strategy**:
 - If agent unavailable → Infer from conversation keywords (finance terms → 0412, code terms → 0611, etc.)
@@ -315,8 +314,8 @@ This prevents:
 
 **Output stored for**:
 - Step 3: Extract Concepts (determine subdomain)
-- Step 3.5: Enrich with Typed Relations (load existing concepts from domain)
-- Step 6.1: Create Knowledge Rems (determine file paths)
+- Step 9: Enrich with Typed Relations (load existing concepts from domain)
+- Step 17: Create Knowledge Rems (determine file paths)
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
 
@@ -343,8 +342,8 @@ This prevents:
 - ❌ Hallucinations (only THIS conversation)
 - ❌ User didn't respond or practice
 
-**ISCED Path Usage** (from Step 2.5):
-- Use classification result from Step 2.5 to determine Rem storage location
+**ISCED Path Usage** (from Step 6):
+- Use classification result from Step 6 to determine Rem storage location
 - Path format: `knowledge-base/{broad-code-name}/{narrow-code-name}/{detailed-code-name}/`
 - Example: ISCED 0412 → `knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
 
@@ -572,7 +571,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
 ```
 
 **Handle**:
-- Option 1 → Step 5.5 (Pre-creation Validation)
+- Option 1 → Step 15 (Pre-creation Validation)
 - Option 2 → Iterate, re-present
 - Option 3 → Abort gracefully
 
@@ -582,7 +581,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 **ONLY after user approval**, run two-stage validation:
 
-**Stage 1: Step 3.5 Execution Check** (Mandatory for programming|language|finance|science)
+**Stage 1: Step 9 Execution Check** (Mandatory for programming|language|finance|science)
 
 ```bash
 source venv/bin/activate && python scripts/archival/preflight_checker.py \
@@ -593,7 +592,7 @@ source venv/bin/activate && python scripts/archival/preflight_checker.py \
 **Exit codes**:
 - `0` = Pass → Continue to Stage 2
 - `1` = Warnings (empty typed_relations) → Continue with warning
-- `2` = Critical (missing typed_relations field) → BLOCK, re-run Step 3.5
+- `2` = Critical (missing typed_relations field) → BLOCK, re-run Step 9
 
 **Stage 2: Lightweight Pre-Creation Validation**
 
@@ -608,7 +607,7 @@ source venv/bin/activate && python scripts/archival/pre_validator_light.py \
 2. Typed relations target existence
 3. Duplicate detection (Jaccard >60%)
 
-**Does NOT validate**: subdomain, isced, created, source (added during Step 16.1)
+**Does NOT validate**: subdomain, isced, created, source (added during Step 17)
 
 **Exit codes**: 0=Pass, 1=Warnings, 2=Critical errors
 
@@ -618,20 +617,20 @@ source venv/bin/activate && python scripts/archival/pre_validator_light.py \
 
 **ONLY after user approval**, create files in this order:
 
-**⚠️ CRITICAL ORDERING**: You MUST execute Step 6.2a (Rename Conversation) BEFORE Step 6.1 (Create Rems).
+**⚠️ CRITICAL ORDERING**: You MUST execute Step 20 (Rename Conversation) BEFORE Step 17 (Create Rems).
 
 **Why**: Rem files need the FINAL conversation filename in their `source` field. If you create Rems before renaming, the source will point to the temporary filename.
 
 **Correct execution order**:
-1. **First**: Run Step 6.2a (normalize and rename conversation) → get `$renamed_conversation_file`
-2. **Then**: Run Step 6.1 (create Rems using `$renamed_conversation_file` as source)
+1. **First**: Run Step 20 (normalize and rename conversation) → get `$renamed_conversation_file`
+2. **Then**: Run Step 17 (create Rems using `$renamed_conversation_file` as source)
 3. Continue with remaining steps (6.3, 6.4, 6.5, ...)
 
 ---
 
 ### Step 17: Create Knowledge Rems
 
-**⚠️ PREREQUISITE**: Step 6.2a must complete first (see above).
+**⚠️ PREREQUISITE**: Step 20 must complete first (see above).
 
 **Use `create-rem-file.py` script** to generate standardized Rem files with all required sections.
 
@@ -667,7 +666,7 @@ Where:
 2. Format: `f"{number:03d}-{subdomain}-{slugified_title}.md"`
 3. Example: If equity-derivatives has files 001-019, next is `020-equity-derivatives-{rem}.md`
 
-Where `{isced_path}` is determined from Step 2.5 classification:
+Where `{isced_path}` is determined from Step 6 classification:
 - Example: `04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
 
 **Script automatically adds**:
@@ -678,7 +677,7 @@ Where `{isced_path}` is determined from Step 2.5 classification:
 
 **Build complete Rem from tutor suggestions + main agent supplements**:
 
-If Rem was enriched by tutor (Step 3.5), use tutor's enhanced fields:
+If Rem was enriched by tutor (Step 9), use tutor's enhanced fields:
 - `title`: Use tutor's academic title
 - `core_points`: Parse tutor's `core_content` (already formatted as bullet points)
 - `usage_scenario`: Use tutor's `usage_scenario_suggestion`
@@ -724,7 +723,7 @@ Main agent supplements missing fields:
 - Use ISCED code field instead of legacy domain field
 - 3 core points maximum (not 3-5)
 - Include: title, core points, usage scenario, mistakes, related Rems
-- Use tutor-enriched fields when available (from Step 3.5):
+- Use tutor-enriched fields when available (from Step 9):
   - `title` from tutor's academic title
   - `core_points` from tutor's `core_content`
   - `usage_scenario` from tutor's `usage_scenario_suggestion`
@@ -754,7 +753,7 @@ Where:
 
 **Handling Related Rems Section:**
 
-**IMPORTANT**: Always write Related Rems as **wikilinks** during creation (Step 6.1). They will be automatically converted to markdown links in Step 6.5 (Normalize Wikilinks).
+**IMPORTANT**: Always write Related Rems as **wikilinks** during creation (Step 17). They will be automatically converted to markdown links in Step 23 (Normalize Wikilinks).
 
 When creating the `## Related Rems` section in Rem files:
 
@@ -770,7 +769,7 @@ When creating the `## Related Rems` section in Rem files:
      - [[french-adjective-agreement]] {rel: prerequisite_of}
      - [[french-negation-ne-pas]] {rel: contrasts_with}
      ```
-   - After Step 6.5 normalize-links.py, becomes:
+   - After Step 23 normalize-links.py, becomes:
      ```markdown
      ## Related Rems
 
@@ -1021,7 +1020,7 @@ Materialize these inferred links?
 source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --verbose
 ```
 
-**If user skips or no inferences found**, continue to Step 6.7.
+**If user skips or no inferences found**, continue to Step 25.
 
 ### Step 25: Sync Rems to Review Schedule (Auto)
 
@@ -1349,7 +1348,7 @@ If user provides topic name:
 - Update chats/index.json with metadata aggregates
 - Preview inferred links before materializing (dry-run first)
 - Allow user to skip inferred link materialization
-- Auto-sync new Rems to FSRS review schedule (Step 6.7)
+- Auto-sync new Rems to FSRS review schedule (Step 25)
 - Validate conversation meets archival criteria
 - Use kebab-case for file names (remove special characters)
 - Respect user's explicit instructions about what to extract
