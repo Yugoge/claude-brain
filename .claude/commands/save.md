@@ -462,61 +462,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 - 💡 **Section 2**: New Concepts (from Type B/C/D questions)
 - ⚙️ **Section 3**: Rem Updates (from Type A clarifications) - **[MVP: Display only, defer update implementation]**
 
-**Phase 5 Optimization: Token-efficient preview formatting** - Use `scripts/archival/preview_generator.py` to generate compact previews.
-
-**Script generates**:
-- Learn/ask format: 1-line previews (~20 tokens each)
-- Review format: Three-section preview (reviewed + new + updates)
-- Token target: ~600 tokens total (33% reduction vs verbose format)
-
-**Format**:
-```
-📊 Review Session Analysis
-
-✅ Reviewed Rems (FSRS Updated): {N}
-  1. [[{rem-id-1}]] - Rating: {rating} ({label})
-  2. [[{rem-id-2}]] - Rating: {rating} ({label})
-  ...
-
-💡 New Concepts Discovered: {M}
-
-1. **{Concept Title}** (Type {B|C|D}: {Extension|Comparison|Application})
-   Source: Turn {N} - "{user_question}"
-   Core points:
-   - {Point 1}
-   - {Point 2}
-   - {Point 3}
-   File: knowledge-base/{domain}/concepts/{slug}.md
-   Tokens: ~{N}
-
-2. **{Concept Title 2}** ...
-
-⚙️ Rem Updates (Clarifications): {K}
-
-  1. **[[{rem-id}]]** - {clarification_type} clarification
-     Source: Turn {N} - "{user_question}"
-     Target section: {target_section}
-
-     Diff preview:
-     OLD: "{old_content_snippet}"
-     NEW: "{old_content_snippet} {clarification_text}"
-
-     File: knowledge-base/{domain}/concepts/{rem-id}.md
-
-📊 Summary:
-  - Reviewed: {N} Rems (FSRS progress saved)
-  - Create: {M} new Rems (Type B/C/D)
-  - Update: {K} existing Rems (Type A clarifications)
-  - Archive: 1 conversation file
-
-<options>
-  <option>Approve All (Create {M} + Update {K})</option>
-  <option>Create Only ( - Skip Updates)</option>
-  <option>Update Only ( - Skip New)</option>
-  <option>Modify</option>
-  <option>Cancel</option>
-</options>
-```
+Use `scripts/archival/preview_generator.py` to generate structured three-section preview showing reviewed Rems, new concepts, and proposed updates.
 
 ### Step 13: User Confirmation
 
@@ -924,21 +870,7 @@ source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --
 source venv/bin/activate && python scripts/knowledge-graph/materialize-inferred-links.py --dry-run --verbose
 ```
 
-**If inferences found**, present preview to user:
-
-```
-🧠 Found {N} potential inferred links:
-
-📝 rem-1.md
-  + [[related-rem]] {rel: inferred, via: intermediate-rem}
-
-📝 rem-2.md
-  + [[another-rem]] {rel: inferred, via: bridge-rem}
-
-⚠️  WARNING: This will modify {M} Rem files
-
-Materialize these inferred links?
-```
+**If inferences found**, present count and ask user to approve materialization.
 
 **Options**:
 ```xml
@@ -1108,23 +1040,7 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 ### Step 27: Display Summary to User
 
-**Present the auto-generated artifacts**:
-
-```
-📊 Learning Analytics Auto-Generated:
-
-📈 Interactive Dashboard:
-   → knowledge-graph.html
-
-   Open in browser to explore:
-   - Knowledge graph with {N} concepts
-   - Interactive node exploration
-   - Relationship visualization
-   - Domain-based clustering
-
-💡 Tip: Run /stats to see detailed analytics dashboard
-       Run /visualize to regenerate the knowledge graph
-```
+Inform user that analytics and visualization files have been generated (knowledge-graph.html and analytics cache).
 
 **Handle edge cases**:
 
@@ -1153,65 +1069,16 @@ source venv/bin/activate && python scripts/knowledge-graph/generate-visualizatio
 
 ### Step 28: Completion Report
 
-**After all operations complete**, provide:
-
-**Phase 5: Track and report performance metrics** - `scripts/archival/workflow_orchestrator.py` handles timing for all steps.
-
-```
-✅ Conversation Archived & Graph Updated
-
-📝 Created Rems ({N} concepts):
-   [list file paths]
-
-{✏️  Updated Rems ({M} clarifications):
-   [list updated Rem IDs]
-   📊 Update Summary:
-     ✅ Updated: {success_count}
-     ⏭️  Skipped: {skipped_count}
-     ❌ Errors: {error_count}
-}
-
-💬 Saved Conversation:
-   {conversation file path}
-   {Session Type: review | learn | ask}
-
-🔗 Graph Maintenance:
-   ✅ Links normalized ({M} files updated)
-   ✅ Backlinks rebuilt ({total concepts} in graph)
-   {✅ Inferred links materialized ({K} links, {L} files) | ⏭  Skipped}
-
-📅 Review Schedule:
-   ✅ Rems synced to FSRS schedule
-   📊 {N} new Rems added (total: {total in schedule})
-   🗓️  First review: {tomorrow's date}
-
-🧠 Memory MCP:
-   {✅ Conversation + {N} concepts recorded | ⚠️ MCP unavailable (skipped)}
-   📊 Total memory entities: {count}
-
-📊 Analytics & Visualizations:
-   {✅ Analytics generated: .review/analytics-cache.json | ⚠️ Generation failed}
-   {✅ Knowledge graph created: knowledge-graph.html | ⚠️ Generation failed}
-   💡 Tip: Open knowledge-graph.html in browser to explore
-
-📊 Knowledge Base Status:
-   Total Rems: {count}
-   Total conversations: {count}
-   {For review sessions: Rems reviewed: {reviewed_count}}
-
-⏱️  Performance Metrics (Phase 5):
-   Total time: {total_time:.2f}s
-   - Session detection: {session_detection_time:.2f}s
-   - FSRS filtering: {fsrs_filter_time:.2f}s
-   - Concept extraction: {extraction_time:.2f}s
-   - Preview generation: {preview_time:.2f}s
-   - File creation: {file_creation_time:.2f}s
-   - Index updates: {index_update_time:.2f}s
-   - Stats & visualization: {stats_viz_time:.2f}s
-   Estimated tokens: ~{estimated_tokens} (target: <4,000)
-
-Next: /review (tomorrow to review new concepts!)
-```
+Provide comprehensive summary covering:
+- Created Rems (file paths)
+- Updated Rems (if review session)
+- Saved conversation path
+- Graph maintenance status (backlinks, normalization, inferred links)
+- FSRS sync status
+- Memory MCP status
+- Analytics/visualization generation status
+- Knowledge base statistics
+- Performance metrics (execution time breakdown)
 
 ## Conversation Discovery
 
@@ -1282,38 +1149,6 @@ If user provides topic name:
 - Archive trivial conversations (<3 turns)
 - Archive already-archived conversations (check index)
 
-## Token Efficiency
-
-**Target**: <4,000 tokens per archival (with full graph maintenance)
-
-**Enhanced Breakdown** (after P1 optimization - 28 steps):
-- Concept extraction: ~800 tokens (streamlined prompts)
-- Preview generation (7 Rems × 20 tokens): ~140 tokens (ultra-compact)
-- User approval workflow: ~100 tokens (concise format)
-- Rem file creation (7 Rems × 100 tokens): ~700 tokens (ultra-minimal template)
-- Conversation archive: ~800 tokens (compressed format)
-- Graph updates (merged): ~250 tokens (backlinks + index + normalize combined)
-- Inferred link materialization (optional): ~400 tokens (preview + confirmation)
-- FSRS schedule sync: ~150 tokens (auto-sync new Rems)
-- Analytics & visualizations (merged): ~200 tokens (combined generation)
-- Enhanced completion report: ~300 tokens (graph + review + analytics status)
-- **Total**: ~3,840 tokens ✅ (4% under 4,000 target, 7% reduction from 4,140)
-
-**Optimization techniques applied**:
-1. Streamlined extraction prompts (imperatives, bullet points, no filler)
-2. Ultra-compact preview format (1-line summaries)
-3. Ultra-minimal Rem template (100-120 tokens vs 150-200)
-4. Incremental backlinks update (only new Rems)
-5. Direct JSON manipulation (Edit tool vs read-modify-write)
-6. Idempotent graph operations (safe to run multiple times)
-7. Optional materialization (user can skip to save tokens)
-8. **Step consolidation (P1)**: Merged related operations (32→28 steps, ~300 token savings)
-
-**Comparison with separate commands**:
-- OLD: `/archive-conversation` (2,840) + `/learn-finalize` (500-800) = 3,340-3,640 tokens
-- NEW: Enhanced `/save` (after P1) = 3,840 tokens (unified workflow with full automation)
-- Benefit: Slightly higher token cost (+200-500), but simpler UX + auto-stats + auto-viz
-
 ## Success Criteria
 
 A successful archival with full graph maintenance:
@@ -1327,7 +1162,6 @@ A successful archival with full graph maintenance:
 - Inferred links previewed and optionally materialized
 - Stats and visualizations auto-generated (no manual intervention)
 - Comprehensive completion report with graph stats and analytics
-- Token consumption ~3,840 (typical with all features including automation, after P1 optimization)
 
 Edge cases handled:
 - No conversation found → Helpful message
@@ -1350,13 +1184,11 @@ Edge cases handled:
 - Provides full graph maintenance in one unified workflow
 
 **Performance Optimizations**:
-- Early exit if no Rems to extract (saves ~2,000 tokens)
+- Early exit if no Rems to extract
 - Lazy loading of review history (only for review sessions)
 - Compiled regex patterns cached (classification patterns compiled once)
-- Optimized preview generation (token-efficient formatting)
+- Optimized preview generation (compact formatting)
 - Incremental file processing (process Rems in batches if >10)
-- Performance monitoring (tracks execution time & token usage)
+- Performance monitoring (tracks execution time)
 
-**Token Efficiency**: Target <4,000 tokens per archival with full graph maintenance (see Token Efficiency section for breakdown)
-
-**Workflow Goal**: Enable reliable, context-aware conversation archival with guaranteed content correctness and token efficiency
+**Workflow Goal**: Enable reliable, context-aware conversation archival with guaranteed content correctness
