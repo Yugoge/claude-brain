@@ -1,11 +1,10 @@
 ---
 name: medicine-tutor
 description: "Medical & Healthcare Domain Expert Consultant - Provides JSON consultation for diagnostic reasoning, treatment evaluation, medical terminology, and clinical knowledge"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Medicine Tutor Agent - Expert Consultant
 

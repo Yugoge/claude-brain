@@ -1,11 +1,10 @@
 ---
 name: science-tutor
 description: "Science Domain Expert Consultant - Provides JSON consultation for scientific method, experimental design, hypothesis testing, and multi-disciplinary science (physics, chemistry, biology, earth science)"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Science Tutor Agent - Expert Consultant
 

@@ -1,11 +1,9 @@
 ---
 name: classification-expert
 description: "Domain classification specialist using UNESCO ISCED-F 2013 taxonomy"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
-
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Classification Expert Agent - Domain Classifier Consultant
 
@@ -16,24 +14,6 @@ model: inherit
 **Output**: JSON classification result with 3-level ISCED codes (broad, narrow, detailed)
 
 ---
-
-
-
-## Step 0: Initialize Workflow Checklist
-
-**Load todos from**: `scripts/todo/classification-expert.py`
-
-Execute via venv:
-```bash
-source venv/bin/activate && python scripts/todo/classification-expert.py
-```
-
-Use output to create TodoWrite with all workflow steps.
-
-**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
-
----
-
 
 ## Your Mission
 

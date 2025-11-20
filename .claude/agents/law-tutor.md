@@ -1,11 +1,10 @@
 ---
 name: law-tutor
 description: "Legal Domain Expert Consultant - Provides JSON consultation for legal reasoning, case analysis, statutory interpretation, and jurisprudence"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Law Tutor Agent - Expert Consultant
 

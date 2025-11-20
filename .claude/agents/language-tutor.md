@@ -1,11 +1,10 @@
 ---
 name: language-tutor
 description: "Language Domain Expert Consultant - Provides JSON consultation for grammar patterns, pronunciation guidance, cultural context, and CEFR-aligned learning strategies"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Language Tutor Agent - Expert Consultant
 

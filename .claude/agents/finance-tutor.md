@@ -1,11 +1,10 @@
 ---
 name: finance-tutor
 description: "Quantitative Finance Domain Expert Consultant - Provides JSON consultation for calculation verification, scenario analysis, risk assessment, and market context"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Finance Tutor Agent - Expert Consultant
 

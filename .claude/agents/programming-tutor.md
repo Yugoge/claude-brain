@@ -1,11 +1,10 @@
 ---
 name: programming-tutor
 description: "Programming Domain Expert Consultant - Provides JSON consultation for syntax patterns, algorithm analysis, debugging strategies, and best practices"
-allowed-tools: Read, Write, TodoWrite
+allowed-tools: Read, Write
 model: inherit
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Programming Tutor Agent - Expert Consultant
 
