@@ -66,9 +66,12 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 
 **Rules**:
 1. Use "concept_id" from Candidate Rems list (the new concepts being created)
-2. In "to" field, ONLY reference IDs from the Valid concept_id list above (existing concepts)
+2. In "to" field, ONLY reference IDs from the Valid rem_id list above (existing concepts)
 3. DO NOT create composite, normalized, or descriptive IDs
-4. Use relation types: prerequisite_of, used_in, related_to, contrasts_with, example_of, member_of, extends
+4. Use ONLY these relation types (from RELATION_TYPES.md standard):
+   Lexical: synonym, antonym, hypernym, hyponym, part_of, has_part
+   Conceptual: is_a, has_subtype, prerequisite_of, has_prerequisite, cause_of, caused_by, example_of, has_example, uses, used_by, defines, defined_by, generalizes, specializes
+   Comparative: contrasts_with, complements, complemented_by, analogous_to, related
 5. Empty array if no strong pedagogical relations exist
 
 **Output Format**:

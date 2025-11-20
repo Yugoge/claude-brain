@@ -51,14 +51,6 @@ VALID_RELATION_TYPES = {
     'related'
 }
 
-# Auto-fix mappings for common tutor mistakes
-RELATION_TYPE_MAPPINGS = {
-    'related_to': 'related',
-    'used_in': 'used_by',
-    'extends': 'specializes',
-    'extended_by': 'generalizes',
-}
-
 
 def load_backlinks() -> Dict:
     """Load backlinks.json"""
@@ -133,20 +125,13 @@ def check_typed_relations(enriched_rems: List[Dict], existing: Dict[str, Dict]) 
                 auto_fixes.append(f"Removed invalid target: [[{to_id}]] from [{rem_id}]")
                 continue
 
-            # Check relation type valid (with auto-mapping)
+            # Check relation type valid
             if rel_type not in VALID_RELATION_TYPES:
-                # Try auto-mapping first
-                if rel_type in RELATION_TYPE_MAPPINGS:
-                    mapped_type = RELATION_TYPE_MAPPINGS[rel_type]
-                    rel['type'] = mapped_type
-                    auto_fixes.append(f"Mapped {rel_type} → '{mapped_type}' for [[{to_id}]]")
-                else:
-                    # Fallback to 'related'
-                    warnings.append(
-                        f"⚠️  [{rem_id}] Unknown relation type: {rel_type} → 'related'"
-                    )
-                    rel['type'] = 'related'
-                    auto_fixes.append(f"Changed {rel_type} → 'related' for [[{to_id}]]")
+                warnings.append(
+                    f"⚠️  [{rem_id}] Invalid relation type: {rel_type} → 'related'"
+                )
+                rel['type'] = 'related'
+                auto_fixes.append(f"Changed {rel_type} → 'related' for [[{to_id}]]")
 
             valid_relations.append(rel)
 
