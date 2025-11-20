@@ -40,7 +40,7 @@ def extract_domain_concepts(backlinks_data, domain_path):
 
     Args:
         backlinks_data: Complete backlinks.json data
-        domain_path: ISCED domain path (e.g., "0231-language-acquisition")
+        domain_path: ISCED domain path (e.g., "0231-language-acquisition" or full path)
 
     Returns:
         List of {"rem_id": concept_id, "title": title} dicts
@@ -48,11 +48,18 @@ def extract_domain_concepts(backlinks_data, domain_path):
     concepts = []
     concepts_meta = backlinks_data.get('concepts', {})
 
+    # Normalize domain path for flexible matching
+    # Supports both "0412-finance-banking-insurance" and full paths
+    normalized_domain = domain_path.strip('/').replace('knowledge-base/', '')
+
     for concept_id, meta in concepts_meta.items():
         file_path = meta.get('file', '')
 
+        # Normalize file path for comparison
+        normalized_file = file_path.strip('/')
+
         # Check if this concept belongs to the specified domain
-        if domain_path in file_path:
+        if normalized_domain in normalized_file:
             concepts.append({
                 'rem_id': concept_id,
                 'title': meta.get('title', concept_id),
