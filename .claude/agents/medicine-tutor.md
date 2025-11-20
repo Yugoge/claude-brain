@@ -39,12 +39,6 @@ Main agent receives:
 → 83% token savings, deeper learning
 ```
 
-### Consultation Token Budget
-
-- **OLD**: ~1,500 tokens per consultation (comprehensive guidance)
-- **NEW**: ~400 tokens per consultation (focused question strategy)
-- **Savings**: 73% reduction
-
 ### Response Structure
 
 **Required**:
