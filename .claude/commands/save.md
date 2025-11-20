@@ -128,80 +128,74 @@ Extract arguments from `$ARGUMENTS`:
 
 **⚠️ CRITICAL**: Session type determines workflow (review vs learn). Wrong detection = incorrect Rem extraction.
 
-**Determine if this is a review session or learn/ask session**:
+**Use session detector script** for comprehensive detection:
 
 ```bash
-# Check if there's an active review session
-test -f .review/history.json && echo "Review history exists"
+source venv/bin/activate && python scripts/archival/session_detector.py
 ```
 
-**Review session indicators**:
-1. `.review/history.json` exists and has recent entries (today's date)
-2. Conversation contains FSRS rating patterns (e.g., "Rate your recall: 1-4")
-3. Multiple Rem IDs referenced in conversation
-4. Review-master agent invoked earlier in session
+**Script provides**:
+- Multi-indicator confidence scoring (FSRS patterns, turn count, technical keywords, Rem references)
+- Confidence levels: HIGH (≥80%), MEDIUM (50-80%), LOW (<50%)
+- Warns user if confidence < 50%
+- Lazy loading optimization (only reads history file if exists)
+- Returns session type ('review' or 'learn' or 'ask') and list of reviewed Rems
 
 **Session detection returns**:
 - `session_type`: "review" or "learn" or "ask"
 - `rems_reviewed`: List of Rem IDs if review session
+- `confidence`: Float 0.0-1.0
 - `fsrs_progress_saved`: Boolean flag
 
-**Implementation**: Use `scripts/archival/session_detector.py` to detect session type and load review history if needed.
-
-**Script handles**:
-- Lazy loading optimization (only reads history file if exists)
-- Performance tracking
-- Returns session type ('review' or 'learn') and list of reviewed Rems
+**Fallback** (if script fails): Simple history file check:
+```bash
+test -f .review/history.json && echo "review" || echo "learn"
+```
 
 ### Step 4: Validate Conversation & Filter FSRS Tests
 
-**Phase 5 Optimization: Early Exit** - Use `scripts/archival/concept_extractor.py` to check if there's content worth extracting.
+**Use concept extractor for early exit** optimization:
 
-**🔒 SAFETY MECHANISMS (Automatic)**:
+```bash
+source venv/bin/activate && python scripts/archival/concept_extractor.py --check-only
+```
 
-1. **Token Limit Protection** (`utils/token_estimation.py`):
-   - Checks conversation size before extraction
+**Script performs 3 safety checks**:
+
+1. **Token Limit Protection**:
    - Maximum: 150k tokens (safe limit)
    - Warns at 100k tokens (83% threshold)
-   - If exceeded → Clear error message + suggestion to split session
-   - Prevents system crashes from oversized conversations
+   - Exit code 2 if exceeded → Suggest splitting session
 
-2. **Duplicate Detection** (`concept_extractor.py:check_duplicate_concepts()`):
+2. **Duplicate Detection**:
    - Scans existing knowledge base for similar Rem titles
-   - Uses Jaccard similarity (60% threshold)
-   - Non-blocking warning (user decides whether to proceed)
-   - Prevents redundant extraction
+   - Jaccard similarity 60% threshold
+   - Non-blocking warning (user decides)
 
-3. **Session Type Confidence** (`session_detector.py:calculate_confidence()`):
-   - Multi-indicator scoring (turn count, FSRS patterns, technical keywords, Rem references)
-   - Confidence levels: HIGH (≥80%), MEDIUM (50-80%), LOW (<50%)
-   - Warns user if confidence < 50%
-   - Reduces misclassification risk
+3. **Conversation Length Check**:
+   - Minimum 3 substantial turns required
+   - Exit code 1 if <3 turns → Skip archival
 
-**Script performs**:
-- Quick conversation length check (<3 turns → skip)
-- Technical indicator scanning
-- Token size validation (CRITICAL)
-- Returns decision to proceed or skip
+**Exit codes**:
+- `0` = Pass validation → Continue to Step 5
+- `1` = Too short → Skip with message
+- `2` = Token limit exceeded → Block with error
 
-Before archiving, verify:
-
-1. **Minimum turns**: At least 3 substantial turns (not just "thanks" or "okay")
-2. **Technical content**: Contains learnable concepts, not just casual chat
-3. **Not already archived**: Check `chats/index.json` for duplicates
-4. **Context available**: Full conversation accessible in current session
-
-**If validation fails**:
+**If validation fails** (exit code 1 or 2), display:
 ```
 This conversation doesn't meet archival criteria:
-- Reason: [Too short | No technical content | Already archived | No access to conversation]
+- Reason: [Too short | Token limit exceeded | No technical content]
 
 Archival is recommended for conversations with:
 - 3+ substantial turns
 - Technical concepts or detailed explanations
-- Code examples or step-by-step guidance
-- Learning value for future reference
+- Token count <150k (current: {N}k)
 ```
+
+**Fallback** (if script unavailable): Manual checks
+1. Count turns (≥3 required)
+2. Check `chats/index.json` for duplicates
+3. Verify technical content present
 
 ---
 
