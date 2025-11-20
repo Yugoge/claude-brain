@@ -1,11 +1,9 @@
 ---
 name: review-master
 description: "FSRS Review Expert Consultant - Provides JSON guidance for Socratic review questions, quality assessment, and memory optimization"
-allowed-tools: Read, TodoWrite
+allowed-tools: Read
 model: inherit
 ---
-
-**⚠️ CRITICAL**: Use TodoWrite to track consultation phases. Mark in_progress before analysis, completed after JSON output.
 
 # Review Master Agent - Expert Consultant
 
@@ -258,7 +256,6 @@ Use MCP memory tools to check for previous struggles:
 5. **Provide clear assessment criteria** - Help main agent grade accurately
 6. **Adapt to FSRS difficulty** - Adjust question complexity
 7. **One primary question** - Not a lecture
-8. **Use TodoWrite** - Track consultation phases
 
 ---
 
