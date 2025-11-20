@@ -32,7 +32,7 @@ def load_candidate_rems(file_path):
 
 def build_tutor_prompt(domain, existing_concepts, candidate_rems):
     """
-    Build minimal tutor prompt with existing concepts context.
+    Build minimal tutor prompt with support for inter-candidate relations.
 
     Returns: JSON-formatted prompt string
     """
@@ -46,8 +46,10 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
             "core_points": rem.get("core_points", [])
         })
 
-    # Extract valid IDs for validation
-    valid_concept_ids = [c["rem_id"] for c in existing_concepts]
+    # Extract valid IDs: BOTH existing concepts AND candidate Rems
+    existing_ids = [c["rem_id"] for c in existing_concepts]
+    candidate_ids = [r["rem_id"] for r in candidate_rems]
+    all_valid_ids = existing_ids + candidate_ids  # Support inter-candidate relations
 
     prompt = f"""Domain expert: {domain}
 
@@ -56,23 +58,29 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 **Existing Concepts** ({len(existing_list)}):
 {json.dumps(existing_list, indent=2, ensure_ascii=False)}
 
-**Candidate Rems** ({len(candidates_summary)}):
+**Candidate Rems** ({len(candidates_summary)}) - NEW in this session:
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
 
 **Valid rem_id values** (use these EXACTLY in "to" fields of typed_relations):
-{json.dumps(valid_concept_ids, ensure_ascii=False)}
+{json.dumps(all_valid_ids, ensure_ascii=False)}
 
 **Task**: Return JSON with typed_relations for each Rem.
 
 **Rules**:
 1. Use "concept_id" from Candidate Rems list (the new concepts being created)
-2. In "to" field, ONLY reference IDs from the Valid rem_id list above (existing concepts)
-3. DO NOT create composite, normalized, or descriptive IDs
-4. Use ONLY these relation types (from RELATION_TYPES.md standard):
+2. In "to" field, reference IDs from:
+   - Existing concepts (pedagogical relations to prior knowledge)
+   - Other candidate Rems (inter-concept relations in this batch)
+3. Prioritize:
+   - Strong conceptual relations (prerequisite_of, uses, defines, triggers)
+   - Relations within same topic/conversation
+   - Inter-candidate relations when concepts are tightly coupled
+4. DO NOT create composite, normalized, or descriptive IDs
+5. Use ONLY these relation types (from RELATION_TYPES.md standard):
    Lexical: synonym, antonym, hypernym, hyponym, part_of, has_part
    Conceptual: is_a, has_subtype, prerequisite_of, has_prerequisite, cause_of, caused_by, example_of, has_example, uses, used_by, defines, defined_by, generalizes, specializes
    Comparative: contrasts_with, complements, complemented_by, analogous_to, related
-5. Empty array if no strong pedagogical relations exist
+6. Empty array if no strong pedagogical relations exist
 
 **Output Format**:
 {{
@@ -182,9 +190,11 @@ def main():
                 tutor_json = json.load(f)
             print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
 
-            # Validate tutor response IDs
-            valid_ids = [c["rem_id"] for c in existing_concepts]
-            is_valid, errors = validate_tutor_response(tutor_json, valid_ids)
+            # Validate tutor response IDs (includes both existing and candidate IDs)
+            existing_ids = [c["rem_id"] for c in existing_concepts]
+            candidate_ids = [r["rem_id"] for r in candidate_rems]
+            all_valid_ids = existing_ids + candidate_ids
+            is_valid, errors = validate_tutor_response(tutor_json, all_valid_ids)
 
             if not is_valid:
                 print(f"\n❌ Tutor response validation failed:", file=sys.stderr)
