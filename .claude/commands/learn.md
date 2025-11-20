@@ -82,9 +82,9 @@ You are the **orchestrator** for this command. Your job:
 - If `safe: false` and `recommendation: must_chunk`:
   - Large files (>10MB): Exit with options (extract TOC, choose pages, or start with first 10%)
   - User selects option and continues with selected extraction strategy
-  - Proceed to token estimation (Step 1.5)
+  - Proceed to PDF token estimation (see below)
 
-**Step 1.5: PDF Token Estimation**:
+**PDF Token Estimation** (within Step 1):
 - Determine chunk size: image_heavy=1 page, text_heavy=10 pages, mixed=5 pages
 - Run `source venv/bin/activate && python scripts/learning-materials/estimate_tokens.py '{file_path}' 0 {chunk_size}`
 - If exit code 0: Read `.tokens.json`, check total_tokens < 180000
@@ -125,7 +125,7 @@ You are the **orchestrator** for this command. Your job:
 
 **Phase 2: Visual Study (1 Page at a Time)**:
 - Parse user's page range selection
-- For each page: Use Step 4.1 (Dynamic Single-Page Extraction) below
+- For each page: Use Step 5 (Dynamic Single-Page PDF Extraction) below
 - Load with full images, then cleanup temp file immediately
 
 ### Step 5: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)
@@ -244,7 +244,7 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 
 **Task Call**:
 - Use Task tool with `subagent_type={agent}` (book/language/finance/programming/medicine/law/science-tutor)
-- Include in prompt: Material, Current Section, Content Chunk, User Profile, Domain Focus Constraints (from Step 6.5)
+- Include in prompt: Material, Current Section, Content Chunk, User Profile, Domain Focus Constraints (from Step 9)
 - Request JSON consultation: Learning plan, Socratic questioning (with domain_focus/question_type/domain_element_tested), Concept extraction, Success criteria, Strategy adjustments
 - Parse JSON result for consultation data
 

@@ -35,7 +35,7 @@ Initial FSRS state for new Rems:
 
 ## Notes
 
-- Usually NOT needed - `/save` command auto-syncs in Step 6.7
+- Usually NOT needed - `/save` command auto-syncs in Step 25
 - Use when: Manual Rem creation (bypassed /save), schedule file corruption (rebuild needed), external Rem import
 - Idempotent operation (safe to run multiple times)
 - Already-scheduled Rems are skipped (no duplicates)
