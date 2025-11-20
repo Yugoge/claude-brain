@@ -81,11 +81,11 @@ archived_file=$(python3 scripts/services/chat_archiver.py --no-include-subagents
 ```
 
 **Parameters**:
-- `--include-subagents` (default): Include all subagent dialogues (analyst, language-tutor, etc.)
+- `--include-subagents` (default): Include all subagent dialogues (analyst, language-tutor, finance-tutor, programming-tutor, medicine-tutor, law-tutor, science-tutor, etc.)
 - `--no-include-subagents`: Exclude subagent messages, archive only main conversation
 
 **What the archiver does**:
-1. Detects subagent messages (analyst, language-tutor, finance-tutor, etc.)
+1. Detects subagent messages (analyst, language-tutor, finance-tutor, programming-tutor, medicine-tutor, law-tutor, science-tutor, etc.)
 2. Labels subagent responses as `### Subagent: {Name}` instead of `### User`
 3. Demotes headings in message content by 1 level (prevents hierarchy conflicts)
    - Example: `# Title` in content → `## Title` (since role labels are `### User`)

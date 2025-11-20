@@ -5,7 +5,7 @@ This is a personal knowledge management and spaced repetition learning system bu
 ## System Overview
 
 - **Purpose**: Multi-domain knowledge learning, management, and review
-- **Supported Domains**: Finance, Programming, Language, Science, and more
+- **Supported Domains**: Finance, Programming, Language, Medicine, Law, Science, and more
 - **Learning Method**: Socratic dialogue-based interactive teaching (not flashcards)
 - **Knowledge Structure**: RemNote-style (hierarchy + bidirectional links + tags)
 - **Classification**: Dual taxonomy (UNESCO ISCED + Dewey Decimal)
@@ -38,12 +38,15 @@ knowledge-system/
 - **language-tutor**: Language learning specialist
 - **finance-tutor**: Finance domain specialist
 - **programming-tutor**: Programming domain specialist
+- **medicine-tutor**: Medical & healthcare domain specialist
+- **law-tutor**: Legal domain specialist
+- **science-tutor**: Science domain specialist (physics, chemistry, biology, earth science)
 - **review-master**: Review conductor
 - **knowledge-indexer**: Knowledge graph maintainer
 - **analyst**: Universal AI assistant for research and problem-solving
 
 **Agent Architecture**: The system uses three types of agents:
-1. **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor) - Domain expert consultants providing JSON consultations
+1. **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor, medicine-tutor, law-tutor, science-tutor) - Domain expert consultants providing JSON consultations
 2. **Standalone Agents** (analyst, review-master) - User-facing interactive agents
 3. **Utility Agents** (knowledge-indexer) - Background workers for system maintenance
 

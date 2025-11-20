@@ -53,6 +53,9 @@ Use output to create TodoWrite with all workflow steps.
    - Language materials → `language-tutor`
    - Finance materials → `finance-tutor`
    - Programming materials → `programming-tutor`
+   - Medicine materials → `medicine-tutor`
+   - Law materials → `law-tutor`
+   - Science materials → `science-tutor`
 4. **Starts Socratic dialogue** teaching session
 5. **Tracks progress** at page/chapter/concept level
 6. **Updates indexes** via `knowledge-indexer`
@@ -206,6 +209,9 @@ CORRECT WORKFLOW:
 - `finance` → finance-tutor
 - `programming` → programming-tutor
 - `language` → language-tutor
+- `medicine` → medicine-tutor
+- `law` → law-tutor
+- `science` → science-tutor
 - `default` → book-tutor (books/reports)
 
 **Fallback strategy**:
@@ -230,14 +236,14 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 
 **⚠️ CRITICAL**: This is the core learning workflow. Skipping consultation phases = no Socratic teaching = passive content dump.
 
-**Architecture**: Main agent orchestrates learning using Task tool for expert consultation (book/language/finance/programming-tutor). Expert provides JSON guidance (learning plan, Socratic questions, concept extraction). User never sees consultation process - only natural teaching dialogue.
+**Architecture**: Main agent orchestrates learning using Task tool for expert consultation (book/language/finance/programming/medicine/law/science-tutor). Expert provides JSON guidance (learning plan, Socratic questions, concept extraction). User never sees consultation process - only natural teaching dialogue.
 
 **Code Presentation**: If consultant generates code for exercises/analysis, translate outputs to natural language. User should not see raw scripts unless debugging.
 
 #### PHASE 1: Initial Consultation
 
 **Task Call**:
-- Use Task tool with `subagent_type={agent}` (book/language/finance/programming-tutor)
+- Use Task tool with `subagent_type={agent}` (book/language/finance/programming/medicine/law/science-tutor)
 - Include in prompt: Material, Current Section, Content Chunk, User Profile, Domain Focus Constraints (from Step 6.5)
 - Request JSON consultation: Learning plan, Socratic questioning (with domain_focus/question_type/domain_element_tested), Concept extraction, Success criteria, Strategy adjustments
 - Parse JSON result for consultation data
