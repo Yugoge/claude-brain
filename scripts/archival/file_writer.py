@@ -2,12 +2,12 @@
 """
 Atomic File Writer for /save Workflow
 
-Consolidates Steps 16-19 + 24 into single atomic transaction:
-  Step 16: Create Knowledge Rems
-  Step 17: Update Existing Rems (review sessions only)
-  Step 18: Create Conversation Archive (enrichment)
-  Step 19: Normalize and Rename Conversation File
-  Step 24: Update Conversation Rem Links
+Single atomic transaction for all file operations:
+  - Create Knowledge Rems (N files)
+  - Update Existing Rems (review sessions only)
+  - Create Conversation Archive (with enrichment)
+  - Normalize and Rename Conversation File
+  - Update Conversation-to-Rem Bidirectional Links
 
 Atomic transaction guarantee:
   - Either ALL files written successfully, or NONE
@@ -344,8 +344,8 @@ class FileWriter:
             with self.transaction():
                 created_rem_paths = []
 
-                # Step 19: Normalize conversation FIRST (Rems need final conversation path)
-                print("\n📝 Step 19: Normalizing conversation...", file=sys.stderr)
+                # Normalize conversation FIRST (Rems need final conversation path)
+                print("\n📝 Normalizing conversation...", file=sys.stderr)
                 conversation_path = self.normalize_and_rename_conversation(
                     archived_file=archived_file,
                     conversation_id=conversation_metadata['id'],
@@ -358,8 +358,8 @@ class FileWriter:
                     summary=conversation_metadata['summary']
                 )
 
-                # Step 16: Create Knowledge Rems
-                print("\n📝 Step 16: Creating Knowledge Rems...", file=sys.stderr)
+                # Create Knowledge Rems
+                print("\n📝 Creating Knowledge Rems...", file=sys.stderr)
                 for rem in enriched_rems:
                     rem_path = self.create_rem_file(
                         rem_id=rem['rem_id'],
@@ -376,9 +376,9 @@ class FileWriter:
                     )
                     created_rem_paths.append(rem_path)
 
-                # Step 17: Update Existing Rems (review sessions only)
+                # Update Existing Rems (review sessions only)
                 if rems_to_update:
-                    print("\n✏️  Step 17: Updating existing Rems...", file=sys.stderr)
+                    print("\n✏️  Updating existing Rems...", file=sys.stderr)
                     for update in rems_to_update:
                         self.update_existing_rem(
                             rem_id=update['rem_id'],
@@ -386,8 +386,8 @@ class FileWriter:
                             target_section=update['target_section']
                         )
 
-                # Step 24: Update Conversation with Rem Links
-                print("\n🔗 Step 24: Linking conversation to Rems...", file=sys.stderr)
+                # Update Conversation with Rem Links (bidirectional)
+                print("\n🔗 Linking conversation to Rems...", file=sys.stderr)
                 self.update_conversation_with_rems(conversation_path, created_rem_paths)
 
                 print("\n✅ All files written successfully", file=sys.stderr)

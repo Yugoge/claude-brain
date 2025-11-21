@@ -15,7 +15,7 @@ from typing import Tuple, List, Optional
 SCRIPT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from archival.types import DetectionResult
+from archival.archival_types import DetectionResult
 
 class SessionDetector:
     """Detect session type and load relevant data with confidence scoring."""

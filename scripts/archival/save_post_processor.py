@@ -2,20 +2,17 @@
 """
 Save Post-Processor - Unified Post-Creation Pipeline
 
-Consolidates Steps 12-22 of /save workflow into single automated script.
+Automated post-processing for /save workflow (executes after user approval).
 
 Executes:
-  Step 12: Pre-creation Validation
-  Step 13: Create Knowledge Rems (atomic transaction)
-  Step 14: Process Conversation Archive
-  Step 15: Update Existing Rems (review sessions only)
-  Step 16: Update Knowledge Graph
-  Step 17: Materialize Inferred Links (optional)
-  Step 18: Sync Rems to Review Schedule (FSRS)
-  Step 19: Record to Memory MCP
-  Step 20: Update Conversation Rem Links
-  Step 21: Generate Analytics & Visualizations
-  Step 22: Display Completion Report
+  - Pre-creation Validation (preflight + light validation)
+  - Atomic File Creation (Rems + conversation + updates)
+  - Knowledge Graph Updates (backlinks + indexes + normalization)
+  - Optional Inferred Links Materialization
+  - FSRS Review Schedule Sync
+  - Memory MCP Recording
+  - Analytics & Visualization Generation
+  - Completion Report Display
 
 Usage:
     python scripts/archival/save_post_processor.py \\
@@ -82,7 +79,7 @@ from archival.file_writer import FileWriter, WriteResult
 
 def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path: str) -> bool:
     """
-    Step 12: Pre-creation Validation
+    Pre-creation Validation
 
     Runs:
       - preflight_checker.py: Validate typed_relations enforcement
@@ -91,7 +88,7 @@ def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path:
     Returns: True if validation passes, False otherwise
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("📋 Step 12: Pre-creation Validation", file=sys.stderr)
+    print("📋 Pre-creation Validation", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     try:
@@ -140,18 +137,18 @@ def atomic_write_all_files(
     rems_to_update: Optional[List[Dict]] = None
 ) -> WriteResult:
     """
-    Steps 13-15 + 20: Atomic File Creation
+    Atomic File Creation
 
     Uses FileWriter for atomic transaction:
-      Step 13: Create Knowledge Rems (N files)
-      Step 14: Normalize and rename conversation
-      Step 15: Update existing Rems (review only)
-      Step 20: Update conversation with Rem links
+      - Create Knowledge Rems (N files)
+      - Normalize and rename conversation
+      - Update existing Rems (review sessions only)
+      - Link conversation to Rems bidirectionally
 
     Returns: WriteResult with created paths
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("💾 Steps 13-15, 20: Atomic File Creation", file=sys.stderr)
+    print("💾 Atomic File Creation", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     writer = FileWriter()
@@ -168,7 +165,7 @@ def atomic_write_all_files(
 
 def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata: Dict):
     """
-    Step 16: Update Knowledge Graph
+    Update Knowledge Graph
 
     Executes:
       1. update-backlinks-incremental.py (rebuild backlinks for new Rems)
@@ -177,7 +174,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
       4. sync-related-rems-from-backlinks.py (update Related Rems sections)
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("🔗 Step 16: Update Knowledge Graph", file=sys.stderr)
+    print("🔗 Update Knowledge Graph", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     # Sub-step 1: Update backlinks
@@ -239,13 +236,13 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
 
 def materialize_inferred_links(prompt_user: bool = True):
     """
-    Step 17: Materialize Inferred Links (optional)
+    Materialize Inferred Links (optional)
 
     Prompts user to materialize inferred bidirectional links.
     If non-interactive, skips with warning.
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("🔮 Step 17: Materialize Inferred Links (Optional)", file=sys.stderr)
+    print("🔮 Materialize Inferred Links (Optional)", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     if not prompt_user:
@@ -276,12 +273,12 @@ def materialize_inferred_links(prompt_user: bool = True):
 
 def sync_to_fsrs():
     """
-    Step 18: Sync Rems to FSRS Review Schedule
+    Sync Rems to FSRS Review Schedule
 
     Automatically adds new Rems to .review/schedule.json
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("📅 Step 18: Sync to FSRS Review Schedule", file=sys.stderr)
+    print("📅 Sync to FSRS Review Schedule", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     result = subprocess.run(
@@ -303,12 +300,12 @@ def sync_to_fsrs():
 
 def record_to_memory_mcp(metadata: Dict, rems: List[Dict]):
     """
-    Step 19: Record to Memory MCP
+    Record to Memory MCP
 
     Creates entities and relations in MCP memory server.
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("🧠 Step 19: Record to Memory MCP", file=sys.stderr)
+    print("🧠 Record to Memory MCP", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     try:
@@ -325,7 +322,7 @@ def record_to_memory_mcp(metadata: Dict, rems: List[Dict]):
 
 def generate_analytics():
     """
-    Step 21: Generate Analytics & Visualizations
+    Generate Analytics & Visualizations
 
     Executes:
       1. generate-analytics.py (30-day stats)
@@ -333,7 +330,7 @@ def generate_analytics():
       3. generate-visualization-html.py (interactive graph)
     """
     print("\n" + "="*60, file=sys.stderr)
-    print("📊 Step 21: Generate Analytics & Visualizations", file=sys.stderr)
+    print("📊 Generate Analytics & Visualizations", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     # Sub-step 1: Analytics
@@ -384,14 +381,14 @@ def display_completion_report(
     start_time: datetime
 ):
     """
-    Step 22: Display Completion Report
+    Display Completion Report
 
     Shows summary of all operations with performance metrics.
     """
     elapsed = (datetime.now() - start_time).total_seconds()
 
     print("\n" + "="*60, file=sys.stderr)
-    print("✅ Step 22: Completion Report", file=sys.stderr)
+    print("✅ Completion Report", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
     print(f"\n📊 Session: {metadata.get('title')}", file=sys.stderr)
@@ -484,12 +481,12 @@ def main():
     print("\n🚀 Starting /save post-processing workflow", file=sys.stderr)
     print(f"   Processing {len(rems)} Rem(s) for session: {metadata.get('title')}", file=sys.stderr)
 
-    # Step 12: Validation
+    # Pre-creation validation
     if not validate_before_creation(rems, metadata.get('domain'), metadata.get('isced_path')):
         print("\n❌ Validation failed - no changes made", file=sys.stderr)
         return 1
 
-    # Steps 13-15, 20: Atomic file creation
+    # Atomic file creation (Rems + conversation + updates + links)
     write_result = atomic_write_all_files(
         enriched_rems=rems,
         metadata=metadata,
@@ -503,24 +500,24 @@ def main():
         print(f"   Rollback performed: {write_result.rollback_performed}", file=sys.stderr)
         return 2
 
-    # Step 16: Update knowledge graph
+    # Update knowledge graph (backlinks + indexes + normalization)
     rem_ids = [r['rem_id'] for r in rems]
     update_knowledge_graph(rem_ids, write_result.conversation_path, metadata)
 
-    # Step 17: Materialize inferred links (optional)
+    # Materialize inferred links (optional, non-interactive)
     if not args.skip_materialize:
         materialize_inferred_links(prompt_user=False)
 
-    # Step 18: Sync to FSRS
+    # Sync to FSRS review schedule
     sync_to_fsrs()
 
-    # Step 19: Record to Memory MCP
+    # Record to Memory MCP (placeholder for main agent)
     record_to_memory_mcp(metadata, rems)
 
-    # Step 21: Generate analytics
+    # Generate analytics and visualizations
     generate_analytics()
 
-    # Step 22: Display completion report
+    # Display completion report with metrics
     display_completion_report(
         metadata=metadata,
         rems=rems,

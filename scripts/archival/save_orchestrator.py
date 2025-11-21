@@ -14,15 +14,15 @@ Consolidates Steps 1-9 of /save workflow:
   9. Rem Extraction Transparency (return enriched Rems)
 
 Enforcement Gates:
-  - Step 3: Blocks if confidence <50% or token limit exceeded
-  - Step 8: Blocks if domain requires tutor but typed_relations empty
-  - Validation: Comprehensive checks before proceeding to file creation
+  - Session validation: Blocks if confidence <50% or token limit exceeded
+  - Typed relations: Blocks if domain requires tutor but typed_relations empty
+  - Comprehensive validation before proceeding to file creation
 
 Usage:
     python scripts/archival/save_orchestrator.py [topic-name | --all]
 
 Output:
-    - enriched_rems.json: Ready for file creation (Step 16)
+    - enriched_rems.json: Ready for post-processing (file creation phase)
     - orchestrator_metadata.json: Session info for downstream steps
     - Exit code 0 if successful, 1 if validation failed, 2 if mandatory step skipped
 """
@@ -41,7 +41,7 @@ sys.path.append(str(ROOT / "scripts"))
 # Import existing functionality
 from archival.session_detector import SessionDetector
 from archival.concept_extractor import ConceptExtractor
-from archival.types import DetectionResult, ValidationResult
+from archival.archival_types import DetectionResult, ValidationResult
 from archival.get_domain_concepts import extract_domain_concepts, load_backlinks
 from archival.workflow_orchestrator import (
     build_tutor_prompt,
@@ -85,11 +85,11 @@ def archive_conversation(include_subagents=True):
 
     print("📝 Step 1: Archiving conversation...", file=sys.stderr)
 
-    cmd = ["python3", "scripts/services/chat_archiver.py"]
+    cmd = ["python3", str(ROOT / "scripts/services/chat_archiver.py")]
     if not include_subagents:
         cmd.append("--no-include-subagents")
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT))
 
     if result.returncode != 0:
         raise RuntimeError(f"Chat archiver failed: {result.stderr}")
