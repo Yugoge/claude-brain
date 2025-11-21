@@ -97,10 +97,10 @@ def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path:
     try:
         # Validation 1: Preflight checker (typed relations enforcement)
         print("  Running preflight checks...", file=sys.stderr)
-        from archival.preflight_checker import check_step_3_5_executed
+        from archival.preflight_checker import check_enrichment_executed
 
         # Check if domain requires tutor enrichment
-        check_result = check_step_3_5_executed(
+        check_result = check_enrichment_executed(
             enriched_rems=enriched_rems,
             domain=domain
         )

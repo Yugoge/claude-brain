@@ -48,7 +48,7 @@ from archival.workflow_orchestrator import (
     validate_tutor_response,
     merge_tutor_suggestions
 )
-from archival.preflight_checker import check_step_3_5_executed
+from archival.preflight_checker import check_enrichment_executed
 from archival.pre_validator_light import validate_enriched_rems
 
 
@@ -404,8 +404,8 @@ def validate_enrichment(enriched_rems, domain, isced_path):
     """
     print("✅ Step 9: Pre-creation validation...", file=sys.stderr)
 
-    # Stage 1: Preflight check (Step 8 execution)
-    preflight_result = check_step_3_5_executed(enriched_rems, domain)
+    # Stage 1: Preflight check (enrichment execution)
+    preflight_result = check_enrichment_executed(enriched_rems, domain)
 
     if preflight_result['exit_code'] == 2:
         raise ValidationFailed(
