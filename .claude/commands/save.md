@@ -215,62 +215,45 @@ Map clarification type to target Rem section:
 
 ### Step 8: Enrich with Typed Relations via Domain Tutor (AI + Subagent)
 
-**⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science] domains.
+**⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science|medicine|law] domains.
 
 **Purpose**: Discover typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts.
 
-**⚠️ 3-PHASE WORKFLOW**: This step requires orchestrator → domain-tutor → orchestrator interaction.
+**3-Phase Workflow**:
 
 **Phase 1: Generate Tutor Prompt**
 ```bash
-# Pass candidate_rems from Step 6 via inline JSON parameter
+# Write candidate_rems to temp file
+python3 -c "import json; json.dump(candidate_rems, open('/tmp/candidate_rems.json', 'w'))"
+
+# Generate prompt
 source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --domain "$domain" \
   --isced-path "$isced_detailed_path" \
-  --candidate-rems-json '$(cat <<EOF
-[{"rem_id": "...", "title": "...", "core_points": ["..."]}, ...]
-EOF
-)'
+  --candidate-rems /tmp/candidate_rems.json
 ```
 
-**Script outputs**:
-- Tutor prompt with existing concepts loaded from domain
-- Valid concept_id list for validation
-- Critical ID constraints embedded in prompt
+Script outputs tutor prompt with existing concepts from domain and valid concept_id list.
 
-**Phase 2: Call Domain Tutor Subagent**
-- Use Task tool to call `{domain}-tutor` subagent (e.g., `language-tutor`, `finance-tutor`)
-- Pass the generated prompt from Phase 1
+**Phase 2: Call Domain Tutor**
+- Use Task tool: `{domain}-tutor` (e.g., `language-tutor`, `finance-tutor`)
+- Pass generated prompt from Phase 1
 - Tutor returns JSON with typed_relations
-- Store tutor response in memory (DO NOT create `tutor_response.json` file)
+- Write response to temp file: `/tmp/tutor_response.json`
 
 **Phase 3: Merge Relations**
 ```bash
-# Pass tutor response via inline JSON parameter
+# Merge and validate
 python scripts/archival/workflow_orchestrator.py \
-  --candidate-rems-json '$(cat <<EOF
-[candidate rems from Phase 1]
-EOF
-)' \
-  --tutor-response-json '$(cat <<EOF
-{tutor response from Phase 2}
-EOF
-)'
+  --candidate-rems /tmp/candidate_rems.json \
+  --tutor-response /tmp/tutor_response.json
 ```
 
-**Script automatically**:
-1. Validates tutor response (checks all IDs match valid list)
-2. Merges typed_relations into candidate Rems
-3. Outputs enriched Rems ready for Step 11
+Script validates all IDs and merges typed_relations.
 
-**Output**: Enriched Rems with typed_relations (stored in memory, ready for Step 11)
+**Output**: Enriched Rems with validated typed_relations (stored in AI memory for Step 11)
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
-
-**Quality improvements expected**:
-- Language: Merge isolated words into systematic concepts
-- Finance: Add theoretical frameworks and formulas
-- Programming: Focus on design patterns vs syntax
 
 ---
 
@@ -290,15 +273,28 @@ EOF
 
 **Post-Processing**: If helper scripts used, READ results and present in natural language (titles, summaries, relationships). ❌ Don't paste JSON/code. ✅ Present readable bullet points. Exception: User requests debugging details.
 
-**Generate Preview** (Format depends on session type):
-- **Learn/Ask sessions**: Ultra-compact 1-line previews (format: `N. [Title] → [1-line summary] → path/to/file.md`)
-- **Review sessions**: Three-section preview (reviewed Rems + new concepts + updates). Use `scripts/archival/preview_generator.py` for generation.
+---
+
+### Step 10: Generate Preview
+
+Present extracted Rems in聊天框:
+
+**Format**:
+```
+N. [Title] → [1-line summary] → path/to/file.md
+```
+
+**Example**:
+```
+1. French Verb "Vouloir" → Conjugation patterns and usage → knowledge-base/.../french-verb-vouloir.md
+2. Black-Scholes Model → Option pricing formula → knowledge-base/.../black-scholes-model.md
+```
 
 **Show ALL previews** before user approval.
 
 ---
 
-### Step 10: User Confirmation
+### Step 11: User Confirmation
 
 Wait for explicit approval before creating files.
 
@@ -306,7 +302,7 @@ Wait for explicit approval before creating files.
 ```
 📊 [Topic] | [domain] | [N] concepts
 
-[Ultra-compact previews from Step 4]
+[Previews from Step 10]
 
 Files: [N] Rems + 1 conversation + 2 index updates
 ```
@@ -321,13 +317,13 @@ Files: [N] Rems + 1 conversation + 2 index updates
 ```
 
 **Handle**:
-- Option 1 → Step 11 (Execute Post-Processing)
-- Option 2 → Iterate, re-present
-- Option 3 → Abort gracefully
+- Approve → Step 12 (Execute Post-Processing)
+- Modify → Iterate, re-present
+- Cancel → Abort gracefully
 
 ---
 
-### Step 11: Execute Automated Post-Processing
+### Step 12: Execute Automated Post-Processing
 
 **⚠️ CRITICAL**: ONLY execute after user approval. This step automates all remaining operations (validation, file creation, graph updates, FSRS sync, analytics).
 
@@ -379,18 +375,18 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
   --session-type "{learn|ask|review}"
 ```
 
-**Post-processor automatically executes**:
-- **Step 12**: Pre-creation Validation (preflight_checker + pre_validator_light)
-- **Step 13**: Create Knowledge Rems (atomic transaction, N files)
-- **Step 14**: Normalize conversation metadata and rename file
-- **Step 15**: Update existing Rems (review sessions with Type A clarifications)
-- **Step 16**: Update knowledge graph (backlinks, conversation index, normalize wikilinks)
-- **Step 17**: Materialize inferred links (optional, with preview)
-- **Step 18**: Sync Rems to FSRS review schedule (automatic)
-- **Step 19**: Record to Memory MCP (automatic)
-- **Step 20**: Update conversation Rem links (bidirectional navigation)
-- **Step 21**: Generate analytics & visualizations (automatic)
-- **Step 22**: Display completion report with performance metrics
+**Post-processor automatically executes (original Steps 12-22)**:
+- **Validation**: Pre-creation checks (preflight_checker + pre_validator_light)
+- **File Creation**: Create Knowledge Rems (atomic transaction, N files)
+- **Conversation**: Normalize metadata and rename file
+- **Updates**: Update existing Rems (review sessions with Type A clarifications)
+- **Graph**: Update knowledge graph (backlinks, conversation index, normalize wikilinks)
+- **Inferred Links**: Materialize inferred links (optional, with preview)
+- **FSRS Sync**: Add Rems to review schedule (automatic)
+- **Memory MCP**: Record to MCP (automatic)
+- **Navigation**: Update conversation Rem links (bidirectional)
+- **Analytics**: Generate analytics & visualizations (automatic)
+- **Report**: Display completion report with performance metrics
 
 **Post-processor output**:
 ```

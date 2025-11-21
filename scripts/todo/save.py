@@ -15,67 +15,72 @@ def get_todos():
         list[dict]: Todo items with content, activeForm, status
     """
     return [
-    {
-        "content": "Step 0: Initialize Workflow Checklist",
-        "activeForm": "Step 0: Initialize Workflow Checklist",
-        "status": "pending"
-    },
-    {
-        "content": "Step 1: Archive Conversation",
-        "activeForm": "Step 1: Archive Conversation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 2: Parse Arguments & Detect Session Type",
-        "activeForm": "Step 2: Parse Arguments & Detect Session Type",
-        "status": "pending"
-    },
-    {
-        "content": "Step 3: Session Validation",
-        "activeForm": "Step 3: Session Validation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
-        "activeForm": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 5: Domain Classification & ISCED Path Determination",
-        "activeForm": "Step 5: Domain Classification & ISCED Path Determination",
-        "status": "pending"
-    },
-    {
-        "content": "Step 6: Extract Concepts",
-        "activeForm": "Step 6: Extract Concepts",
-        "status": "pending"
-    },
-    {
-        "content": "Step 7: Question Type Classification (Review Sessions Only)",
-        "activeForm": "Step 7: Question Type Classification (Review Sessions Only)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
-        "activeForm": "Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 9: Rem Extraction Transparency & Generate Preview",
-        "activeForm": "Step 9: Rem Extraction Transparency & Generate Preview",
-        "status": "pending"
-    },
-    {
-        "content": "Step 10: User Confirmation",
-        "activeForm": "Step 10: User Confirmation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 11: Execute Automated Post-Processing (validation, file creation, graph updates, FSRS sync, analytics)",
-        "activeForm": "Step 11: Execute Automated Post-Processing",
-        "status": "pending"
-    }
-]
+        {
+            "content": "Step 0: Initialize Workflow Checklist",
+            "activeForm": "Initializing workflow checklist",
+            "status": "pending"
+        },
+        {
+            "content": "Step 1: Archive Conversation",
+            "activeForm": "Archiving conversation",
+            "status": "pending"
+        },
+        {
+            "content": "Step 2: Parse Arguments",
+            "activeForm": "Parsing arguments",
+            "status": "pending"
+        },
+        {
+            "content": "Step 3: Session Validation",
+            "activeForm": "Validating session",
+            "status": "pending"
+        },
+        {
+            "content": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
+            "activeForm": "Filtering FSRS test dialogues",
+            "status": "pending"
+        },
+        {
+            "content": "Step 5: Domain Classification & ISCED Path",
+            "activeForm": "Classifying domain",
+            "status": "pending"
+        },
+        {
+            "content": "Step 6: Extract Concepts",
+            "activeForm": "Extracting concepts",
+            "status": "pending"
+        },
+        {
+            "content": "Step 7: Question Type Classification (Review Sessions Only)",
+            "activeForm": "Classifying question types",
+            "status": "pending"
+        },
+        {
+            "content": "Step 8: Enrich with Typed Relations (MANDATORY)",
+            "activeForm": "Enriching with typed relations",
+            "status": "pending"
+        },
+        {
+            "content": "Step 9: Rem Extraction Transparency",
+            "activeForm": "Presenting extracted Rems",
+            "status": "pending"
+        },
+        {
+            "content": "Step 10: Generate Preview",
+            "activeForm": "Generating preview",
+            "status": "pending"
+        },
+        {
+            "content": "Step 11: User Confirmation",
+            "activeForm": "Awaiting user confirmation",
+            "status": "pending"
+        },
+        {
+            "content": "Step 12: Execute Post-Processing (automated Steps 12-22)",
+            "activeForm": "Executing post-processing",
+            "status": "pending"
+        }
+    ]
 
 
 if __name__ == "__main__":
