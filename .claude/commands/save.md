@@ -54,48 +54,62 @@ Archive conversations (`/learn`, `/ask`, `/review`), extract ultra-minimal Rems 
 ## Implementation
 
 
-### Steps 1-4: Pre-processing (Automated via save_orchestrator)
+### Step 1: Archive Conversation
 
-**⚠️ BATCH PROCESSING**: Steps 1-4 are handled by a single orchestrator script.
-
-**Execute orchestrator**:
 ```bash
-source venv/bin/activate && python scripts/archival/save_orchestrator.py
+archived_file=$(python3 scripts/services/chat_archiver.py)
 ```
 
-**Orchestrator automatically performs**:
-1. **Archive Conversation** - Archives current conversation with chat_archiver.py
-2. **Parse Arguments** - Detects topic from context or $ARGUMENTS
-3. **Session Validation** - Uses session_detector.py and concept_extractor.py to validate
-4. **Filter FSRS Test Dialogues** - Removes test portions from review sessions
+**Output**: `chats/YYYY-MM/conversation-YYYY-MM-DD.md`
 
-**Output**:
-- `archived_file` - Path to archived conversation (e.g., `chats/2025-11/conversation-2025-11-21.md`)
-- `session_type` - Detected type: "learn", "ask", or "review"
-- Validation passed (exit code 0) or failed (exit code 1/2)
+**Note**: Archived file contains placeholder metadata (id, title, domain, summary) that will be updated in Step 14.
+
+---
+
+### Step 2: Parse Arguments
+
+Extract from `$ARGUMENTS`:
+- **No arguments**: Archive most recent conversation
+- **Topic name** (e.g., `python-gil`): Archive specific topic
+- **`--all`**: Archive all unarchived conversations
+
+---
+
+### Step 3: Session Validation
+
+Runs validation checks:
+- `session_detector.py`: Detect type (learn|ask|review) with confidence
+- `concept_extractor.py --check-only`: Validate conversation length, token count
 
 **Exit codes**:
-- `0` = Success → Continue to Step 5
-- `1` = Validation failed (too short/low confidence) → Skip archival
-- `2` = Token limit exceeded → Block with error
+- `0` = Valid → Continue
+- `1` = Too short (<3 turns) → Block
+- `2` = Token limit exceeded (>150k) → Block
 
-**If orchestrator fails**:
+---
+
+### Step 4: Filter FSRS Test Dialogues (Review Sessions Only)
+
+**If session_type == "review"**: Segment conversation using pattern matching.
+
+**FSRS patterns** (auto-detected and removed):
+- Rating prompts: "Rate your recall.*1-4"
+- Test questions: "What is [[rem-id]]"
+- FSRS feedback: "Next review.*days"
+
+**Output**: Filtered conversation (learning portion only), test portion saved to `*_fsrs_test.md`
+
+---
+
+**Batch execution for Steps 1-4**:
+```bash
+# Orchestrator handles all 4 steps atomically
+source venv/bin/activate && python scripts/archival/save_orchestrator.py
+
+# Outputs:
+# - Filtered archived conversation file
+# - orchestrator_metadata.json (session_type, confidence, archived_file path)
 ```
-❌ Session validation failed
-
-Possible issues:
-- Conversation too short (<3 substantial turns)
-- Token count >150k
-- Session type confidence <50%
-
-Manual check: test -f .review/history.json && echo "review" || echo "learn"
-```
-
-**Why batch processing**:
-- ✅ Eliminates 4 manual steps
-- ✅ Consistent validation logic
-- ✅ Automatic session type detection
-- ✅ FSRS filtering for review sessions
 
 ---
 

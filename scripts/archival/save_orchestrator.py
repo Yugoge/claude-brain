@@ -74,9 +74,9 @@ class ValidationFailed(Exception):
     pass
 
 
-def step1_archive_conversation(include_subagents=True):
+def archive_conversation(include_subagents=True):
     """
-    Step 1: Archive conversation using chat_archiver.py
+    Archive conversation using chat_archiver.py
 
     Returns: archived_file path
     """
@@ -99,9 +99,9 @@ def step1_archive_conversation(include_subagents=True):
     return archived_file
 
 
-def step2_parse_arguments(args):
+def parse_arguments(args):
     """
-    Step 2: Parse arguments and determine archival mode
+    Parse arguments and determine archival mode
 
     Returns: (mode, topic_filter)
         mode: 'single' | 'topic' | 'all'
@@ -125,9 +125,9 @@ def step2_parse_arguments(args):
     return mode, topic_filter
 
 
-def step3_validate_session(archived_file):
+def validate_session(archived_file):
     """
-    Step 3: Comprehensive session validation
+    Comprehensive session validation
 
     Runs:
       - session_detector.py: Detect session type with confidence
@@ -174,9 +174,74 @@ def step3_validate_session(archived_file):
     return session_type, confidence, validation_result
 
 
-def step5_classify_domain(conversation_summary, main_topics):
+def filter_fsrs_test_dialogues(archived_file, session_type):
     """
-    Step 5: Domain Classification & ISCED Path Determination
+    Filter FSRS test dialogues from review sessions
+
+    Segments conversation to remove test portions (rating prompts, test questions, FSRS feedback).
+    Only applies to review sessions.
+
+    Args:
+        archived_file: Path to archived conversation
+        session_type: Type of session (learn|ask|review)
+
+    Returns: None (modifies archived_file in-place)
+    """
+    if session_type != 'review':
+        print("  Step 4: Skipped (not a review session)", file=sys.stderr)
+        return
+
+    print("🗂️  Step 4: Filtering FSRS test dialogues...", file=sys.stderr)
+
+    # Read archived conversation
+    with open(archived_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    import re
+
+    # FSRS test patterns:
+    # - Rating prompts: "Rate your recall.*1-4"
+    # - Test questions: "What is [[rem-id]]"
+    # - FSRS feedback: "Next review.*days"
+    fsrs_patterns = [
+        r'Rate your recall[^\n]*[1-4]',
+        r'What is \[\[[^\]]+\]\]\?',
+        r'Next review.*\d+ days?'
+    ]
+
+    # Find first occurrence of any FSRS pattern
+    first_match = None
+    first_pos = len(content)
+
+    for pattern in fsrs_patterns:
+        match = re.search(pattern, content, re.IGNORECASE)
+        if match and match.start() < first_pos:
+            first_match = match
+            first_pos = match.start()
+
+    if first_match:
+        # Split at first FSRS occurrence
+        learning_portion = content[:first_pos].rstrip()
+        test_portion = content[first_pos:]
+
+        # Rewrite archived file with only learning portion
+        with open(archived_file, 'w', encoding='utf-8') as f:
+            f.write(learning_portion)
+
+        # Save test portion to separate file for debugging
+        test_file = archived_file.replace('.md', '_fsrs_test.md')
+        with open(test_file, 'w', encoding='utf-8') as f:
+            f.write(test_portion)
+
+        print(f"  ✓ Filtered FSRS test portion (saved to {test_file})", file=sys.stderr)
+        print(f"  ✓ Learning portion: {len(learning_portion)} chars", file=sys.stderr)
+    else:
+        print("  No FSRS test patterns detected", file=sys.stderr)
+
+
+def classify_domain(conversation_summary, main_topics):
+    """
+    Domain Classification & ISCED Path Determination
 
     Args:
         conversation_summary: 2-3 sentence summary of conversation
@@ -204,9 +269,9 @@ def step5_classify_domain(conversation_summary, main_topics):
     return None  # Main agent provides this
 
 
-def step6_extract_concepts(conversation_context, domain, subdomain):
+def extract_concepts(conversation_context, domain, subdomain):
     """
-    Step 6: Extract Concepts
+    Extract Concepts from conversation
 
     Args:
         conversation_context: The active conversation context (NOT file read)
@@ -233,14 +298,14 @@ def step6_extract_concepts(conversation_context, domain, subdomain):
     return None  # Main agent provides this
 
 
-def step8_enrich_with_tutor(candidate_rems, domain, isced_path, tutor_response_json=None):
+def enrich_with_tutor(candidate_rems, domain, isced_path, tutor_response_json=None):
     """
-    Step 8: Enrich with Typed Relations via Domain Tutor
+    Enrich with Typed Relations via Domain Tutor
 
     MANDATORY for: programming, language, finance, science, medicine, law
 
     Args:
-        candidate_rems: List of candidate Rems from Step 6
+        candidate_rems: List of candidate Rems from extraction
         domain: Domain classification
         isced_path: ISCED detailed path
         tutor_response_json: Optional pre-provided tutor response
@@ -313,12 +378,12 @@ def step8_enrich_with_tutor(candidate_rems, domain, isced_path, tutor_response_j
         return candidate_rems
 
 
-def step9_validate_enrichment(enriched_rems, domain, isced_path):
+def validate_enrichment(enriched_rems, domain, isced_path):
     """
-    Step 9: Pre-creation Validation
+    Pre-creation Validation
 
     Runs:
-      - preflight_checker.py: Verify Step 8 execution
+      - preflight_checker.py: Verify enrichment execution
       - pre_validator_light.py: Check for collisions and duplicates
 
     Returns: validation_result dict
@@ -376,22 +441,20 @@ def main():
         completed_stages = set()
 
         # Step 1: Archive Conversation
-        archived_file = step1_archive_conversation(include_subagents=not args.no_subagents)
+        archived_file = archive_conversation(include_subagents=not args.no_subagents)
         completed_stages.add(WorkflowStage.ARCHIVE)
 
         # Step 2: Parse Arguments
-        mode, topic_filter = step2_parse_arguments(args)
+        mode, topic_filter = parse_arguments(args)
         completed_stages.add(WorkflowStage.PARSE_ARGS)
 
         # Step 3: Validate Session
-        session_type, confidence, validation = step3_validate_session(archived_file)
+        session_type, confidence, validation = validate_session(archived_file)
         completed_stages.add(WorkflowStage.VALIDATE)
 
         # Step 4: Filter FSRS (review sessions only)
-        if session_type == 'review':
-            print("🗂️  Step 4: Filtering FSRS test dialogues...", file=sys.stderr)
-            print("  (Review session detected - filter test portions)", file=sys.stderr)
-            # Implementation placeholder - would segment conversation
+        filter_fsrs_test_dialogues(archived_file, session_type)
+        completed_stages.add(WorkflowStage.FILTER_FSRS)
 
         # Steps 5-9: Require main agent interaction
         print("\n⚠️  Steps 5-9 require main agent interaction:", file=sys.stderr)
@@ -415,7 +478,7 @@ def main():
         with open('orchestrator_metadata.json', 'w') as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"\n✅ Steps 1-3 completed. Metadata saved to orchestrator_metadata.json", file=sys.stderr)
+        print(f"\n✅ Steps 1-4 completed. Metadata saved to orchestrator_metadata.json", file=sys.stderr)
         print("Next: Main agent performs Steps 5-9 with orchestrator enforcement", file=sys.stderr)
 
         return 0

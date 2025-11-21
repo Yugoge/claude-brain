@@ -80,7 +80,7 @@ sys.path.append(str(ROOT / "scripts"))
 from archival.file_writer import FileWriter, WriteResult
 
 
-def step12_validate(enriched_rems: List[Dict], domain: str, isced_path: str) -> bool:
+def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path: str) -> bool:
     """
     Step 12: Pre-creation Validation
 
@@ -132,7 +132,7 @@ def step12_validate(enriched_rems: List[Dict], domain: str, isced_path: str) -> 
         return False
 
 
-def steps13_15_20_atomic_write(
+def atomic_write_all_files(
     enriched_rems: List[Dict],
     metadata: Dict,
     archived_file: Path,
@@ -166,7 +166,7 @@ def steps13_15_20_atomic_write(
     return result
 
 
-def step16_update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata: Dict):
+def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata: Dict):
     """
     Step 16: Update Knowledge Graph
 
@@ -223,7 +223,7 @@ def step16_update_knowledge_graph(rem_ids: List[str], conversation_path: Path, m
         print(f"  ✓ Wikilinks normalized", file=sys.stderr)
 
 
-def step17_materialize_inferred_links(prompt_user: bool = True):
+def materialize_inferred_links(prompt_user: bool = True):
     """
     Step 17: Materialize Inferred Links (optional)
 
@@ -260,7 +260,7 @@ def step17_materialize_inferred_links(prompt_user: bool = True):
     print("     python scripts/knowledge-graph/materialize-inferred-links.py --verbose", file=sys.stderr)
 
 
-def step18_sync_to_fsrs():
+def sync_to_fsrs():
     """
     Step 18: Sync Rems to FSRS Review Schedule
 
@@ -287,7 +287,7 @@ def step18_sync_to_fsrs():
             print(f"    {output.strip()}", file=sys.stderr)
 
 
-def step19_record_to_memory_mcp(metadata: Dict, rems: List[Dict]):
+def record_to_memory_mcp(metadata: Dict, rems: List[Dict]):
     """
     Step 19: Record to Memory MCP
 
@@ -309,7 +309,7 @@ def step19_record_to_memory_mcp(metadata: Dict, rems: List[Dict]):
         print(f"  ⚠️  MCP recording failed: {e}", file=sys.stderr)
 
 
-def step21_generate_analytics():
+def generate_analytics():
     """
     Step 21: Generate Analytics & Visualizations
 
@@ -362,7 +362,7 @@ def step21_generate_analytics():
         print(f"  ✓ Visualization HTML generated", file=sys.stderr)
 
 
-def step22_display_completion_report(
+def display_completion_report(
     metadata: Dict,
     rems: List[Dict],
     created_paths: List[Path],
@@ -471,12 +471,12 @@ def main():
     print(f"   Processing {len(rems)} Rem(s) for session: {metadata.get('title')}", file=sys.stderr)
 
     # Step 12: Validation
-    if not step12_validate(rems, metadata.get('domain'), metadata.get('isced_path')):
+    if not validate_before_creation(rems, metadata.get('domain'), metadata.get('isced_path')):
         print("\n❌ Validation failed - no changes made", file=sys.stderr)
         return 1
 
     # Steps 13-15, 20: Atomic file creation
-    write_result = steps13_15_20_atomic_write(
+    write_result = atomic_write_all_files(
         enriched_rems=rems,
         metadata=metadata,
         archived_file=archived_file,
@@ -491,23 +491,23 @@ def main():
 
     # Step 16: Update knowledge graph
     rem_ids = [r['rem_id'] for r in rems]
-    step16_update_knowledge_graph(rem_ids, write_result.conversation_path, metadata)
+    update_knowledge_graph(rem_ids, write_result.conversation_path, metadata)
 
     # Step 17: Materialize inferred links (optional)
     if not args.skip_materialize:
-        step17_materialize_inferred_links(prompt_user=False)
+        materialize_inferred_links(prompt_user=False)
 
     # Step 18: Sync to FSRS
-    step18_sync_to_fsrs()
+    sync_to_fsrs()
 
     # Step 19: Record to Memory MCP
-    step19_record_to_memory_mcp(metadata, rems)
+    record_to_memory_mcp(metadata, rems)
 
     # Step 21: Generate analytics
-    step21_generate_analytics()
+    generate_analytics()
 
     # Step 22: Display completion report
-    step22_display_completion_report(
+    display_completion_report(
         metadata=metadata,
         rems=rems,
         created_paths=write_result.created_rems,
