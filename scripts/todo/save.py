@@ -71,93 +71,63 @@ def get_todos():
         "status": "pending"
     },
     {
-        "content": "Step 11: Learn/Ask Session Preview (Original Format)",
-        "activeForm": "Step 11: Learn/Ask Session Preview (Original Format)",
+        "content": "Step 11: User Confirmation",
+        "activeForm": "Step 11: User Confirmation",
         "status": "pending"
     },
     {
-        "content": "Step 12: Review Session Preview (Three-Section Format)",
-        "activeForm": "Step 12: Review Session Preview (Three-Section Format)",
+        "content": "Step 12: Pre-creation Validation",
+        "activeForm": "Step 12: Pre-creation Validation",
         "status": "pending"
     },
     {
-        "content": "Step 13: User Confirmation",
-        "activeForm": "Step 13: User Confirmation",
+        "content": "Step 13: Create Knowledge Rems",
+        "activeForm": "Step 13: Create Knowledge Rems",
         "status": "pending"
     },
     {
-        "content": "Step 14: Pre-creation Validation",
-        "activeForm": "Step 14: Pre-creation Validation",
+        "content": "Step 14: Process Conversation Archive",
+        "activeForm": "Step 14: Process Conversation Archive",
         "status": "pending"
     },
     {
-        "content": "Step 15: Create Files",
-        "activeForm": "Step 15: Create Files",
+        "content": "Step 15: Update Existing Rems (Review Sessions with Type A Clarifications)",
+        "activeForm": "Step 15: Update Existing Rems (Review Sessions with Type A Clarifications)",
         "status": "pending"
     },
     {
-        "content": "Step 16: Create Knowledge Rems",
-        "activeForm": "Step 16: Create Knowledge Rems",
+        "content": "Step 16: Update Knowledge Graph",
+        "activeForm": "Step 16: Update Knowledge Graph",
         "status": "pending"
     },
     {
-        "content": "Step 17: Update Existing Rems (Review Sessions with Type A Clarifications)",
-        "activeForm": "Step 17: Update Existing Rems (Review Sessions with Type A Clarifications)",
+        "content": "Step 17: Materialize Inferred Links (Optional)",
+        "activeForm": "Step 17: Materialize Inferred Links (Optional)",
         "status": "pending"
     },
     {
-        "content": "Step 18: Create Conversation Archive",
-        "activeForm": "Step 18: Create Conversation Archive",
+        "content": "Step 18: Sync Rems to Review Schedule (Auto)",
+        "activeForm": "Step 18: Sync Rems to Review Schedule (Auto)",
         "status": "pending"
     },
     {
-        "content": "Step 19: Normalize and Rename Conversation File",
-        "activeForm": "Step 19: Normalize and Rename Conversation File",
+        "content": "Step 19: Record to Memory MCP (Auto)",
+        "activeForm": "Step 19: Record to Memory MCP (Auto)",
         "status": "pending"
     },
     {
-        "content": "Step 20: Update Knowledge Graph",
-        "activeForm": "Step 20: Update Knowledge Graph",
+        "content": "Step 20: Update Conversation Rem Links",
+        "activeForm": "Step 20: Update Conversation Rem Links",
         "status": "pending"
     },
     {
-        "content": "Step 21: Materialize Inferred Links (Optional)",
-        "activeForm": "Step 21: Materialize Inferred Links (Optional)",
+        "content": "Step 21: Generate Analytics & Visualizations",
+        "activeForm": "Step 21: Generate Analytics & Visualizations",
         "status": "pending"
     },
     {
-        "content": "Step 22: Sync Rems to Review Schedule (Auto)",
-        "activeForm": "Step 22: Sync Rems to Review Schedule (Auto)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 23: Record to Memory MCP (Auto)",
-        "activeForm": "Step 23: Record to Memory MCP (Auto)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 24: Update Conversation Rem Links",
-        "activeForm": "Step 24: Update Conversation Rem Links",
-        "status": "pending"
-    },
-    {
-        "content": "Step 25: Auto-generate Statistics & Visualizations",
-        "activeForm": "Step 25: Auto-generate Statistics & Visualizations",
-        "status": "pending"
-    },
-    {
-        "content": "Step 26: Generate Analytics & Visualizations",
-        "activeForm": "Step 26: Generate Analytics & Visualizations",
-        "status": "pending"
-    },
-    {
-        "content": "Step 27: Display Summary to User",
-        "activeForm": "Step 27: Display Summary to User",
-        "status": "pending"
-    },
-    {
-        "content": "Step 28: Completion Report",
-        "activeForm": "Step 28: Completion Report",
+        "content": "Step 22: Display Completion Report",
+        "activeForm": "Step 22: Display Completion Report",
         "status": "pending"
     }
 ]

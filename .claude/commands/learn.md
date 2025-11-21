@@ -212,6 +212,7 @@ CORRECT WORKFLOW:
 - `medicine` → medicine-tutor
 - `law` → law-tutor
 - `science` → science-tutor
+- `journalism` → journalist
 - `default` → book-tutor (books/reports)
 
 **Fallback strategy**:
