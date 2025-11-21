@@ -51,3 +51,4 @@ env/
 # Memory files are local and should not be shared
 .mcp/memory/
 orchestrator_metadata.json
+*.backup-*

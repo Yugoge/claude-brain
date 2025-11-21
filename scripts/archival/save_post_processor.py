@@ -174,6 +174,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
       1. update-backlinks-incremental.py (rebuild backlinks for new Rems)
       2. update-conversation-index.py (add to chats/index.json)
       3. normalize-links.py (normalize wikilinks)
+      4. sync-related-rems-from-backlinks.py (update Related Rems sections)
     """
     print("\n" + "="*60, file=sys.stderr)
     print("🔗 Step 16: Update Knowledge Graph", file=sys.stderr)
@@ -221,6 +222,19 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
         print(f"  ⚠️  Link normalization failed: {result.stderr}", file=sys.stderr)
     else:
         print(f"  ✓ Wikilinks normalized", file=sys.stderr)
+
+    # Sub-step 4: Sync Related Rems from backlinks
+    print("  Syncing Related Rems sections...", file=sys.stderr)
+    result = subprocess.run(
+        ['python3', 'scripts/knowledge-graph/sync-related-rems-from-backlinks.py', '--concept-ids'] + rem_ids,
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print(f"  ⚠️  Related Rems sync failed: {result.stderr}", file=sys.stderr)
+    else:
+        print(f"  ✓ Related Rems synced for {len(rem_ids)} Rems", file=sys.stderr)
 
 
 def materialize_inferred_links(prompt_user: bool = True):
