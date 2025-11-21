@@ -101,26 +101,6 @@ Manual check: test -f .review/history.json && echo "review" || echo "learn"
 
 ### Step 5: Domain Classification & ISCED Path (AI + Subagent)
 
-**If session_type == "review"**, filter out FSRS test portions to avoid duplicate Rem creation:
-
-**FSRS Test Patterns** (indicators of testing dialogue, not new learning):
-
-**FSRS Test Pattern Detection**:
-
-Detect review test dialogues using pattern matching:
-- Rating prompts: "Rate your recall.*1-4", "How well did you remember"
-- Test questions: "What is [[rem-id]]", "Explain [[rem-id]]"
-- FSRS feedback: "Next review.*days", "Stability.*increased"
-
-Segment conversation into FSRS test portions vs learning portions. Only extract Rems from learning segments.
-
-This prevents:
-- ❌ Creating duplicate Rems for already-reviewed concepts
-- ❌ Extracting test questions as "new concepts"
-- ❌ Confusing FSRS feedback with learning content
-
-### Step 5: Domain Classification & ISCED Path Determination
-
 **⚠️ CRITICAL**: This step determines where Rems will be stored. Incorrect classification = wrong directory = broken knowledge graph.
 
 **Purpose**: Classify conversation into UNESCO ISCED taxonomy to determine correct storage path for Rems.
@@ -170,7 +150,7 @@ This prevents:
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
 
-### Step 6: Extract Concepts
+### Step 6: Extract Concepts (AI-driven, no file creation)
 
 **Main agent extraction process**:
 
@@ -178,13 +158,27 @@ This prevents:
 
 1. Analyze active context, identify domain, extract 3-7 candidate Rems (distinct, reusable knowledge from user's mentions)
 2. Follow user's learning logic, classify questions (update vs create)
+3. **Store extracted Rems in memory** (as Python list/dict variables) - DO NOT create `candidate_rems.json` file
 
 **Extraction Rules**: ✅ User's terms/mistakes/questions, specific & reusable. ❌ Too broad/narrow, AI explanations, hallucinations, user didn't practice.
+
+**Data structure** (store in memory for Step 8):
+```python
+candidate_rems = [
+    {
+        "rem_id": "{subdomain}-{concept-slug}",
+        "title": "{Concept Title}",
+        "core_points": ["{point1}", "{point2}", "{point3}"]
+    }
+]
+```
 
 **ISCED Path Usage** (from Step 5):
 - Use classification result from Step 5 to determine Rem storage location
 - Path format: `knowledge-base/{broad-code-name}/{narrow-code-name}/{detailed-code-name}/`
 - Example: ISCED 0412 → `knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
+
+**Output**: Extracted Rems stored in memory, ready to pass to Step 8 workflow_orchestrator
 
 ---
 
@@ -205,47 +199,57 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 8: Enrich with Typed Relations via Domain Tutor (MANDATORY)
+### Step 8: Enrich with Typed Relations via Domain Tutor (AI + Subagent)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science] domains.
 
 **Purpose**: Discover typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts.
 
-**Candidate Rems JSON Schema** (create before calling orchestrator):
-```json
-[{"rem_id": "rem-slug", "title": "Title", "core_points": ["p1", "p2", "p3"]}]
-```
-- Use `"rem_id"` field (unified standard since 2025-11-07)
-- Main agent creates this JSON from extracted concepts
+**⚠️ 3-PHASE WORKFLOW**: This step requires orchestrator → domain-tutor → orchestrator interaction.
 
-**Execution Method**: Use orchestrator script:
-
+**Phase 1: Generate Tutor Prompt**
 ```bash
+# Pass candidate_rems from Step 6 via inline JSON parameter
 source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --domain "$domain" \
   --isced-path "$isced_detailed_path" \
-  --candidate-rems candidate_rems.json
+  --candidate-rems-json '$(cat <<EOF
+[{"rem_id": "...", "title": "...", "core_points": ["..."]}, ...]
+EOF
+)'
+```
+
+**Script outputs**:
+- Tutor prompt with existing concepts loaded from domain
+- Valid concept_id list for validation
+- Critical ID constraints embedded in prompt
+
+**Phase 2: Call Domain Tutor Subagent**
+- Use Task tool to call `{domain}-tutor` subagent (e.g., `language-tutor`, `finance-tutor`)
+- Pass the generated prompt from Phase 1
+- Tutor returns JSON with typed_relations
+- Store tutor response in memory (DO NOT create `tutor_response.json` file)
+
+**Phase 3: Merge Relations**
+```bash
+# Pass tutor response via inline JSON parameter
+python scripts/archival/workflow_orchestrator.py \
+  --candidate-rems-json '$(cat <<EOF
+[candidate rems from Phase 1]
+EOF
+)' \
+  --tutor-response-json '$(cat <<EOF
+{tutor response from Phase 2}
+EOF
+)'
 ```
 
 **Script automatically**:
-1. Loads existing concepts from domain
-2. Extracts valid concept_id list for validation
-3. Builds tutor prompt with **CRITICAL** ID constraints
-4. Outputs prompt for Task tool call
+1. Validates tutor response (checks all IDs match valid list)
+2. Merges typed_relations into candidate Rems
+3. Outputs enriched Rems ready for Step 11
 
-**Tutor prompt includes**:
-- "**CRITICAL**: Use EXACT concept_id values" warning
-- "**Valid concept_id values**" list (all available IDs)
-- Explicit rules: "DO NOT create composite, normalized, or descriptive IDs"
-
-**Then**:
-1. Call Task tool with `{domain}-tutor` using output prompt
-2. Save tutor JSON response to `tutor_response.json`
-3. Re-run orchestrator with `--tutor-response tutor_response.json`
-4. **Script validates tutor response** (checks all IDs match valid list)
-5. Script merges typed_relations into candidate Rems
-
-**Output**: `enriched_rems.json` with typed_relations added (all IDs validated)
+**Output**: Enriched Rems with typed_relations (stored in memory, ready for Step 11)
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 

@@ -102,7 +102,10 @@ def check_typed_relations(enriched_rems: List[Dict], existing: Dict[str, Dict]) 
     warnings = []
     auto_fixes = []
 
+    # Valid IDs include BOTH existing concepts AND current batch of candidate Rems
     existing_ids = set(existing.keys())
+    candidate_ids = {rem.get('rem_id') for rem in enriched_rems if rem.get('rem_id')}
+    valid_ids = existing_ids | candidate_ids  # Union of both sets
 
     for rem in enriched_rems:
         rem_id = rem.get('rem_id', 'unknown')
@@ -117,8 +120,8 @@ def check_typed_relations(enriched_rems: List[Dict], existing: Dict[str, Dict]) 
             to_id = rel.get('to', '')
             rel_type = rel.get('type', '')
 
-            # Check target exists
-            if to_id not in existing_ids:
+            # Check target exists (in existing concepts OR current batch)
+            if to_id not in valid_ids:
                 warnings.append(
                     f"⚠️  [{rem_id}] Relation target not found: [[{to_id}]] (will be removed)"
                 )

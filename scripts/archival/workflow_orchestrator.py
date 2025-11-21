@@ -24,10 +24,23 @@ sys.path.append(str(ROOT / "scripts"))
 from archival.get_domain_concepts import extract_domain_concepts, load_backlinks
 
 
-def load_candidate_rems(file_path):
-    """Load candidate Rems from JSON file"""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+def load_candidate_rems(file_path=None, json_string=None):
+    """
+    Load candidate Rems from JSON file or inline JSON string.
+
+    Args:
+        file_path: Path to JSON file (legacy)
+        json_string: Inline JSON string (preferred)
+
+    Returns: List of candidate Rems
+    """
+    if json_string:
+        return json.loads(json_string)
+    elif file_path:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    else:
+        raise ValueError("Must provide either file_path or json_string")
 
 
 def build_tutor_prompt(domain, existing_concepts, candidate_rems):
@@ -165,15 +178,27 @@ def main():
     parser = argparse.ArgumentParser(description='Orchestrate Step 3.5 Domain Tutor Enrichment')
     parser.add_argument('--domain', required=True, help='Domain: programming|language|finance|science')
     parser.add_argument('--isced-path', required=True, help='ISCED detailed path (e.g., 0611-computer-use)')
-    parser.add_argument('--candidate-rems', required=True, help='JSON file with candidate Rems')
+
+    # Input modes (mutually exclusive)
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument('--candidate-rems', help='JSON file with candidate Rems (legacy)')
+    input_group.add_argument('--candidate-rems-json', help='Inline JSON string with candidate Rems (preferred)')
+
     parser.add_argument('--output', default='enriched_rems.json', help='Output file path')
-    parser.add_argument('--tutor-response', help='Manual tutor JSON response file (skip Task call)')
+
+    # Tutor response modes (optional, mutually exclusive)
+    tutor_group = parser.add_mutually_exclusive_group()
+    tutor_group.add_argument('--tutor-response', help='Tutor JSON response file (legacy)')
+    tutor_group.add_argument('--tutor-response-json', help='Inline tutor JSON response (preferred)')
 
     args = parser.parse_args()
 
     try:
-        # Load candidate Rems
-        candidate_rems = load_candidate_rems(args.candidate_rems)
+        # Load candidate Rems (from file or inline JSON)
+        candidate_rems = load_candidate_rems(
+            file_path=args.candidate_rems,
+            json_string=args.candidate_rems_json
+        )
         print(f"✓ Loaded {len(candidate_rems)} candidate Rems", file=sys.stderr)
 
         # Load existing concepts
@@ -184,11 +209,15 @@ def main():
         # Build tutor prompt
         tutor_prompt = build_tutor_prompt(args.domain, existing_concepts, candidate_rems)
 
-        if args.tutor_response:
-            # Manual mode: use provided tutor response
-            with open(args.tutor_response, 'r', encoding='utf-8') as f:
-                tutor_json = json.load(f)
-            print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
+        if args.tutor_response or args.tutor_response_json:
+            # Manual mode: use provided tutor response (from file or inline JSON)
+            if args.tutor_response_json:
+                tutor_json = json.loads(args.tutor_response_json)
+                print(f"✓ Loaded tutor response from inline JSON", file=sys.stderr)
+            else:
+                with open(args.tutor_response, 'r', encoding='utf-8') as f:
+                    tutor_json = json.load(f)
+                print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
 
             # Validate tutor response IDs (includes both existing and candidate IDs)
             existing_ids = [c["rem_id"] for c in existing_concepts]
