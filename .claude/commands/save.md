@@ -54,99 +54,52 @@ Archive conversations (`/learn`, `/ask`, `/review`), extract ultra-minimal Rems 
 ## Implementation
 
 
-### Step 1: Archive Conversation
+### Steps 1-4: Pre-processing (Automated via save_orchestrator)
 
+**⚠️ BATCH PROCESSING**: Steps 1-4 are handled by a single orchestrator script.
+
+**Execute orchestrator**:
 ```bash
-# Default: Include subagent messages (full context)
-archived_file=$(python3 scripts/services/chat_archiver.py)
-
-# Optional: Exclude subagent messages (main conversation only)
-archived_file=$(python3 scripts/services/chat_archiver.py --no-include-subagents)
+source venv/bin/activate && python scripts/archival/save_orchestrator.py
 ```
 
-**Parameters**:
-- `--include-subagents` (default): Include all subagent dialogues (analyst, language-tutor, finance-tutor, programming-tutor, medicine-tutor, law-tutor, science-tutor, journalist, etc.)
-- `--no-include-subagents`: Exclude subagent messages, archive only main conversation
+**Orchestrator automatically performs**:
+1. **Archive Conversation** - Archives current conversation with chat_archiver.py
+2. **Parse Arguments** - Detects topic from context or $ARGUMENTS
+3. **Session Validation** - Uses session_detector.py and concept_extractor.py to validate
+4. **Filter FSRS Test Dialogues** - Removes test portions from review sessions
 
-**Archiver behavior**: Detects subagents, labels responses as `### Subagent: {Name}`, demotes headings by 1 level, optionally filters with `--no-include-subagents`.
-
-Store `archived_file` for Step 13 (Rem source) and Step 7 (conversation rems_extracted update).
-
-**IMPORTANT**: The archived file contains placeholder metadata that MUST be enriched from active context:
-- `id`: Generic `conversation-{date}` → Needs meaningful topic-based ID
-- `title`: Generic "Conversation - {date}" → Needs descriptive title
-- `domain`: Generic "general" → Needs actual domain classification
-- `summary`: Placeholder text → Needs real summary from conversation
-
-These will be updated in Step 14 using information from the active conversation context.
-
----
-
-### Step 2: Parse Arguments & Detect Session Type
-
-Extract arguments from `$ARGUMENTS`:
-
-**Possible cases**:
-
-1. **No arguments** (empty `$ARGUMENTS`)
-   - Archive the most recent substantial conversation
-   - Must identify the last meaningful dialogue in session
-
-2. **Topic name** (e.g., `$ARGUMENTS = "python-gil"`)
-   - Archive conversation about specific topic
-   - Search session for matching topic
-
-3. **--all flag** (e.g., `$ARGUMENTS = "--all"`)
-   - Archive all recent unarchived conversations
-   - Batch processing mode
-
-**YOU MUST** handle all three cases correctly.
-
----
-
-### Step 3: Session Validation
-
-**⚠️ CRITICAL**: Comprehensive validation determines workflow viability. Failures here prevent incorrect extraction.
-
-**IMPORTANT**: `session_detector.py` and `concept_extractor.py` are library modules imported by `save_orchestrator.py`. Do NOT run them as standalone CLI scripts.
-
-**Validation is performed automatically by save_orchestrator** (executed in subsequent steps). The orchestrator:
-- Detects session type with confidence scoring (FSRS patterns, turns, keywords, Rem refs)
-- Validates conversation meets archival criteria (token limits, duplicates, length)
-- Returns `session_type`, `rems_reviewed`, `confidence`, `fsrs_progress_saved`
-
-**Validation checks**:
-1. **Token Limit**: Max 150k (warns at 100k) → Exit code 2 if exceeded
-2. **Duplicates**: Jaccard 60% similarity → Non-blocking warning
-3. **Length**: Min 3 substantial turns → Exit code 1 if too short
-4. **Confidence**: Session type confidence must be ≥50%
+**Output**:
+- `archived_file` - Path to archived conversation (e.g., `chats/2025-11/conversation-2025-11-21.md`)
+- `session_type` - Detected type: "learn", "ask", or "review"
+- Validation passed (exit code 0) or failed (exit code 1/2)
 
 **Exit codes**:
-- `0` = Pass → Continue to Step 4
-- `1` = Too short → Skip archival
-- `2` = Token limit → Block with error
+- `0` = Success → Continue to Step 5
+- `1` = Validation failed (too short/low confidence) → Skip archival
+- `2` = Token limit exceeded → Block with error
 
-**If validation fails**:
+**If orchestrator fails**:
 ```
-This conversation doesn't meet archival criteria:
-- Reason: [Too short | Token exceeded | Low confidence]
+❌ Session validation failed
 
-Archival requires:
-- 3+ substantial turns
-- Token count <150k (current: {N}k)
-- Session type confidence ≥50%
+Possible issues:
+- Conversation too short (<3 substantial turns)
+- Token count >150k
+- Session type confidence <50%
+
+Manual check: test -f .review/history.json && echo "review" || echo "learn"
 ```
 
-**Manual fallback** (if orchestrator fails):
-```bash
-# Simple checks
-test -f .review/history.json && echo "review" || echo "learn"
-# Manual: Count turns, check chats/index.json, verify content
-```
+**Why batch processing**:
+- ✅ Eliminates 4 manual steps
+- ✅ Consistent validation logic
+- ✅ Automatic session type detection
+- ✅ FSRS filtering for review sessions
 
 ---
 
-### Step 4: Filter FSRS Test Dialogues (Review Sessions Only)
+### Step 5: Domain Classification & ISCED Path (AI + Subagent)
 
 **If session_type == "review"**, filter out FSRS test portions to avoid duplicate Rem creation:
 
