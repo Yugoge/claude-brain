@@ -21,63 +21,48 @@ def get_todos():
             "status": "pending"
         },
         {
-            "content": "Step 1: Archive Conversation",
-            "activeForm": "Archiving conversation",
+            "content": "Step 1: Pre-Processing (Batch Execution)",
+            "activeForm": "Running pre-processing orchestrator",
             "status": "pending"
         },
         {
-            "content": "Step 2: Parse Arguments",
-            "activeForm": "Parsing arguments",
-            "status": "pending"
-        },
-        {
-            "content": "Step 3: Session Validation",
-            "activeForm": "Validating session",
-            "status": "pending"
-        },
-        {
-            "content": "Step 4: Filter FSRS Test Dialogues (Review Sessions Only)",
-            "activeForm": "Filtering FSRS test dialogues",
-            "status": "pending"
-        },
-        {
-            "content": "Step 5: Domain Classification & ISCED Path",
+            "content": "Step 2: Domain Classification & ISCED Path",
             "activeForm": "Classifying domain",
             "status": "pending"
         },
         {
-            "content": "Step 6: Extract Concepts",
+            "content": "Step 3: Extract Concepts",
             "activeForm": "Extracting concepts",
             "status": "pending"
         },
         {
-            "content": "Step 7: Question Type Classification (Review Sessions Only)",
+            "content": "Step 4: Question Type Classification (Review Sessions Only)",
             "activeForm": "Classifying question types",
             "status": "pending"
         },
         {
-            "content": "Step 8: Enrich with Typed Relations (MANDATORY)",
+            "content": "Step 5: Enrich with Typed Relations (MANDATORY)",
             "activeForm": "Enriching with typed relations",
             "status": "pending"
         },
         {
-            "content": "Step 9: Rem Extraction Transparency",
+            "content": "Step 6: Rem Extraction Transparency",
             "activeForm": "Presenting extracted Rems",
             "status": "pending"
         },
         {
-            "content": "Step 10: Generate Preview",
+            "content": "Step 7: Generate Preview",
             "activeForm": "Generating preview",
             "status": "pending"
         },
         {
-            "content": "Step 11: User Confirmation",
+            "content": "Step 8: User Confirmation",
             "activeForm": "Awaiting user confirmation",
             "status": "pending"
         },
         {
-            "content": "Step 12: Execute Post-Processing (automated Steps 12-22)",
-            "activeForm": "Executing post-processing",
+            "content": "Step 9: Execute Post-Processing (Batch Execution)",
+            "activeForm": "Running post-processing orchestrator",
             "status": "pending"
         }
     ]

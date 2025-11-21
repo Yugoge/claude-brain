@@ -199,8 +199,11 @@ class FileWriter:
         if result.returncode != 0:
             raise WriteError(f"Failed to normalize conversation: {result.stderr}")
 
-        # Parse new path from output
-        new_path = Path(result.stdout.strip())
+        # Parse new path from output (last line only, ignore status messages)
+        output_lines = result.stdout.strip().split('\n')
+        new_path_str = output_lines[-1]  # Last line is the path
+        new_path = Path(new_path_str)
+
         self.modified_files.append(new_path)
 
         print(f"✓ Normalized: {new_path.name}", file=sys.stderr)

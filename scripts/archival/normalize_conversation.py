@@ -309,8 +309,9 @@ def main():
     # Normalize
     new_path = normalize_conversation(args.file_path, metadata)
 
-    print(f"✅ Normalized conversation file: {new_path}")
-    return str(new_path)
+    print(f"✅ Normalized conversation file: {new_path}", file=sys.stderr)
+    print(str(new_path))  # Output path to stdout for programmatic consumption
+    return 0
 
 
 if __name__ == "__main__":

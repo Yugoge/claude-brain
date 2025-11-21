@@ -6,8 +6,16 @@ Detects whether the session is a review or learning session
 
 import json
 import time
+import sys
 from pathlib import Path
 from datetime import datetime
+from typing import Tuple, List, Optional
+
+# Add scripts to path for type imports
+SCRIPT_DIR = Path(__file__).parent.parent
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from archival.types import DetectionResult
 
 class SessionDetector:
     """Detect session type and load relevant data with confidence scoring."""
@@ -122,7 +130,7 @@ class SessionDetector:
 
         return min(1.0, max(0.0, confidence))
 
-    def detect_session_type(self, conversation_turns=None):
+    def detect_session_type(self, conversation_turns=None) -> DetectionResult:
         """
         Detect if this is a review or learning session with confidence scoring.
 
@@ -130,7 +138,7 @@ class SessionDetector:
             conversation_turns: Optional conversation history for heuristics
 
         Returns:
-            Tuple of (session_type, rems_reviewed, confidence_score)
+            DetectionResult with session_type, rems_reviewed, and confidence
         """
         # Performance tracking
         start_time = time.time()
@@ -173,7 +181,29 @@ class SessionDetector:
         elif self.confidence_score < self.HIGH_CONFIDENCE:
             print(f"ℹ️  Session type confidence: {self.confidence_score:.0%} (MEDIUM)")
 
-        return self.session_type, self.rems_reviewed, self.confidence_score
+        return DetectionResult(
+            session_type=self.session_type,  # type: ignore
+            rems_reviewed=self.rems_reviewed,
+            confidence=self.confidence_score,
+            metadata={
+                'history_file_exists': self.history_file.exists(),
+                'confidence_level': (
+                    "HIGH" if self.confidence_score >= self.HIGH_CONFIDENCE
+                    else "MEDIUM" if self.confidence_score >= self.MEDIUM_CONFIDENCE
+                    else "LOW"
+                )
+            }
+        )
+
+    def detect_session_type_legacy(self, conversation_turns=None) -> Tuple[str, List[str], float]:
+        """
+        Legacy method returning tuple format (for backward compatibility).
+
+        DEPRECATED: Use detect_session_type() which returns DetectionResult.
+        This method will be removed in a future version.
+        """
+        result = self.detect_session_type(conversation_turns)
+        return result.session_type, result.rems_reviewed, result.confidence
 
     def get_session_metadata(self):
         """Get metadata for the current session with confidence."""

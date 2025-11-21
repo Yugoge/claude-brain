@@ -97,12 +97,12 @@ def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path:
     try:
         # Validation 1: Preflight checker (typed relations enforcement)
         print("  Running preflight checks...", file=sys.stderr)
-        from archival.preflight_checker import check_enrichment_execution
+        from archival.preflight_checker import check_step_3_5_executed
 
         # Check if domain requires tutor enrichment
-        check_result = check_enrichment_execution(
-            domain=domain,
-            enriched_rems=enriched_rems
+        check_result = check_step_3_5_executed(
+            enriched_rems=enriched_rems,
+            domain=domain
         )
 
         if not check_result['passed']:
@@ -113,11 +113,11 @@ def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path:
 
         # Validation 2: Light validator (Rem structure)
         print("  Running light validation...", file=sys.stderr)
-        from archival.pre_validator_light import validate_rems_light
+        from archival.pre_validator_light import validate_enriched_rems
 
-        validation_result = validate_rems_light(enriched_rems, isced_path)
+        validation_result = validate_enriched_rems(enriched_rems, isced_path)
 
-        if not validation_result['valid']:
+        if not validation_result['passed']:
             print(f"  ❌ Light validation failed:", file=sys.stderr)
             for error in validation_result['errors']:
                 print(f"    - {error}", file=sys.stderr)

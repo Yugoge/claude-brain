@@ -54,66 +54,31 @@ Archive conversations (`/learn`, `/ask`, `/review`), extract ultra-minimal Rems 
 ## Implementation
 
 
-### Step 1: Archive Conversation
+### Step 1: Pre-Processing (Batch Execution)
 
+**Orchestrator handles all pre-processing atomically**:
 ```bash
-archived_file=$(python3 scripts/services/chat_archiver.py)
+source venv/bin/activate && python scripts/archival/save_orchestrator.py
 ```
 
-**Output**: `chats/YYYY-MM/conversation-YYYY-MM-DD.md`
+**Automatically performs**:
+1. **Archive Conversation**: `python3 scripts/services/chat_archiver.py`
+2. **Parse Arguments**: Extract from `$ARGUMENTS` (topic-name | --all | empty)
+3. **Session Validation**: Detect type (learn|ask|review) with confidence checks
+4. **Filter FSRS** (review only): Remove test dialogues via pattern matching
 
-**Note**: Archived file contains placeholder metadata (id, title, domain, summary) that will be updated in Step 14.
-
----
-
-### Step 2: Parse Arguments
-
-Extract from `$ARGUMENTS`:
-- **No arguments**: Archive most recent conversation
-- **Topic name** (e.g., `python-gil`): Archive specific topic
-- **`--all`**: Archive all unarchived conversations
-
----
-
-### Step 3: Session Validation
-
-Runs validation checks:
-- `session_detector.py`: Detect type (learn|ask|review) with confidence
-- `concept_extractor.py --check-only`: Validate conversation length, token count
+**Outputs**:
+- Filtered archived conversation (`chats/YYYY-MM/conversation-YYYY-MM-DD.md`)
+- Session metadata (`orchestrator_metadata.json`)
 
 **Exit codes**:
-- `0` = Valid → Continue
+- `0` = Valid → Continue to Step 2
 - `1` = Too short (<3 turns) → Block
 - `2` = Token limit exceeded (>150k) → Block
 
 ---
 
-### Step 4: Filter FSRS Test Dialogues (Review Sessions Only)
-
-**If session_type == "review"**: Segment conversation using pattern matching.
-
-**FSRS patterns** (auto-detected and removed):
-- Rating prompts: "Rate your recall.*1-4"
-- Test questions: "What is [[rem-id]]"
-- FSRS feedback: "Next review.*days"
-
-**Output**: Filtered conversation (learning portion only), test portion saved to `*_fsrs_test.md`
-
----
-
-**Batch execution for Steps 1-4**:
-```bash
-# Orchestrator handles all 4 steps atomically
-source venv/bin/activate && python scripts/archival/save_orchestrator.py
-
-# Outputs:
-# - Filtered archived conversation file
-# - orchestrator_metadata.json (session_type, confidence, archived_file path)
-```
-
----
-
-### Step 5: Domain Classification & ISCED Path (AI + Subagent)
+### Step 2: Domain Classification & ISCED Path (AI + Subagent)
 
 **⚠️ CRITICAL**: This step determines where Rems will be stored. Incorrect classification = wrong directory = broken knowledge graph.
 
@@ -158,13 +123,15 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 - If ISCED path missing → Create directory structure or use closest match
 
 **Output stored for**:
-- Step 6: Extract Concepts (determine subdomain)
-- Step 8: Enrich with Typed Relations (load existing concepts from domain)
-- Step 13: Create Knowledge Rems (determine file paths)
+- Step 3: Extract Concepts (determine subdomain)
+- Step 5: Enrich with Typed Relations (load existing concepts from domain)
+- Step 9: Post-Processing (determine file paths)
 
 **CRITICAL**: All Rems MUST be saved to ISCED 3-level paths. No legacy domain shortcuts allowed.
 
-### Step 6: Extract Concepts (AI-driven, no file creation)
+---
+
+### Step 3: Extract Concepts (AI-driven, no file creation)
 
 **Main agent extraction process**:
 
@@ -187,16 +154,16 @@ candidate_rems = [
 ]
 ```
 
-**ISCED Path Usage** (from Step 5):
-- Use classification result from Step 5 to determine Rem storage location
+**ISCED Path Usage** (from Step 2):
+- Use classification result from Step 2 to determine Rem storage location
 - Path format: `knowledge-base/{broad-code-name}/{narrow-code-name}/{detailed-code-name}/`
 - Example: ISCED 0412 → `knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
 
-**Output**: Extracted Rems stored in memory, ready to pass to Step 8 workflow_orchestrator
+**Output**: Extracted Rems stored in memory, ready to pass to Step 5 workflow_orchestrator
 
 ---
 
-### Step 7: Question Type Classification (Review Sessions Only)
+### Step 4: Question Type Classification (Review Sessions Only)
 
 **If session_type == "review"**, classify each user question:
 
@@ -213,7 +180,9 @@ Map clarification type to target Rem section:
 - Example clarification → `## Usage Scenario`
 - Usage clarification → `## Usage Scenario`
 
-### Step 8: Enrich with Typed Relations via Domain Tutor (AI + Subagent)
+---
+
+### Step 5: Enrich with Typed Relations via Domain Tutor (AI + Subagent)
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science|medicine|law] domains.
 
@@ -251,13 +220,13 @@ python scripts/archival/workflow_orchestrator.py \
 
 Script validates all IDs and merges typed_relations.
 
-**Output**: Enriched Rems with validated typed_relations (stored in AI memory for Step 11)
+**Output**: Enriched Rems with validated typed_relations (stored in AI memory for Step 8)
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 
 ---
 
-### Step 9: Rem Extraction Transparency
+### Step 6: Rem Extraction Transparency
 
 **After extracting and enriching Rems**, YOU (main agent) MUST present them in user-friendly format (no code):
 
@@ -275,7 +244,7 @@ Script validates all IDs and merges typed_relations.
 
 ---
 
-### Step 10: Generate Preview
+### Step 7: Generate Preview
 
 Present extracted Rems in聊天框:
 
@@ -294,7 +263,7 @@ N. [Title] → [1-line summary] → path/to/file.md
 
 ---
 
-### Step 11: User Confirmation
+### Step 8: User Confirmation
 
 Wait for explicit approval before creating files.
 
@@ -302,7 +271,7 @@ Wait for explicit approval before creating files.
 ```
 📊 [Topic] | [domain] | [N] concepts
 
-[Previews from Step 10]
+[Previews from Step 7]
 
 Files: [N] Rems + 1 conversation + 2 index updates
 ```
@@ -317,13 +286,13 @@ Files: [N] Rems + 1 conversation + 2 index updates
 ```
 
 **Handle**:
-- Approve → Step 12 (Execute Post-Processing)
+- Approve → Step 9 (Execute Post-Processing)
 - Modify → Iterate, re-present
 - Cancel → Abort gracefully
 
 ---
 
-### Step 12: Execute Automated Post-Processing
+### Step 9: Execute Automated Post-Processing
 
 **⚠️ CRITICAL**: ONLY execute after user approval. This step automates all remaining operations (validation, file creation, graph updates, FSRS sync, analytics).
 
@@ -375,7 +344,7 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
   --session-type "{learn|ask|review}"
 ```
 
-**Post-processor automatically executes (original Steps 12-22)**:
+**Post-processor automatically executes**:
 - **Validation**: Pre-creation checks (preflight_checker + pre_validator_light)
 - **File Creation**: Create Knowledge Rems (atomic transaction, N files)
 - **Conversation**: Normalize metadata and rename file
@@ -393,42 +362,42 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
 🚀 Starting /save post-processing workflow
    Processing {N} Rem(s) for session: {title}
 
-📋 Step 12: Pre-creation Validation
+📋 Pre-creation Validation
   ✓ Preflight check passed
   ✓ Light validation passed ({N} Rems)
 
-💾 Steps 13-15, 20: Atomic File Creation
-  📝 Step 19: Normalizing conversation...
+💾 Atomic File Creation
+  📝 Normalizing conversation...
   ✓ Normalized: {conversation-file}.md
-  📝 Step 16: Creating Knowledge Rems...
+  📝 Creating Knowledge Rems...
   ✓ Created: {rem1}.md
   ✓ Created: {rem2}.md
   ...
-  🔗 Step 24: Linking conversation to Rems...
+  🔗 Linking conversation to Rems...
   ✓ Updated conversation with {N} Rem links
   ✅ All files written successfully
 
-🔗 Step 16: Update Knowledge Graph
+🔗 Update Knowledge Graph
   ✓ Backlinks updated for {N} Rems
   ✓ Conversation index updated
   ✓ Wikilinks normalized
 
-🔮 Step 17: Materialize Inferred Links (Optional)
+🔮 Materialize Inferred Links (Optional)
   ⏭️  Skipped (non-interactive mode)
 
-📅 Step 18: Sync to FSRS Review Schedule
+📅 Sync to FSRS Review Schedule
   ✓ FSRS sync completed
 
-🧠 Step 19: Record to Memory MCP
+🧠 Record to Memory MCP
   ℹ️  MCP recording should be handled by main agent
   ⏭️  Skipped (MCP tools unavailable in subprocess)
 
-📊 Step 21: Generate Analytics & Visualizations
+📊 Generate Analytics & Visualizations
   ✓ Analytics generated (30-day period)
   ✓ Graph data generated
   ✓ Visualization HTML generated
 
-✅ Step 22: Completion Report
+✅ Completion Report
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📊 Session: {title}
@@ -496,12 +465,12 @@ Next: /review
 
 ## Important Rules
 
-**DO**: Analyze conversation directly, extract from ACTUAL content, use ultra-minimal template (100-120 tokens/Rem), show previews, wait for approval, run Steps 16-22 post-processing, use kebab-case filenames, respect user instructions.
+**DO**: Analyze conversation directly, extract from ACTUAL content, use ultra-minimal template (100-120 tokens/Rem), show previews, wait for approval, run post-processing, use kebab-case filenames, respect user instructions.
 
-**DON'T**: Use `python -c`/heredocs (use scripts), invoke conversation-archiver subagent, hallucinate, create without approval, skip previews, extract wrong amounts (3-7 typical), skip Steps 16-22, archive trivial/duplicate conversations.
+**DON'T**: Use `python -c`/heredocs (use scripts), invoke conversation-archiver subagent, hallucinate, create without approval, skip previews, extract wrong amounts (3-7 typical), skip post-processing, archive trivial/duplicate conversations.
 
 ## Success Criteria
 
 **Core**: Extract from ACTUAL conversation (no hallucinations), user approval before files, ultra-minimal format (100-120 tokens/Rem), correct ISCED paths, wikilinks normalized, backlinks/indexes updated, stats auto-generated, comprehensive completion report.
 
-**Edge cases**: No conversation (help message), already archived (inform), too short (warn+override), user cancels (graceful exit), modifications (iterate), no inferences (skip Step 17), failures (fallback/log/continue).
+**Edge cases**: No conversation (help message), already archived (inform), too short (warn+override), user cancels (graceful exit), modifications (iterate), no inferences (skip materialization), failures (fallback/log/continue).

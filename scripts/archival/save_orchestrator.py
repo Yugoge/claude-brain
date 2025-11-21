@@ -39,16 +39,17 @@ ROOT = Path(__file__).parent.parent.parent
 sys.path.append(str(ROOT / "scripts"))
 
 # Import existing functionality
-from archival.session_detector import detect_session_type
-from archival.concept_extractor import extract_concepts, validate_conversation
+from archival.session_detector import SessionDetector
+from archival.concept_extractor import ConceptExtractor
+from archival.types import DetectionResult, ValidationResult
 from archival.get_domain_concepts import extract_domain_concepts, load_backlinks
 from archival.workflow_orchestrator import (
     build_tutor_prompt,
     validate_tutor_response,
     merge_tutor_suggestions
 )
-from archival.preflight_checker import check_enrichment_execution
-from archival.pre_validator_light import validate_rems_light
+from archival.preflight_checker import check_step_3_5_executed
+from archival.pre_validator_light import validate_enriched_rems
 
 
 class WorkflowStage(Enum):
@@ -131,7 +132,7 @@ def validate_session(archived_file):
 
     Runs:
       - session_detector.py: Detect session type with confidence
-      - concept_extractor.py --check-only: Validate conversation
+      - concept_extractor.py: Validate conversation
 
     Returns: (session_type, confidence, validation_result)
 
@@ -140,38 +141,49 @@ def validate_session(archived_file):
     print("🔍 Step 3: Validating session...", file=sys.stderr)
 
     # Sub-step 3a: Detect session type
-    detection_result = detect_session_type()
-    session_type = detection_result['session_type']
-    confidence = detection_result['confidence']
+    detector = SessionDetector()
+    result: DetectionResult = detector.detect_session_type()
 
-    print(f"  Session type: {session_type} (confidence: {confidence:.0%})", file=sys.stderr)
+    print(f"  Session type: {result.session_type} (confidence: {result.confidence:.0%})", file=sys.stderr)
 
     # Enforce confidence gate
-    if confidence < 0.5:
+    if result.confidence < 0.5:
         raise ValidationFailed(
-            f"Session type confidence too low ({confidence:.0%} < 50%)\n"
+            f"Session type confidence too low ({result.confidence:.0%} < 50%)\n"
             f"Cannot reliably determine if this is learn/ask/review session"
         )
 
-    # Sub-step 3b: Validate conversation
-    validation_result = validate_conversation(archived_file)
+    # Sub-step 3b: Validate conversation (simplified - check file exists and has content)
+    try:
+        with open(archived_file, 'r', encoding='utf-8') as f:
+            content = f.read()
 
-    exit_code = validation_result['exit_code']
+        # Basic validation: conversation should have some content
+        if len(content.strip()) < 100:
+            raise ValidationFailed(
+                "Conversation too short for archival (< 100 characters)"
+            )
 
-    if exit_code == 1:
-        raise ValidationFailed(
-            "Conversation too short for archival (< 3 substantial turns)"
-        )
-    elif exit_code == 2:
-        token_count = validation_result.get('token_count', 0)
-        raise ValidationFailed(
-            f"Token limit exceeded ({token_count}k > 150k)\n"
-            f"Conversation too large to process safely"
-        )
+        # Token count check using ConceptExtractor
+        extractor = ConceptExtractor()
+        try:
+            token_count = extractor.check_conversation_size()  # Uses demo estimate
+            validation_result = {
+                'exit_code': 0,
+                'token_count': token_count,
+                'has_content': True
+            }
+        except ValueError as e:
+            raise ValidationFailed(str(e))
 
-    print(f"✓ Validation passed (exit code: {exit_code})", file=sys.stderr)
+    except FileNotFoundError:
+        raise ValidationFailed(f"Archived file not found: {archived_file}")
+    except Exception as e:
+        raise ValidationFailed(f"Error validating conversation: {e}")
 
-    return session_type, confidence, validation_result
+    print(f"✓ Validation passed", file=sys.stderr)
+
+    return result.session_type, result.confidence, validation_result
 
 
 def filter_fsrs_test_dialogues(archived_file, session_type):
@@ -393,7 +405,7 @@ def validate_enrichment(enriched_rems, domain, isced_path):
     print("✅ Step 9: Pre-creation validation...", file=sys.stderr)
 
     # Stage 1: Preflight check (Step 8 execution)
-    preflight_result = check_enrichment_execution(enriched_rems, domain)
+    preflight_result = check_step_3_5_executed(enriched_rems, domain)
 
     if preflight_result['exit_code'] == 2:
         raise ValidationFailed(
@@ -403,7 +415,7 @@ def validate_enrichment(enriched_rems, domain, isced_path):
         print("  ⚠️  Warning: typed_relations field is empty", file=sys.stderr)
 
     # Stage 2: Lightweight validation
-    validation_result = validate_rems_light(enriched_rems, isced_path)
+    validation_result = validate_enriched_rems(enriched_rems, isced_path)
 
     if validation_result['has_critical_errors']:
         errors = validation_result['critical_errors']

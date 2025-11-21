@@ -50,3 +50,4 @@ env/
 # MCP Memory Server Storage
 # Memory files are local and should not be shared
 .mcp/memory/
+orchestrator_metadata.json
