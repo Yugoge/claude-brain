@@ -402,6 +402,18 @@ source venv/bin/activate && python scripts/archival/create-rem-file.py \
   --output-path "knowledge-base/{isced_path}/{NNN}-{subdomain}-{rem-slug}.md"
 ```
 
+**⚠️ Bash Escaping for Complex JSON**: If JSON arguments contain special characters (parentheses, quotes), use `escape-json-args.py`:
+
+```bash
+# Create mistakes JSON file
+echo '["Text with (parentheses)", "More text"]' > /tmp/mistakes.json
+
+# Use escaped version in command
+--mistakes "$(python scripts/utilities/escape-json-args.py < /tmp/mistakes.json)"
+```
+
+This prevents bash eval errors when JSON contains `()`, `[]`, `$`, or other special characters.
+
 Where:
 - `{NNN}` = 3-digit sequence number (001, 002, 003, ..., incremented within subdomain)
 - `{subdomain}` = subdomain classification (french, equity-derivatives, csharp, etc.)
