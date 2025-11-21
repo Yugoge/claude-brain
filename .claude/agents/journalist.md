@@ -134,7 +134,22 @@ You MUST output **valid JSON** following this schema:
         "bias_risk": "low | medium | high",
         "verification_method": "How to verify funding (Form 990, annual reports, About page)"
       }
-    ]
+    ],
+    "EXAMPLE": {
+      "source_name": "Australian Strategic Policy Institute (ASPI)",
+      "source_type": "think_tank",
+      "funding_sources": [
+        {"funder": "Australian Department of Defence", "amount_or_percentage": "43%", "year": "2022-23"},
+        {"funder": "US State Department", "amount_or_percentage": "14%", "year": "2022-23"},
+        {"funder": "Defense contractors (Lockheed, Raytheon, etc.)", "amount_or_percentage": "10-15%", "year": "2022-23"}
+      ],
+      "funder_interests": "Defense funders benefit from US-China tensions; military contractors profit from increased defense spending in Asia-Pacific",
+      "independence_score": "3/10",
+      "methodology_transparency": "Yes - ASPI reports cite sources, satellite imagery, Chinese government documents. Methods are replicable.",
+      "cross_verification": "Yes - US CBP (independent investigation), Sheffield Hallam University (UK, different funders), UN Human Rights Office (2022 report) reached similar conclusions on Xinjiang forced labor.",
+      "bias_risk": "high (geopolitical incentives) BUT evidence cross-verified by multiple independent sources with different funding structures",
+      "verification_method": "ASPI annual report page: https://www.aspi.org.au/annual-report"
+    }
   },
   "issue_hierarchy_assessment": {
     "red_line_identification": {
@@ -582,6 +597,7 @@ User prefers: Evidence-based analysis, quantitative scoring, structural over ide
 6. **Minimal Rems** - ~150 tokens each (formula + example + verification method)
 7. **No ideology** - Analyze structure, not content ideology (left/right irrelevant)
 8. **Cross-verification** - Always recommend checking 3+ sources with different funding
+9. **MANDATORY: Source credibility check** - If your analysis cites think tanks, NGOs, research institutions (ASPI, Heritage, HRW, etc.), you MUST populate `source_credibility_analysis` with funding sources and bias risk. Distinguish bias from evidence validity via cross-verification.
 
 ---
 

@@ -108,22 +108,18 @@ Extract arguments from `$ARGUMENTS`:
 
 **⚠️ CRITICAL**: Comprehensive validation determines workflow viability. Failures here prevent incorrect extraction.
 
-**Run two validation scripts in sequence**:
+**IMPORTANT**: `session_detector.py` and `concept_extractor.py` are library modules imported by `save_orchestrator.py`. Do NOT run them as standalone CLI scripts.
 
-```bash
-# 1. Detect session type with confidence scoring
-source venv/bin/activate && python scripts/archival/session_detector.py
+**Validation is performed automatically by save_orchestrator** (executed in subsequent steps). The orchestrator:
+- Detects session type with confidence scoring (FSRS patterns, turns, keywords, Rem refs)
+- Validates conversation meets archival criteria (token limits, duplicates, length)
+- Returns `session_type`, `rems_reviewed`, `confidence`, `fsrs_progress_saved`
 
-# 2. Validate conversation meets archival criteria
-source venv/bin/activate && python scripts/archival/concept_extractor.py --check-only
-```
-
-**Session Detector**: Multi-indicator confidence scoring (FSRS patterns, turns, keywords, Rem refs). Returns `session_type`, `rems_reviewed`, `confidence`, `fsrs_progress_saved`. Warns if confidence <50%.
-
-**Concept Extractor checks**:
+**Validation checks**:
 1. **Token Limit**: Max 150k (warns at 100k) → Exit code 2 if exceeded
 2. **Duplicates**: Jaccard 60% similarity → Non-blocking warning
 3. **Length**: Min 3 substantial turns → Exit code 1 if too short
+4. **Confidence**: Session type confidence must be ≥50%
 
 **Exit codes**:
 - `0` = Pass → Continue to Step 4
@@ -141,7 +137,7 @@ Archival requires:
 - Session type confidence ≥50%
 ```
 
-**Fallback** (if scripts fail):
+**Manual fallback** (if orchestrator fails):
 ```bash
 # Simple checks
 test -f .review/history.json && echo "review" || echo "learn"
