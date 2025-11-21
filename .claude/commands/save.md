@@ -350,11 +350,176 @@ Files: [N] Rems + 1 conversation + 2 index updates
 ```
 
 **Handle**:
-- Option 1 → Step 12 (Pre-creation Validation)
+- Option 1 → Step 11 (Execute Post-Processing)
 - Option 2 → Iterate, re-present
 - Option 3 → Abort gracefully
 
-### Step 12: Pre-creation Validation
+---
+
+### Step 11: Execute Automated Post-Processing
+
+**⚠️ CRITICAL**: ONLY execute after user approval. This step automates all remaining operations (validation, file creation, graph updates, FSRS sync, analytics).
+
+**Create enriched_rems.json** with all extracted and enriched Rem data:
+
+```json
+{
+  "session_metadata": {
+    "id": "{topic-slug}-{YYYY-MM-DD}",
+    "title": "{Conversation Title}",
+    "summary": "{2-3 sentence conversation summary}",
+    "archived_file": "{path/to/archived.md}",
+    "session_type": "{learn|ask|review}",
+    "domain": "{domain}",
+    "subdomain": "{subdomain}",
+    "isced_path": "{isced_path}",
+    "agent": "{main|analyst}",
+    "tags": []
+  },
+  "rems": [
+    {
+      "rem_id": "{subdomain}-{concept-slug}",
+      "title": "{Concept Title}",
+      "core_points": ["{point1}", "{point2}", "{point3}"],
+      "usage_scenario": "{1-2 sentence usage}",
+      "my_mistakes": ["{mistake1}", "{mistake2}"],
+      "typed_relations": [
+        {"target": "{existing-rem-id}", "type": "{prerequisite_of|synonym|contrasts_with|...}"}
+      ],
+      "output_path": "knowledge-base/{isced_path}/{NNN}-{subdomain}-{rem-slug}.md"
+    }
+  ],
+  "rems_to_update": [
+    {
+      "rem_id": "{rem-to-update}",
+      "clarification_text": "{Additional clarification text}",
+      "target_section": "## Core Memory Points"
+    }
+  ]
+}
+```
+
+**Execute post-processor**:
+
+```bash
+source venv/bin/activate && python scripts/archival/save_post_processor.py \
+  --enriched-rems /tmp/enriched_rems.json \
+  --archived-file "$archived_file" \
+  --session-type "{learn|ask|review}"
+```
+
+**Post-processor automatically executes**:
+- **Step 12**: Pre-creation Validation (preflight_checker + pre_validator_light)
+- **Step 13**: Create Knowledge Rems (atomic transaction, N files)
+- **Step 14**: Normalize conversation metadata and rename file
+- **Step 15**: Update existing Rems (review sessions with Type A clarifications)
+- **Step 16**: Update knowledge graph (backlinks, conversation index, normalize wikilinks)
+- **Step 17**: Materialize inferred links (optional, with preview)
+- **Step 18**: Sync Rems to FSRS review schedule (automatic)
+- **Step 19**: Record to Memory MCP (automatic)
+- **Step 20**: Update conversation Rem links (bidirectional navigation)
+- **Step 21**: Generate analytics & visualizations (automatic)
+- **Step 22**: Display completion report with performance metrics
+
+**Post-processor output**:
+```
+🚀 Starting /save post-processing workflow
+   Processing {N} Rem(s) for session: {title}
+
+📋 Step 12: Pre-creation Validation
+  ✓ Preflight check passed
+  ✓ Light validation passed ({N} Rems)
+
+💾 Steps 13-15, 20: Atomic File Creation
+  📝 Step 19: Normalizing conversation...
+  ✓ Normalized: {conversation-file}.md
+  📝 Step 16: Creating Knowledge Rems...
+  ✓ Created: {rem1}.md
+  ✓ Created: {rem2}.md
+  ...
+  🔗 Step 24: Linking conversation to Rems...
+  ✓ Updated conversation with {N} Rem links
+  ✅ All files written successfully
+
+🔗 Step 16: Update Knowledge Graph
+  ✓ Backlinks updated for {N} Rems
+  ✓ Conversation index updated
+  ✓ Wikilinks normalized
+
+🔮 Step 17: Materialize Inferred Links (Optional)
+  ⏭️  Skipped (non-interactive mode)
+
+📅 Step 18: Sync to FSRS Review Schedule
+  ✓ FSRS sync completed
+
+🧠 Step 19: Record to Memory MCP
+  ℹ️  MCP recording should be handled by main agent
+  ⏭️  Skipped (MCP tools unavailable in subprocess)
+
+📊 Step 21: Generate Analytics & Visualizations
+  ✓ Analytics generated (30-day period)
+  ✓ Graph data generated
+  ✓ Visualization HTML generated
+
+✅ Step 22: Completion Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Session: {title}
+   Type: {session_type}
+   Domain: {domain} > {subdomain}
+
+📝 Files Created:
+   • {N} Rem(s):
+     - {rem1}.md
+     - {rem2}.md
+     ...
+   • 1 Conversation: {conversation-file}.md
+
+🔗 Graph Updates:
+   • Backlinks rebuilt for {N} Rem(s)
+   • Conversation index updated
+   • Wikilinks normalized
+
+📅 FSRS Review:
+   • {N} Rem(s) added to review schedule
+
+📊 Analytics:
+   • 30-day statistics updated
+   • Knowledge graph visualization regenerated
+
+⏱️  Performance:
+   • Total time: {X}s
+   • Average: {Y}s per Rem
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ /save workflow completed successfully
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Next: /review
+```
+
+**Exit codes**:
+- `0` = Success (all operations completed)
+- `1` = Validation failed (no changes made)
+- `2` = File creation failed (rollback performed)
+- `3` = Post-processing failed (files created but downstream operations failed)
+
+**Error handling**:
+- Validation failure → No files created, report errors, suggest fixes
+- File creation failure → Automatic rollback, restore previous state
+- Post-processing failures → Log warnings, continue (non-blocking)
+
+**Important notes**:
+- ✅ Post-processor uses FileWriter for atomic transactions (all-or-nothing guarantee)
+- ✅ Rollback on any file creation error (no partial state)
+- ✅ All Steps 12-22 automated in single script call
+- ✅ Performance metrics included in completion report
+- ⚠️  Step 17 (materialize inferred links) skipped in non-interactive mode
+- ⚠️  Step 19 (Memory MCP) must be handled by main agent (MCP tools unavailable in subprocess)
+
+---
+
+## Conversation Discovery
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step prevents collisions, duplicates, and broken relations. Skipping this risks corrupting the knowledge graph.
 
