@@ -205,13 +205,7 @@
     ],
     "PreCompact": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -f chats/index.json ] && cp chats/index.json chats/index.backup.json || true",
-            "on_error": "ignore"
-          }
-        ]
+        "hooks": []
       }
     ],
     "Stop": [

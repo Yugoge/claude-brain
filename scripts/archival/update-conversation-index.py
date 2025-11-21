@@ -26,6 +26,12 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 
+# Add scripts to path for rebuild_utils
+ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from knowledge_graph.rebuild_utils import cleanup_old_backups
+
 
 def load_index(index_file: Path) -> dict:
     """Load conversation index JSON."""
@@ -50,12 +56,17 @@ def load_index(index_file: Path) -> dict:
 
 
 def save_index(index_file: Path, data: dict):
-    """Save conversation index JSON with backup."""
+    """Save conversation index JSON with backup and automatic cleanup."""
     # Create backup
     if index_file.exists():
         backup_path = index_file.parent / f"{index_file.name}.backup-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         import shutil
         shutil.copy2(index_file, backup_path)
+
+        # Cleanup old backups (keep last 3)
+        deleted = cleanup_old_backups(index_file, keep_count=3)
+        if deleted > 0:
+            print(f"   Cleaned up {deleted} old backup(s)", file=sys.stderr)
 
     # Write updated index
     with open(index_file, 'w', encoding='utf-8') as f:
