@@ -19,9 +19,13 @@ import sys
 import argparse
 
 
-def check_step_3_5_executed(enriched_rems, domain):
+def check_enrichment_executed(enriched_rems, domain):
     """
-    Verify Step 3.5 (Domain Tutor Enrichment) was executed.
+    Verify domain tutor enrichment was executed for mandatory domains.
+
+    Args:
+        enriched_rems: List of enriched Rem dictionaries
+        domain: Domain name (programming, language, finance, science)
 
     Returns:
         dict: {
@@ -56,7 +60,7 @@ def check_step_3_5_executed(enriched_rems, domain):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Pre-flight check for Step 3.5 execution')
+    parser = argparse.ArgumentParser(description='Pre-flight check for enrichment execution')
     parser.add_argument('--enriched-rems', required=True, help='JSON file with enriched Rems')
     parser.add_argument('--domain', required=True, help='Domain: programming|language|finance|science')
 
@@ -68,7 +72,7 @@ def main():
             enriched_rems = json.load(f)
 
         # Run check
-        result = check_step_3_5_executed(enriched_rems, args.domain)
+        result = check_enrichment_executed(enriched_rems, args.domain)
 
         # Report results
         if result["passed"]:
