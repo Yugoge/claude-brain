@@ -61,73 +61,18 @@ def get_todos():
         "status": "pending"
     },
     {
-        "content": "Step 9: Rem Extraction Transparency",
-        "activeForm": "Step 9: Rem Extraction Transparency",
+        "content": "Step 9: Rem Extraction Transparency & Generate Preview",
+        "activeForm": "Step 9: Rem Extraction Transparency & Generate Preview",
         "status": "pending"
     },
     {
-        "content": "Step 10: Generate Preview (Format depends on session type)",
-        "activeForm": "Step 10: Generate Preview (Format depends on session type)",
+        "content": "Step 10: User Confirmation",
+        "activeForm": "Step 10: User Confirmation",
         "status": "pending"
     },
     {
-        "content": "Step 11: User Confirmation",
-        "activeForm": "Step 11: User Confirmation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 12: Pre-creation Validation",
-        "activeForm": "Step 12: Pre-creation Validation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 13: Create Knowledge Rems",
-        "activeForm": "Step 13: Create Knowledge Rems",
-        "status": "pending"
-    },
-    {
-        "content": "Step 14: Process Conversation Archive",
-        "activeForm": "Step 14: Process Conversation Archive",
-        "status": "pending"
-    },
-    {
-        "content": "Step 15: Update Existing Rems (Review Sessions with Type A Clarifications)",
-        "activeForm": "Step 15: Update Existing Rems (Review Sessions with Type A Clarifications)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 16: Update Knowledge Graph",
-        "activeForm": "Step 16: Update Knowledge Graph",
-        "status": "pending"
-    },
-    {
-        "content": "Step 17: Materialize Inferred Links (Optional)",
-        "activeForm": "Step 17: Materialize Inferred Links (Optional)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 18: Sync Rems to Review Schedule (Auto)",
-        "activeForm": "Step 18: Sync Rems to Review Schedule (Auto)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 19: Record to Memory MCP (Auto)",
-        "activeForm": "Step 19: Record to Memory MCP (Auto)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 20: Update Conversation Rem Links",
-        "activeForm": "Step 20: Update Conversation Rem Links",
-        "status": "pending"
-    },
-    {
-        "content": "Step 21: Generate Analytics & Visualizations",
-        "activeForm": "Step 21: Generate Analytics & Visualizations",
-        "status": "pending"
-    },
-    {
-        "content": "Step 22: Display Completion Report",
-        "activeForm": "Step 22: Display Completion Report",
+        "content": "Step 11: Execute Automated Post-Processing (validation, file creation, graph updates, FSRS sync, analytics)",
+        "activeForm": "Step 11: Execute Automated Post-Processing",
         "status": "pending"
     }
 ]
