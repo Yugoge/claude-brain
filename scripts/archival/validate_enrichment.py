@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Step 8 Enforcement Gate
+Domain Tutor Enrichment Validator
 
-Validates that Domain Tutor Enrichment (Step 8) was properly executed
-for domains where it's MANDATORY.
+Validates that domain tutor enrichment was properly executed
+for domains where it's mandatory.
 
 Usage:
-    python scripts/archival/validate_step8_execution.py \\
+    python scripts/archival/validate_enrichment.py \\
         --enriched-rems enriched_rems.json \\
         --domain finance
 
 Exit Codes:
-    0 = Pass (Step 8 properly executed)
+    0 = Pass (enrichment properly executed)
     1 = Warning (typed_relations empty but not critical)
-    2 = Critical (Step 8 skipped for mandatory domain)
+    2 = Critical (enrichment skipped for mandatory domain)
 """
 
 import json
@@ -32,9 +32,9 @@ MANDATORY_DOMAINS = {
 }
 
 
-def validate_step8(enriched_rems, domain):
+def validate_enrichment(enriched_rems, domain):
     """
-    Validate Step 8 execution.
+    Validate domain tutor enrichment execution.
 
     Returns: (exit_code, message)
     """
@@ -45,7 +45,7 @@ def validate_step8(enriched_rems, domain):
             return (
                 2,
                 f"CRITICAL: Rem '{rem.get('rem_id', 'unknown')}' missing 'typed_relations' field\n"
-                f"Step 8 (Domain Tutor Enrichment) was not executed"
+                f"Domain Tutor Enrichment was not executed"
             )
 
     # Check 2: For mandatory domains, verify relations were added
@@ -68,7 +68,7 @@ def validate_step8(enriched_rems, domain):
                 return (
                     2,
                     f"CRITICAL: Zero typed_relations for {domain} domain with {rem_count} Rems\n"
-                    f"Domain Tutor Enrichment (Step 8) is MANDATORY for {domain}\n"
+                    f"Domain Tutor Enrichment is MANDATORY for {domain}\n"
                     f"Expected inter-candidate relations between new concepts"
                 )
 
@@ -84,19 +84,19 @@ def validate_step8(enriched_rems, domain):
 
         return (
             0,
-            f"✓ Step 8 executed correctly ({total_relations} relations across {len(enriched_rems)} Rems)"
+            f"✓ Enrichment executed correctly ({total_relations} relations across {len(enriched_rems)} Rems)"
         )
 
     else:
         # Non-mandatory domain - just verify field exists
         return (
             0,
-            f"✓ Step 8 optional for {domain} domain (typed_relations field present)"
+            f"✓ Enrichment optional for {domain} domain (typed_relations field present)"
         )
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Validate Step 8 Execution')
+    parser = argparse.ArgumentParser(description='Validate Domain Tutor Enrichment')
     parser.add_argument('--enriched-rems', required=True, help='Path to enriched_rems.json')
     parser.add_argument('--domain', required=True, help='Domain classification')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
@@ -114,7 +114,7 @@ def main():
             print(f"Mandatory enrichment: {args.domain in MANDATORY_DOMAINS}", file=sys.stderr)
 
         # Validate
-        exit_code, message = validate_step8(enriched_rems, args.domain)
+        exit_code, message = validate_enrichment(enriched_rems, args.domain)
 
         if exit_code == 0:
             print(message)
