@@ -86,6 +86,60 @@ def extract_title_from_content(file_path: Path) -> str:
         return file_path.stem
 
 
+def find_rem_by_id(rem_id: str):
+    """
+    Find Rem file by rem_id.
+
+    Strategy:
+    1. Check backlinks.json for fast lookup
+    2. Fallback: Scan all domains in knowledge-base
+
+    Args:
+        rem_id: The rem_id to search for
+
+    Returns:
+        Path object if found, None otherwise
+    """
+    # Strategy 1: Fast lookup via backlinks index
+    backlinks_path = ROOT / "knowledge-base/backlinks.json"
+    if backlinks_path.exists():
+        try:
+            with open(backlinks_path, 'r', encoding='utf-8') as f:
+                backlinks = json.load(f)
+
+            if rem_id in backlinks:
+                # backlinks stores relative paths from project root
+                rel_path = backlinks[rem_id].get('path')
+                if rel_path:
+                    abs_path = ROOT / rel_path
+                    if abs_path.exists():
+                        return abs_path
+        except (json.JSONDecodeError, KeyError):
+            # Backlinks file corrupted or invalid format, fall through to Strategy 2
+            pass
+
+    # Strategy 2: Fallback - scan all domains
+    for md_file in KB_DIR.rglob("*.md"):
+        # Skip templates and hidden files
+        if md_file.name.startswith(('.', '_')):
+            continue
+
+        # Check filename match (strip .md or .rem.md extension)
+        stem = md_file.stem
+        if stem.endswith('.rem'):
+            stem = stem[:-4]
+
+        if stem == rem_id:
+            return md_file
+
+        # Check frontmatter rem_id
+        frontmatter = extract_frontmatter(md_file)
+        if frontmatter.get('rem_id') == rem_id:
+            return md_file
+
+    return None
+
+
 def list_rems_in_domain(domain_path: str) -> list:
     """
     Find all Rem files in a specific domain.

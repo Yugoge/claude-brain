@@ -165,20 +165,42 @@ candidate_rems = [
 
 ### Step 4: Question Type Classification (Review Sessions Only)
 
-**If session_type == "review"**, classify each user question:
+**If session_type == "review"**, classify user questions using the classifier script:
 
-**Question Types** :
+```bash
+source venv/bin/activate && python scripts/archival/classify_questions.py \
+  --archived-file "$archived_file" \
+  --rems-reviewed '["rem-id-1", "rem-id-2", ...]'
+```
+
+**Script outputs JSON with classifications**:
+```json
+{
+  "type_a": [{"question": "{text}", "turn": {N}, "rem_id": "{id}", "clarification_text": "{content}", "target_section": "{section}", "confidence": {score}}],
+  "type_bcd": [{"question": "{text}", "turn": {N}, "type": "{B|C|D}", "confidence": {score}}],
+  "statistics": {"total_questions": {N}, "type_a_classified": {N}, "type_bcd_classified": {N}}
+}
+```
+
+**AI Review & Decision**:
+- Review script suggestions (confidence scores provided)
+- Accept high-confidence Type A if rem_id detected correctly
+- Override if context suggests different classification
+- Generate `rems_to_update` list from accepted Type A questions
+- Use Type B/C/D as hints for new concept extraction
+
+**Question Types**:
 - **Type A (Clarification)**: "Can you clarify" → **Update existing Rem**
 - **Type B (Extension)**: "What about", "What if" → **Create new Rem**
 - **Type C (Comparison)**: "X vs Y", "compare" → **Create comparison Rem**
 - **Type D (Application)**: "In practice", "How to use" → **Create application Rem**
 
-Classify using pattern matching on user questions. Extract clarification content (2-3 concise sentences, <100 tokens) from assistant responses.
-
-Map clarification type to target Rem section:
+**Target Section Mapping** (for Type A):
 - Definition clarification → `## Core Memory Points`
 - Example clarification → `## Usage Scenario`
-- Usage clarification → `## Usage Scenario`
+- Usage/correction clarification → `## Usage Scenario`
+
+**Output**: Store `rems_to_update` list for Steps 7 and 9
 
 ---
 
@@ -246,7 +268,11 @@ Script validates all IDs and merges typed_relations.
 
 ### Step 7: Generate Preview
 
-Present extracted Rems in聊天框:
+**Format depends on session type**:
+
+#### For Learn/Ask Sessions
+
+Present ultra-compact 1-line previews:
 
 **Format**:
 ```
@@ -258,6 +284,39 @@ N. [Title] → [1-line summary] → path/to/file.md
 1. French Verb "Vouloir" → Conjugation patterns and usage → knowledge-base/.../french-verb-vouloir.md
 2. Black-Scholes Model → Option pricing formula → knowledge-base/.../black-scholes-model.md
 ```
+
+#### For Review Sessions
+
+Use `preview_generator.format_review_preview()` with **three sections**:
+
+```python
+from archival.preview_generator import PreviewGenerator
+
+generator = PreviewGenerator()
+preview = generator.format_review_preview(
+    concepts=extracted_concepts,           # From extraction
+    rems_reviewed=rems_reviewed_list,      # From orchestrator metadata
+    rems_to_update=rems_to_update          # From question classification
+)
+
+print(preview)
+```
+
+**Three-section format**:
+```
+📊 Review Session Analysis
+✅ Reviewed Rems (FSRS Updated): {N}
+  1. [[{rem-id-1}]] - Rating: {1-4}
+💡 New Concepts Discovered: {N}
+  1. **{Concept Title}** (Type {B|C|D})
+⚙️ Rem Updates (Clarifications): {N}
+  1. [[{rem-id}]] ({Section})
+     + "{Clarification text...}"
+📊 Summary:
+  - Reviewed: {N} Rems | Create: {N} new | Update: {N} existing | Archive: 1 chat
+```
+
+**IMPORTANT**: Pass `rems_to_update` from question classification to show Section 3 (Rem Updates).
 
 **Show ALL previews** before user approval.
 

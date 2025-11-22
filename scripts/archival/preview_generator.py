@@ -48,7 +48,7 @@ class PreviewGenerator:
 
         return '\n'.join(lines)
 
-    def format_review_preview(self, concepts, rems_reviewed):
+    def format_review_preview(self, concepts, rems_reviewed, rems_to_update=None):
         """Format three-section preview for review sessions."""
         lines = []
         lines.append("=" * 63)
@@ -77,11 +77,24 @@ class PreviewGenerator:
             lines.append(f"   File: {slug}.md | Tokens: ~{tokens}")
         lines.append("")
 
-        # Section 3: Summary
+        # Section 3: Rem Updates (if any)
+        if rems_to_update and len(rems_to_update) > 0:
+            lines.append(f"⚙️ Rem Updates (Clarifications): {len(rems_to_update)}")
+            for i, update in enumerate(rems_to_update, 1):
+                rem_id = update.get('rem_id', 'unknown')
+                clarif_preview = update.get('clarification_text', '')[:80]
+                section = update.get('target_section', '## Core Memory Points').replace('##', '').strip()
+                lines.append(f"  {i}. [[{rem_id}]] ({section})")
+                lines.append(f"     + \"{clarif_preview}...\"")
+            lines.append("")
+
+        # Section 4: Summary
         lines.append("=" * 63)
         lines.append("📊 Summary:")
         lines.append(f"  - Reviewed: {len(rems_reviewed)} Rems (FSRS progress saved)")
         lines.append(f"  - Create: {len(concepts)} new Rems")
+        if rems_to_update and len(rems_to_update) > 0:
+            lines.append(f"  - Update: {len(rems_to_update)} existing Rems")
         lines.append(f"  - Archive: 1 conversation file")
 
         return '\n'.join(lines)
