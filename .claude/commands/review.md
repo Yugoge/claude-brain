@@ -238,6 +238,8 @@ Use Task tool:
 
 #### 3.2 Present Question to User (First-Person Voice)
 
+**⚠️ CRITICAL**: Output `primary_question` EXACTLY as received from review-master. PRESERVE ALL `<option>` TAGS VERBATIM.
+
 **Adapt presentation based on question_format**:
 
 **Short Answer** (default - free response):
@@ -257,6 +259,7 @@ Let's review: {rem_title}
 
 {primary_question}
 ```
+**IMPORTANT**: Output the `<option>` tags exactly as provided - they are user-facing UI elements, not formatting instructions.
 
 **Cloze** (fill-in-the-blank):
 ```
