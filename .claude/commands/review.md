@@ -256,7 +256,6 @@ Let's review: {rem_title}
 {context_scenario if provided}
 
 {primary_question}
-(Question already has <option> tags - user clicks to select)
 ```
 
 **Cloze** (fill-in-the-blank):
