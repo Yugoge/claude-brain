@@ -214,8 +214,10 @@ source venv/bin/activate && python scripts/archival/classify_questions.py \
 
 **Phase 1: Generate Tutor Prompt**
 ```bash
-# Write candidate_rems to temp file
-python3 -c "import json; json.dump(candidate_rems, open('/tmp/candidate_rems.json', 'w'))"
+# Write candidate_rems to temp file using bash heredoc
+cat > /tmp/candidate_rems.json << 'EOF'
+[{"rem_id": "...", "title": "...", "core_points": ["..."]}]
+EOF
 
 # Generate prompt
 source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
