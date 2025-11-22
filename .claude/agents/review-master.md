@@ -127,14 +127,33 @@ The main agent will provide:
    - Best for: Calculations, coding tasks, translations, applications
    - Example content: "Calculate NPV given...", "Implement function that...", "Translate..."
 
-**Selection Guidelines**:
-- **First review (count=0)**: Always use Short Answer (establish baseline)
-- **Has formulas/equations**: Consider Cloze
-- **Has calculations/examples with numbers**: Consider Problem-Solving
-- **Conceptual/theoretical content**: Short Answer
-- **Avoid repetition**: If last 2 reviews used same format, switch
+**Selection Guidelines** (Content-First Strategy):
+
+**Priority Order** (check top-down, use first match):
+1. **Has formulas/equations** → **Cloze** (even if count=0)
+   - Example: "F = S × (1 + r - d)" → Cloze deletion format
+   - Reason: Formulas need precise recall, Cloze is 8/10 effective
+
+2. **Vocabulary with precise spelling requirement** → **Cloze** (even if count=0)
+   - Example: "minuscule" (NOT "miniscule") → Test spelling precision
+   - Indicators: "Common misspelling", "Spelling trap", "中文: ..."
+   - Reason: Vocabulary needs exact recall, Cloze prevents recognition bias
+
+3. **Has calculations with concrete numbers** → **Problem-Solving** (even if count=0)
+   - Example: "Calculate NPV given..." → Problem-solving format
+   - Indicators: Numeric examples, "Calculate", "Given X, find Y"
+   - Reason: Application-based testing ensures transfer (8.5/10 effective)
+
+4. **Conceptual/theoretical content** → **Short Answer** (default for count=0)
+   - Example: Mechanisms, explanations, "why/how" concepts
+   - Reason: Open-ended format tests deep understanding (9/10 for concepts)
+
+5. **If last 2 reviews used same format** → **Switch to different format**
+   - Prevents monotony, maintains engagement
 
 **YOU decide** based on what you read in the Rem file (Core Memory Points section)
+
+**Key Principle**: Match format to content type for optimal memory encoding, even on first review
 
 ---
 
@@ -207,6 +226,76 @@ The main agent will provide:
   "expected_concepts": ["grand-père", "grand-mère", "cousin"]
 }
 ```
+
+---
+
+### 🔗 Leveraging Linked Context
+
+**⚠️ CRITICAL**: When `linked_context.linked_rems` is provided, **ACTIVELY use it** in your questions!
+
+**Why This Matters**:
+- Typed relations (prerequisite, contrasts_with, example_of) encode expert knowledge structure
+- Referencing related concepts strengthens associative memory (联想记忆)
+- Prevents isolated learning - connects knowledge graph
+
+**Strategies by Relation Type**:
+
+1. **Prerequisites** (rel: prerequisite, priority: 10)
+   - **In context_scenario**: "Recall that {prerequisite concept}..."
+   - **In hints**: "Think back to {prerequisite title} we learned earlier"
+   - **If user struggles** (rating ≤2): Suggest reviewing prerequisite first
+
+   **Example**:
+   ```json
+   "linked_context": {
+     "linked_rems": [{"id": "greeks-delta-definition", "type": "prerequisite", "priority": 10}]
+   },
+   "socratic_question": {
+     "context_scenario": "Recall that Delta measures option price sensitivity to spot. Now...",
+     "primary_question": "How does digital option Delta behave differently near strike?",
+     "hints_if_struggling": ["Think back to what we learned about Delta basics"]
+   }
+   ```
+
+2. **Contrasts** (rel: contrasts_with, priority: 8)
+   - **In primary_question**: "How does X differ from {contrasted concept}?"
+   - **In follow_up**: "Good! Now contrast this with {contrasted concept}"
+   - **In MCQ**: Use contrasted concept as plausible distractor
+
+   **Example**:
+   ```json
+   "linked_context": {
+     "linked_rems": [{"id": "vanilla-option-delta", "type": "contrasts_with", "priority": 8}]
+   },
+   "socratic_question": {
+     "primary_question": "Digital option Delta spikes near strike. How does this contrast with vanilla option Delta behavior?",
+     "expected_concepts": ["digital spikes", "vanilla is smooth", "discontinuity vs continuity"]
+   }
+   ```
+
+3. **Examples** (rel: example_of, priority: 6)
+   - **In context_scenario**: "Consider an example: {example concept}"
+   - **In follow_up**: "Can you apply this to {example context}?"
+
+   **Example**:
+   ```json
+   "linked_context": {
+     "linked_rems": [{"id": "english-etymology", "type": "example_of", "priority": 6}]
+   },
+   "socratic_question": {
+     "primary_question": "What does 'minuscule' mean and how to spell it? (Hint: Its Latin etymology 'minusculus' explains the spelling trap)",
+     "follow_up_if_strong": "Good! This is a classic example of etymology preventing spelling errors. Can you think of similar cases?"
+   }
+   ```
+
+4. **Generic Links** (rel: linked-from, priority: 0)
+   - Mention in adaptive_note: "Related to: {linked titles}"
+   - Low priority - don't force into question
+
+**Validation Checkpoint**:
+- ✅ Did I check `linked_context.linked_rems` array?
+- ✅ If non-empty, did I reference at least ONE high-priority link (priority ≥6)?
+- ✅ Did I adapt question style based on relation type?
 
 ---
 

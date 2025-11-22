@@ -474,6 +474,13 @@ Would you like to do a focused review session on these?
 - FSRS Algorithm Benefits: 30-50% fewer reviews, adaptive difficulty modeling (0-10 scale), personalized scheduling, memory stability tracking
 - Goal: Long-term retention through scientifically optimized spaced repetition and active recall
 - **Linked Review**: System automatically loads typed relations (prerequisites, contrasts, examples) for context-aware questions. Low ratings trigger prerequisite suggestions.
+- **Question Format Adaptation**: Review-master uses 4 formats based on content type:
+  - **Cloze**: Formulas, vocabulary with precise spelling (e.g., "minuscule" spelling test)
+  - **Problem-Solving**: Calculations, translations, coding tasks
+  - **Multiple Choice**: Recognition, initial concept discrimination
+  - **Short Answer**: Conceptual understanding (default for theoretical content)
+- **Format changes during review journey**: First review uses content-appropriate format (formulas→Cloze, vocab→Cloze, calculations→Problem-Solving), later reviews may switch for variety
+- **Clustering Debug Tool**: Run `python scripts/review/debug_clustering.py` to visualize how Rems are clustered by typed relations (shows associative learning effectiveness)
 - Review-master agent uses `scripts/review/review_scheduler.py` (ReviewScheduler class)
 - Import pattern: `sys.path.append('scripts/review')` then `from review_scheduler import ReviewScheduler`
 - Call `scheduler.schedule_review(concept, rating)` after each review
