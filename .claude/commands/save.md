@@ -137,7 +137,7 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 
 **IMPORTANT**: Extract Rems from **active session context** (NOT from `archived_file`). The file is only used for Rem `source` field paths.
 
-1. Extract minimal Rems capturing what user learned
+1. Extract minimal Rems capturing what user learned. DO NOT extract based on conversation content alone - extract based on knowledge user actually mastered
 2. If user specified topic in /save arguments → Extract only concepts related to that topic
 3. **Store extracted Rems in memory** (as Python list/dict variables) - DO NOT create `candidate_rems.json` file
 
