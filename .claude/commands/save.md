@@ -137,11 +137,36 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 
 **IMPORTANT**: Extract Rems from **active session context** (NOT from `archived_file`). The file is only used for Rem `source` field paths.
 
-1. Analyze active context, identify domain, extract 3-7 candidate Rems (distinct, reusable knowledge from user's mentions)
-2. Follow user's learning logic, classify questions (update vs create)
+**Step 3.1: Analyze User Learning Journey**
+
+Distinguish between passive information reception and active knowledge construction:
+
+1. **Passive Learning Pattern** (user accepts AI's explanation):
+   - User asks initial question → AI provides comprehensive answer → User satisfied/no follow-up
+   - Extract: Multiple concepts from AI's explanation (typically 3-5)
+   - Justification: User absorbed presented information
+
+2. **Active Learning Pattern** (user challenges and verifies):
+   - User asks initial question → AI answers → **User asks follow-up challenge questions**
+   - Follow-up types:
+     - Challenge: "But why X not Y?" / "Why would..." (hypothesis testing)
+     - Comparison: "What about Z?" / "How does this compare..." (contrast seeking)
+     - Verification: "So this means..." / "Is it because..." (synthesis confirmation)
+   - Extract: **ONLY concepts from final verified understanding** (typically 1-3 core insights)
+   - Justification: These are what user truly internalized through active inquiry
+
+3. **User-Specified Extraction**:
+   - User says "too many" / "一个就好" → Reduce to 1-2 most essential concepts
+   - `/save [specific-topic]` → Extract only concepts directly related to that topic
+   - `/save 关键决定性结论` → Extract only breakthrough insights
+
+**Step 3.2: Execute Extraction**
+
+1. Determine learning pattern from conversation analysis above
+2. Extract minimal candidate Rems (typically 1-3 for active learning, up to 5 for passive learning)
 3. **Store extracted Rems in memory** (as Python list/dict variables) - DO NOT create `candidate_rems.json` file
 
-**Extraction Rules**: ✅ User's terms/mistakes/questions, specific & reusable. ❌ Too broad/narrow, AI explanations, hallucinations, user didn't practice.
+**Extraction Rules**: ✅ User's verified understanding, specific & reusable, emerged through questioning. ❌ Too broad/narrow, AI explanations user didn't engage with, hallucinations, user didn't practice.
 
 **Data structure** (store in memory for Step 8):
 ```python
