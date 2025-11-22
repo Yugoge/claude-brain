@@ -97,6 +97,12 @@ This script now ALWAYS shows a comprehensive timeline first:
 
 Then displays filtered review session and outputs JSON data for next steps.
 
+**Relation-based clustering** (commit 2ae4a70):
+- Related Rems review consecutively via graph clustering (DFS connected components)
+- Benefit: Associative learning - remA↔remB always together
+- At session start: Mention "Related concepts clustered for associative learning"
+- Between clusters: Optionally note "Moving to next topic cluster"
+
 **Timeline-only mode** (skip review session):
 ```bash
 source venv/bin/activate && python scripts/review/run_review.py --timeline
@@ -200,10 +206,16 @@ Use Task tool:
 {
   "review_guidance": {
     "rem_id": "...",
+    "question_format": "short-answer | multiple-choice | cloze | problem-solving",
     "socratic_question": {
       "primary_question": "...",
       "expected_concepts": [...],
       "hints_if_struggling": [...]
+    },
+    "format_specific": {
+      "correct_answer": "A/B/C/D (if MCQ)",
+      "cloze_blanks": ["answers (if cloze)"],
+      "problem_data": {"given": {}, "expected_steps": []}
     },
     "quality_assessment_guide": {
       "rating_4_indicators": [...],
@@ -219,16 +231,52 @@ Use Task tool:
 }
 ```
 
+**Parse and extract**:
+- `question_format` - Determines presentation style
+- `primary_question` - The question text (may include `<option>` tags for MCQ)
+- `format_specific` - Additional format data if needed
+
 #### 3.2 Present Question to User (First-Person Voice)
 
-**Parse JSON guidance and ask question naturally**:
+**Adapt presentation based on question_format**:
 
+**Short Answer** (default - free response):
 ```
 Let's review: {rem_title}
 
 {context_scenario if provided}
 
-{primary_question from JSON}
+{primary_question}
+```
+
+**Multiple Choice** (primary_question contains `<option>` tags):
+```
+Let's review: {rem_title}
+
+{context_scenario if provided}
+
+{primary_question}
+(Question already has <option> tags - user clicks to select)
+```
+
+**Cloze** (fill-in-the-blank):
+```
+Let's review: {rem_title}
+
+{context_scenario if provided}
+
+{primary_question with {blank} markers}
+(User fills in missing words/formulas)
+```
+
+**Problem-Solving** (calculation/coding/translation):
+```
+Let's review: {rem_title}
+
+{context_scenario}
+
+{primary_question with clear requirements}
+(User shows work/steps)
 ```
 
 **Voice Guidelines**:
