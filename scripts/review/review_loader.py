@@ -243,6 +243,123 @@ class ReviewLoader:
 
         return sorted(rems, key=urgency_key)
 
+    def sort_by_relation_and_urgency(
+        self, rems: List[Dict], scheduler
+    ) -> List[Dict]:
+        """
+        Sort Rems using graph clustering: group related Rems together.
+
+        Strategy: Associative learning - review connected concepts together
+        1. Build relation graph (any typed link counts)
+        2. Find connected components (clusters)
+        3. Sort clusters by urgency (earliest due cluster first)
+        4. Within cluster: sort by urgency
+
+        Result: Related Rems review consecutively (联想学习)
+
+        Args:
+            rems: List of Rem entries
+            scheduler: ReviewScheduler instance
+
+        Returns:
+            Sorted list with clusters of related Rems together
+
+        Example:
+            Session: [remA, remB, remC, remD]
+            Relations: remA↔remB (any type), remC↔remD
+            Clusters: {remA, remB}, {remC, remD}
+            Result: [remA, remB, remC, remD] or [remC, remD, remA, remB]
+                    (clusters stay together, order by cluster urgency)
+        """
+        if len(rems) <= 1:
+            return rems
+
+        # Build set of session Rem IDs
+        session_ids = {rem.get("id") for rem in rems}
+        id_to_rem = {rem.get("id"): rem for rem in rems}
+
+        # Load backlinks to build relation graph
+        backlinks_path = Path("knowledge-base/_index/backlinks.json")
+        if not backlinks_path.exists():
+            return self.sort_by_urgency(rems, scheduler)
+
+        with open(backlinks_path, "r", encoding="utf-8") as f:
+            backlinks_data = json.load(f)
+        backlinks = backlinks_data.get("links", {})
+
+        # Build adjacency list (undirected graph)
+        # Any typed relation counts - no priority discrimination
+        graph = {rem_id: set() for rem_id in session_ids}
+
+        for rem_id in session_ids:
+            if rem_id not in backlinks:
+                continue
+            rem_links = backlinks[rem_id]
+
+            # Add outgoing links
+            for link in rem_links.get("typed_links_to", []):
+                target_id = link["to"]
+                if target_id in session_ids:
+                    graph[rem_id].add(target_id)
+                    graph[target_id].add(rem_id)  # Undirected
+
+            # Add incoming links
+            for link in rem_links.get("typed_linked_from", []):
+                source_id = link["from"]
+                if source_id in session_ids:
+                    graph[rem_id].add(source_id)
+                    graph[source_id].add(rem_id)  # Undirected
+
+        # Find connected components using DFS
+        visited = set()
+        clusters = []
+
+        def dfs(node, cluster):
+            visited.add(node)
+            cluster.append(node)
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    dfs(neighbor, cluster)
+
+        for rem_id in session_ids:
+            if rem_id not in visited:
+                cluster = []
+                dfs(rem_id, cluster)
+                clusters.append(cluster)
+
+        # Sort clusters by minimum urgency date in cluster
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        def cluster_urgency(cluster_ids):
+            """Get earliest due date in cluster"""
+            dates = []
+            for rem_id in cluster_ids:
+                rem = id_to_rem[rem_id]
+                fsrs_state = rem.get("fsrs_state", {})
+                next_review = fsrs_state.get("next_review", rem.get("next_review_date", ""))
+                if not next_review:
+                    next_review = "1900-01-01"
+                dates.append(next_review)
+            return min(dates) if dates else "9999-12-31"
+
+        clusters.sort(key=cluster_urgency)
+
+        # Within each cluster, sort by urgency
+        def rem_urgency_key(rem_id):
+            rem = id_to_rem[rem_id]
+            fsrs_state = rem.get("fsrs_state", {})
+            next_review = fsrs_state.get("next_review", rem.get("next_review_date", ""))
+            return next_review if next_review else "1900-01-01"
+
+        # Build final sorted list
+        result = []
+        for cluster_ids in clusters:
+            cluster_ids.sort(key=rem_urgency_key)
+            for rem_id in cluster_ids:
+                result.append(id_to_rem[rem_id])
+
+        return result
+
 
 # Self-test
 if __name__ == "__main__":

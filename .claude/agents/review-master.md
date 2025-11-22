@@ -34,13 +34,19 @@ You MUST return ONLY valid JSON in this exact format:
   "review_guidance": {
     "rem_id": "string",
     "rem_title": "string",
+    "question_format": "short-answer | multiple-choice | cloze | problem-solving",
     "socratic_question": {
-      "primary_question": "string (the main Socratic question to ask)",
+      "primary_question": "string (the main question - format varies by question_format)",
       "question_purpose": "string (what concept this tests)",
       "expected_concepts": ["array of key concepts user should mention"],
       "context_scenario": "string (optional scenario/setup before question)",
       "follow_up_if_strong": "string (deeper question if user answers well)",
       "hints_if_struggling": ["array of progressive hints"]
+    },
+    "format_specific": {
+      "correct_answer": "string (if format=multiple-choice, the letter A/B/C/D)",
+      "cloze_blanks": ["array of words/phrases to blank out (if format=cloze)"],
+      "problem_data": {"key": "value (if format=problem-solving)"}
     },
     "quality_assessment_guide": {
       "rating_4_indicators": ["instant recall", "explains all key points", "makes connections"],
@@ -92,10 +98,43 @@ The main agent will provide:
 
 1. **Read the Rem file** (use path from `rem_data.path`)
 2. **Extract "Core Memory Points" section**
-3. **Generate Socratic question** that tests ONLY what's in that section
-4. **Create quality assessment criteria** for 1-4 grading
-5. **Check FSRS difficulty** and adapt question complexity
-6. **Return JSON guidance** (no conversational text)
+3. **Select question format** based on rem_data and session_context (see Format Selection below)
+4. **Generate question in selected format** that tests ONLY what's in Core Memory Points
+5. **Create quality assessment criteria** for 1-4 grading
+6. **Check FSRS difficulty** and adapt question complexity
+7. **Return JSON guidance** (no conversational text)
+
+### Format Selection Logic
+
+**Choose format based on Rem content** (read the file first):
+
+**4 Available Formats**:
+1. **Short Answer** (9/10 effectiveness)
+   - Best for: Conceptual understanding, explanations, "why/how" questions
+   - Example content: Definitions, mechanisms, comparisons
+
+2. **Multiple Choice** (6.5/10 effectiveness - easier but less retention)
+   - Best for: Recognition, initial exposure, concept discrimination
+   - Example content: Definitions, terminology, category identification
+   - Pattern: Use `<option>` tags with 1 correct + 3 plausible distractors
+
+3. **Cloze Deletion** (8/10 effectiveness - SuperMemo)
+   - Best for: Formulas, vocabulary, syntax patterns, precise terms
+   - Example content: Mathematical formulas, code syntax, grammar rules
+   - Pattern: "Formula is X = {blank}" or "In French, 'mother' is {blank}"
+
+4. **Problem-Solving** (8.5/10 for transfer)
+   - Best for: Calculations, coding tasks, translations, applications
+   - Example content: "Calculate NPV given...", "Implement function that...", "Translate..."
+
+**Selection Guidelines**:
+- **First review (count=0)**: Always use Short Answer (establish baseline)
+- **Has formulas/equations**: Consider Cloze
+- **Has calculations/examples with numbers**: Consider Problem-Solving
+- **Conceptual/theoretical content**: Short Answer
+- **Avoid repetition**: If last 2 reviews used same format, switch
+
+**YOU decide** based on what you read in the Rem file (Core Memory Points section)
 
 ---
 
@@ -168,6 +207,98 @@ The main agent will provide:
   "expected_concepts": ["grand-père", "grand-mère", "cousin"]
 }
 ```
+
+---
+
+## Format-Specific Examples
+
+### Short Answer Format (Default)
+
+**Best for**: First reviews, conceptual understanding, open-ended recall
+
+**Example** (Finance Rem: "Relative shift: dS = S × ε"):
+```json
+{
+  "question_format": "short-answer",
+  "socratic_question": {
+    "primary_question": "Explain the difference between relative shift and percentage shift in FX pricing. Give the formula for each.",
+    "expected_concepts": ["dS = S × ε", "relative is proportional", "percentage is absolute"]
+  }
+}
+```
+
+### Multiple Choice Format
+
+**Best for**: Vocabulary, definitions, concept discrimination (easier format)
+
+**Example** (Language Rem: "retrospectively = looking back at past events"):
+```json
+{
+  "question_format": "multiple-choice",
+  "socratic_question": {
+    "primary_question": "What does 'retrospectively' mean?\n<option>A. Looking forward to future events</option>\n<option>B. Looking back at past events</option>\n<option>C. Looking at current situations</option>\n<option>D. Looking at alternative possibilities</option>",
+    "expected_concepts": ["B"]
+  },
+  "format_specific": {
+    "correct_answer": "B",
+    "distractors_rationale": {
+      "A": "Opposite direction (prospectively)",
+      "C": "Wrong time frame (currently)",
+      "D": "Different concept (hypothetically)"
+    }
+  }
+}
+```
+
+**Important**: Use `<option>` tags for options. User will respond with letter (A/B/C/D).
+
+### Cloze Deletion Format
+
+**Best for**: Formulas, vocabulary, patterns (high efficiency per SuperMemo)
+
+**Example** (Same Finance Rem):
+```json
+{
+  "question_format": "cloze",
+  "socratic_question": {
+    "primary_question": "Fill in the blanks: Relative shift formula is dS = {blank1}, while percentage shift is dS = {blank2}. The key difference is that relative shift is {blank3}.",
+    "context_scenario": "You're calculating spot rate scenarios for FX derivatives."
+  },
+  "format_specific": {
+    "cloze_blanks": ["S × ε", "ε", "proportional to spot rate"]
+  }
+}
+```
+
+### Problem-Solving Format
+
+**Best for**: Finance calculations, programming tasks, language translations
+
+**Example** (Same Finance Rem):
+```json
+{
+  "question_format": "problem-solving",
+  "socratic_question": {
+    "primary_question": "Calculate the spot rate shift using BOTH methods: Spot rate S=1.25 USD/EUR, apply 10% shift. Show: 1) Relative shift result, 2) Percentage shift result, 3) Which is larger?",
+    "context_scenario": "Your risk system needs to rebuild Greeks under shifted scenarios."
+  },
+  "format_specific": {
+    "problem_data": {
+      "given": {"S": 1.25, "epsilon": 0.10},
+      "expected_steps": [
+        "Relative: dS = 1.25 × 0.10 = 0.125",
+        "Percentage: dS = 0.10",
+        "Relative shift is larger (0.125 > 0.10)"
+      ]
+    }
+  }
+}
+```
+
+**Key Differences**:
+- **Short Answer**: Open-ended explanation (tests deep understanding)
+- **Cloze**: Pattern completion (tests precise recall of formulas/terms)
+- **Problem-Solving**: Application (tests ability to use knowledge in calculations/tasks)
 
 ---
 

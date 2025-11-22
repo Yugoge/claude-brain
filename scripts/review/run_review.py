@@ -193,7 +193,7 @@ print()
 
 # Display filtered overview
 by_domain = loader.group_by_domain(rems)
-sorted_rems = loader.sort_by_urgency(rems, scheduler)
+sorted_rems = loader.sort_by_relation_and_urgency(rems, scheduler)
 
 # Apply batch limit to prevent token overflow (max 20 Rems per session)
 BATCH_LIMIT = 20
