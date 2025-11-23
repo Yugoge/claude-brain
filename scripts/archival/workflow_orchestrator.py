@@ -64,6 +64,16 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
     candidate_ids = [r["rem_id"] for r in candidate_rems]
     all_valid_ids = existing_ids + candidate_ids  # Support inter-candidate relations
 
+    # Build sibling reminder if multiple candidate Rems (same-conversation baseline)
+    sibling_reminder = ""
+    if len(candidate_rems) > 1:
+        sibling_reminder = f"""
+**CRITICAL - Same-Conversation Baseline**: All {len(candidate_rems)} candidate Rems are from the SAME conversation.
+- MANDATORY: Each Rem MUST include {{{{rel: related}}}} links to ALL other candidate Rems (baseline inter-conversation linking)
+- ADDITIONAL: Add semantic typed_relations (prerequisite_of, uses, contrasts_with, etc.) based on conceptual analysis
+- Candidate Rem IDs (all siblings): {json.dumps(candidate_ids, ensure_ascii=False)}
+"""
+
     prompt = f"""Domain expert: {domain}
 
 **CRITICAL**: Use EXACT concept_id values from the lists below. DO NOT create new IDs.
@@ -73,7 +83,7 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 
 **Candidate Rems** ({len(candidates_summary)}) - NEW in this session:
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
-
+{sibling_reminder}
 **Valid rem_id values** (use these EXACTLY in "to" fields of typed_relations):
 {json.dumps(all_valid_ids, ensure_ascii=False)}
 
@@ -85,6 +95,7 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
    - Existing concepts (pedagogical relations to prior knowledge)
    - Other candidate Rems (inter-concept relations in this batch)
 3. Prioritize:
+   - **BASELINE (mandatory)**: Add {{rel: related}} to ALL sibling candidate Rems from same conversation
    - Strong conceptual relations (prerequisite_of, uses, defines, triggers)
    - Relations within same topic/conversation
    - Inter-candidate relations when concepts are tightly coupled
@@ -93,7 +104,7 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
    Lexical: synonym, antonym, hypernym, hyponym, part_of, has_part
    Conceptual: is_a, has_subtype, prerequisite_of, has_prerequisite, cause_of, caused_by, example_of, has_example, uses, used_by, defines, defined_by, generalizes, specializes
    Comparative: contrasts_with, complements, complemented_by, analogous_to, related
-6. Empty array if no strong pedagogical relations exist
+6. Empty array if no strong pedagogical relations exist (but still include sibling links!)
 
 **Output Format**:
 {{
