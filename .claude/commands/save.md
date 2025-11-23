@@ -139,27 +139,23 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 
 1. Extract minimal Rems capturing what user learned. DO NOT extract based on conversation content alone - extract based on knowledge user actually mastered
 2. If user specified topic in /save arguments → Extract only concepts related to that topic
-3. **Store extracted Rems in memory** (as Python list/dict variables) - DO NOT create `candidate_rems.json` file
+3. **Write extracted Rems to temp file** for Step 5:
+
+```bash
+cat > /tmp/candidate_rems.json << 'EOF'
+[
+  {
+    "rem_id": "{subdomain}-{concept-slug}",
+    "title": "{Concept Title}",
+    "core_points": ["{point1}", "{point2}", "{point3}"]
+  }
+]
+EOF
+```
 
 **Extraction Rules**: ✅ User's understanding verified through practice or follow-up questions. ❌ AI's explanations user didn't engage with.
 
-**Data structure** (store in memory for Step 8):
-```python
-candidate_rems = [
-    {
-        "rem_id": "{subdomain}-{concept-slug}",
-        "title": "{Concept Title}",
-        "core_points": ["{point1}", "{point2}", "{point3}"]
-    }
-]
-```
-
-**ISCED Path Usage** (from Step 2):
-- Use classification result from Step 2 to determine Rem storage location
-- Path format: `knowledge-base/{broad-code-name}/{narrow-code-name}/{detailed-code-name}/`
-- Example: ISCED 0412 → `knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/`
-
-**Output**: Extracted Rems stored in memory, ready to pass to Step 5 workflow_orchestrator
+**Output**: `/tmp/candidate_rems.json` ready for Step 5 enrichment
 
 ---
 
