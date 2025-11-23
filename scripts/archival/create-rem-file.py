@@ -49,6 +49,29 @@ def calculate_relative_path(from_file: str, to_file: str) -> str:
     return rel_path.replace('\\', '/')
 
 
+def escape_yaml_string(s: str) -> str:
+    """
+    Escape special YAML characters in strings.
+
+    YAML special characters that require quoting:
+    : (colon), { } (braces), [ ] (brackets), , (comma), & (ampersand),
+    * (asterisk), # (hash), ? (question), | (pipe), - (dash at start),
+    < > (angle brackets), = (equals), ! (exclamation), % (percent),
+    @ (at), ` (backtick), ' (single quote), " (double quote)
+
+    Returns:
+        String wrapped in double quotes if it contains special chars, otherwise unchanged
+    """
+    special_chars = [':', '{', '}', '[', ']', ',', '&', '*', '#', '?', '|', '<', '>', '=', '!', '%', '@', '`']
+
+    if any(char in s for char in special_chars):
+        # Escape double quotes inside string
+        escaped = s.replace('"', '\\"')
+        return f'"{escaped}"'
+
+    return s
+
+
 def format_related_rems(related_rems: list, typed_relations: list = None) -> str:
     """
     Format related Rems section.
@@ -116,10 +139,10 @@ def generate_rem_content(args) -> str:
     # Format related Rems (typed_relations has priority over related_rems)
     related_text = format_related_rems(related_rems, typed_relations)
 
-    # Build frontmatter
+    # Build frontmatter (escape title for YAML safety)
     frontmatter = f"""---
 rem_id: {args.rem_id}
-title: {args.title}
+title: {escape_yaml_string(args.title)}
 isced: {args.isced}
 subdomain: {args.subdomain}
 created: {created_date}

@@ -366,6 +366,18 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 **Create enriched_rems.json** with all extracted and enriched Rem data:
 
+**CRITICAL - Generate Sequential Numbers for output_path**:
+
+For each Rem, get next available number using script:
+```bash
+source venv/bin/activate && python scripts/utilities/get-next-number.py \
+  --directory "knowledge-base/{isced_path}"
+```
+
+Script returns zero-padded 3-digit number (e.g., `007`). Use this as `{NNN}` in output_path.
+
+**JSON Format**:
+
 ```json
 {
   "session_metadata": {
@@ -390,7 +402,7 @@ Files: [N] Rems + 1 conversation + 2 index updates
       "typed_relations": [
         {"target": "{existing-rem-id}", "type": "{prerequisite_of|synonym|contrasts_with|...}"}
       ],
-      "output_path": "knowledge-base/{isced_path}/{NNN}-{subdomain}-{rem-slug}.md"
+      "output_path": "knowledge-base/{isced_path}/{NNN}-{rem-id}.md"
     }
   ],
   "rems_to_update": [
