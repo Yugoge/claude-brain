@@ -159,42 +159,56 @@ EOF
 
 ---
 
-### Step 4: Question Type Classification (Review Sessions Only)
+### Step 4: Analyze User Learning & Rem Updates (Review Sessions Only)
 
-**If session_type == "review"**, classify user questions using the classifier script:
+**If session_type == "review"**, AI analyzes the full conversation context to determine:
 
-```bash
-source venv/bin/activate && python scripts/archival/classify_questions.py \
-  --archived-file "$archived_file" \
-  --rems-reviewed '["rem-id-1", "rem-id-2", ...]'
+**Two Decision Paths**:
+
+1. **Existing Rem Updates** (Type A - Clarification):
+   - User asked follow-up questions that revealed misunderstanding of existing Rem
+   - User's subsequent responses confirmed they now understand the correction
+   - **Verification required**: Did user demonstrate understanding through practice/confirmation?
+   - ✅ Extract clarification text from AI's response that user engaged with
+   - ❌ Don't update if user only asked but didn't confirm understanding
+
+2. **New Concept Extraction** (Type B/C/D - Extension/Comparison/Application):
+   - User asked questions that led to genuinely new knowledge
+   - User showed engagement with the new concept (follow-up, examples, etc.)
+   - Extract as new Rem following Step 3 rules
+
+**Critical Judgment Criteria** (AI uses full conversation context):
+
+- **For updates to existing Rems**:
+  - Which Rem was being discussed? (Look for `[[rem-id]]` references or context)
+  - What misconception did user have?
+  - Did user confirm understanding after clarification?
+  - Which section to update: `## Core Memory Points` (definitions) | `## Usage Scenario` (examples/usage) | `## My Mistakes` (corrections)
+
+- **For new concepts**:
+  - Is this genuinely new knowledge, or just clarification of existing Rem?
+  - Did user engage with the concept beyond a single question?
+  - Would this be useful as a standalone Rem?
+
+**Output Format** (stored in memory for Steps 7 & 9):
+
+```
+rems_to_update = [
+  {
+    "rem_id": "{existing-rem-id}",
+    "clarification_text": "{What user learned, extracted from AI response}",
+    "target_section": "## Core Memory Points",
+    "reasoning": "{Why this is an update vs new concept}"
+  }
+]
 ```
 
-**Script outputs JSON with classifications**:
-```json
-{
-  "type_a": [{"question": "{text}", "turn": {N}, "rem_id": "{id}", "clarification_text": "{content}", "target_section": "{section}", "confidence": {score}}],
-  "type_bcd": [{"question": "{text}", "turn": {N}, "type": "{B|C|D}", "confidence": {score}}],
-  "statistics": {"total_questions": {N}, "type_a_classified": {N}, "type_bcd_classified": {N}}
-}
-```
-
-**AI Review & Decision**:
-- Review script suggestions (confidence scores provided)
-- Accept high-confidence Type A if rem_id detected correctly
-- Override if context suggests different classification
-- Generate `rems_to_update` list from accepted Type A questions
-- Use Type B/C/D as hints for new concept extraction
-
-**Question Types**:
-- **Type A (Clarification)**: "Can you clarify" → **Update existing Rem**
-- **Type B (Extension)**: "What about", "What if" → **Create new Rem**
-- **Type C (Comparison)**: "X vs Y", "compare" → **Create comparison Rem**
-- **Type D (Application)**: "In practice", "How to use" → **Create application Rem**
-
-**Target Section Mapping** (for Type A):
-- Definition clarification → `## Core Memory Points`
-- Example clarification → `## Usage Scenario`
-- Usage/correction clarification → `## Usage Scenario`
+**Important Principles**:
+- ✅ Judge based on **user's verified understanding**, not question patterns
+- ✅ Use **full conversation context**, not isolated question text
+- ✅ Only extract what user **actually learned and confirmed**
+- ❌ Don't use pattern matching ("Can you clarify" ≠ automatic Type A)
+- ❌ Don't extract if user asked but didn't engage with the answer
 
 **Output**: Store `rems_to_update` list for Steps 7 and 9
 
@@ -209,20 +223,15 @@ source venv/bin/activate && python scripts/archival/classify_questions.py \
 **3-Phase Workflow**:
 
 **Phase 1: Generate Tutor Prompt**
-```bash
-# Write candidate_rems to temp file using bash heredoc
-cat > /tmp/candidate_rems.json << 'EOF'
-[{"rem_id": "...", "title": "...", "core_points": ["..."]}]
-EOF
 
-# Generate prompt
+```bash
 source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --domain "$domain" \
   --isced-path "$isced_detailed_path" \
   --candidate-rems /tmp/candidate_rems.json
 ```
 
-Script outputs tutor prompt with existing concepts from domain and valid concept_id list.
+Script loads `/tmp/candidate_rems.json` from Step 3, outputs tutor prompt with existing concepts from domain and valid concept_id list.
 
 **Phase 2: Call Domain Tutor**
 - Use Task tool: `{domain}-tutor` (e.g., `language-tutor`, `finance-tutor`)
@@ -233,7 +242,9 @@ Script outputs tutor prompt with existing concepts from domain and valid concept
 **Phase 3: Merge Relations**
 ```bash
 # Merge and validate
-python scripts/archival/workflow_orchestrator.py \
+source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
+  --domain "$domain" \
+  --isced-path "$isced_detailed_path" \
   --candidate-rems /tmp/candidate_rems.json \
   --tutor-response /tmp/tutor_response.json
 ```
@@ -292,9 +303,9 @@ from archival.preview_generator import PreviewGenerator
 
 generator = PreviewGenerator()
 preview = generator.format_review_preview(
-    concepts=extracted_concepts,           # From extraction
+    concepts=extracted_concepts,           # From Step 3 extraction
     rems_reviewed=rems_reviewed_list,      # From orchestrator metadata
-    rems_to_update=rems_to_update          # From question classification
+    rems_to_update=rems_to_update          # From Step 4 AI analysis
 )
 
 print(preview)
@@ -314,7 +325,7 @@ print(preview)
   - Reviewed: {N} Rems | Create: {N} new | Update: {N} existing | Archive: 1 chat
 ```
 
-**IMPORTANT**: Pass `rems_to_update` from question classification to show Section 3 (Rem Updates).
+**IMPORTANT**: Pass `rems_to_update` from Step 4 AI analysis to show Section 3 (Rem Updates).
 
 **Show ALL previews** before user approval.
 

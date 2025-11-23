@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
 """
-Save Workflow Orchestrator - Unified Pre-Creation Pipeline
+Save Workflow Orchestrator - Pre-Processing Pipeline
 
-Consolidates Steps 1-9 of /save workflow:
+Executes /save workflow Step 1 (automated batch operations):
   1. Archive Conversation
   2. Parse Arguments & Detect Session Type
   3. Session Validation (session_detector + concept_extractor)
   4. Filter FSRS Test Dialogues (review sessions only)
-  5. Domain Classification & ISCED Path
-  6. Extract Concepts
-  7. Question Type Classification (review sessions only)
-  8. Enrich with Typed Relations (MANDATORY for core domains)
-  9. Rem Extraction Transparency (return enriched Rems)
+
+Main agent then performs Steps 2-9 interactively:
+  Step 2: Domain Classification (via classification-expert)
+  Step 3: Extract Concepts & Write to /tmp/candidate_rems.json
+  Step 4: Analyze User Learning & Rem Updates (review sessions only, AI-driven)
+  Step 5: Enrich with Typed Relations (via domain-tutor)
+  Steps 6-9: Preview, Confirm, Post-Processing
 
 Enforcement Gates:
   - Session validation: Blocks if confidence <50% or token limit exceeded
-  - Typed relations: Blocks if domain requires tutor but typed_relations empty
-  - Comprehensive validation before proceeding to file creation
+  - Token limit: Blocks if >150k tokens
 
 Usage:
     python scripts/archival/save_orchestrator.py [topic-name | --all]
 
 Output:
-    - enriched_rems.json: Ready for post-processing (file creation phase)
-    - orchestrator_metadata.json: Session info for downstream steps
-    - Exit code 0 if successful, 1 if validation failed, 2 if mandatory step skipped
+    - Filtered archived conversation (chats/YYYY-MM/conversation-YYYY-MM-DD.md)
+    - orchestrator_metadata.json: Session info for main agent Steps 2-9
+    - Exit code 0 if successful, 1 if validation failed, 2 if token limit exceeded
 """
 
 import json
@@ -468,13 +469,13 @@ def main():
         filter_fsrs_test_dialogues(archived_file, session_type)
         completed_stages.add(WorkflowStage.FILTER_FSRS)
 
-        # Steps 5-9: Require main agent interaction
-        print("\n⚠️  Steps 5-9 require main agent interaction:", file=sys.stderr)
-        print("  5. Call classification-expert via Task tool", file=sys.stderr)
-        print("  6. Extract concepts from active conversation context", file=sys.stderr)
-        print("  7. Classify questions (review sessions only)", file=sys.stderr)
-        print("  8. Call domain tutor via Task tool (MANDATORY)", file=sys.stderr)
-        print("  9. Validate enrichment", file=sys.stderr)
+        # Steps 2-9: Require main agent interaction
+        print("\n⚠️  Steps 2-9 require main agent interaction:", file=sys.stderr)
+        print("  2. Call classification-expert via Task tool", file=sys.stderr)
+        print("  3. Extract concepts from active conversation context", file=sys.stderr)
+        print("  4. Analyze user learning & Rem updates (review sessions, AI-driven)", file=sys.stderr)
+        print("  5. Call domain tutor via Task tool (MANDATORY)", file=sys.stderr)
+        print("  6-9. Preview, Confirm, Post-Processing", file=sys.stderr)
         print("\nOrchestrator provides validation and enforcement, not extraction.", file=sys.stderr)
 
         # Output metadata for main agent
@@ -491,7 +492,7 @@ def main():
             json.dump(metadata, f, indent=2)
 
         print(f"\n✅ Steps 1-4 completed. Metadata saved to orchestrator_metadata.json", file=sys.stderr)
-        print("Next: Main agent performs Steps 5-9 with orchestrator enforcement", file=sys.stderr)
+        print("Next: Main agent performs Steps 2-9 with orchestrator enforcement", file=sys.stderr)
 
         return 0
 
