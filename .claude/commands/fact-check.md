@@ -175,28 +175,29 @@ Use Task tool with:
   Research using WebSearch, WebFetch, or Bash, then return ONLY:
 
   {
-    \"role\": \"advocate_con\",
     \"analysis_plan\": {
       \"media_outlet\": \"Name of outlet\",
       \"issue_category\": \"core-strategic | secondary-strategic | non-strategic\",
       \"issue_description\": \"Topic being analyzed\",
       \"analysis_approach\": \"ownership-analysis | funding-analysis | red-line-testing | cross-verification\",
-      \"advocacy_angle\": \"Why this outlet may have bias concerns\"
+      \"key_questions\": [\"Question 1\", \"Question 2\"],
+      \"questioning_strategy\": \"High-level approach\"
     },
     \"structural_analysis\": {
       \"ownership_structure\": {
         \"owner\": \"Who owns this outlet?\",
         \"independence_score\": \"0-10\",
-        \"red_flags\": \"Evidence of potential control\"
+        \"verification_method\": \"Evidence QUESTIONING independence (e.g., single owner control, state ownership)\"
       },
       \"funding_sources\": {
         \"primary_revenue\": \"Subscription | Advertising | Government | Donations\",
+        \"single_source_dependence\": \"X%\",
         \"independence_score\": \"0-10\",
-        \"red_flags\": \"Evidence of funding dependence\"
+        \"verification_method\": \"Evidence QUESTIONING financial independence (e.g., government funding dependence)\"
       },
       \"editorial_independence_history\": {
         \"independence_score\": \"0-10\",
-        \"red_flags\": \"Evidence of editorial interference\"
+        \"verification_method\": \"Evidence QUESTIONING editorial freedom (e.g., self-censorship, fired journalists)\"
       }
     },
     \"bias_quantification\": {
@@ -233,10 +234,9 @@ Use Task tool with:
 
 1. **Check if response is valid JSON**:
    - Try to parse as JSON
-   - Check for required fields: `role`, `analysis_plan`, `structural_analysis`, `bias_quantification`
-   - Verify `role` is either "advocate_pro" or "advocate_con"
+   - Check for required fields: `analysis_plan`, `structural_analysis`, `bias_quantification`
 
-2. **If valid JSON** → Store as `guidance_pro` and `guidance_con`
+2. **If valid JSON** → Store as `guidance_pro` and `guidance_con` (based on which Task call returned it)
 
 3. **If invalid/Markdown** → Extract what you can:
    - Look for ownership/funding information
@@ -275,23 +275,24 @@ Your Role:
 ```
 For each structural aspect (ownership, funding, editorial):
 
-1. Present Pro Perspective Evidence:
-   - Independence score from advocate_pro
-   - Positive indicators found
-   - Sources supporting independence
+1. Present Pro Perspective:
+   - Independence score from guidance_pro
+   - verification_method (contains supporting evidence)
+   - Sources
 
-2. Present Con Perspective Evidence:
-   - Independence score from advocate_con
-   - Red flags found
-   - Sources questioning independence
+2. Present Con Perspective:
+   - Independence score from guidance_con
+   - verification_method (contains questioning evidence)
+   - Sources
 
 3. Identify Consensus vs Disagreement:
-   - Where both agree → State as established fact
-   - Where they conflict → Present as open question with evidence quality assessment
+   - Where scores agree → State as established fact
+   - Where scores differ → Present as contested assessment with both evidence types
 
 4. Let User Judge:
-   - "If you prioritize [evidence type X], the pro analysis suggests..."
-   - "If you prioritize [evidence type Y], the con analysis suggests..."
+   - "Evidence supporting independence: [from guidance_pro.verification_method]"
+   - "Evidence questioning independence: [from guidance_con.verification_method]"
+   - "If you prioritize [evidence type X], the independence score would be higher..."
    - Do NOT impose conclusion
 ```
 
@@ -338,12 +339,10 @@ Use Task tool with:
 
   Return JSON:
   {
-    \"role\": \"advocate_pro\",
     \"analysis_update\": {
       \"new_findings\": \"Additional supporting evidence\",
       \"verification_sources\": [\"Source 1\", \"Source 2\"],
-      \"updated_scores\": {\"ownership\": X, \"funding\": Y, \"editorial\": Z},
-      \"positive_indicators\": \"New evidence of independence\"
+      \"updated_scores\": {\"ownership\": X, \"funding\": Y, \"editorial\": Z}
     }
   }
   "
@@ -364,12 +363,10 @@ Use Task tool with:
 
   Return JSON:
   {
-    \"role\": \"advocate_con\",
     \"analysis_update\": {
       \"new_findings\": \"Additional skeptical evidence\",
       \"verification_sources\": [\"Source 1\", \"Source 2\"],
-      \"updated_scores\": {\"ownership\": X, \"funding\": Y, \"editorial\": Z},
-      \"red_flags\": \"New concerns about independence\"
+      \"updated_scores\": {\"ownership\": X, \"funding\": Y, \"editorial\": Z}
     }
   }
   "
