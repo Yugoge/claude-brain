@@ -150,6 +150,39 @@ def validate_tutor_response(tutor_response_json, valid_ids):
     return (len(errors) == 0, errors)
 
 
+def auto_generate_output_paths(enriched_rems, isced_path):
+    """
+    Auto-generate output_path for Rems that are missing it.
+
+    Args:
+        enriched_rems: List of Rems (may have missing output_path)
+        isced_path: ISCED path for directory
+
+    Returns: Rems with output_path populated
+    """
+    import subprocess
+
+    for rem in enriched_rems:
+        if not rem.get('output_path'):
+            # Get next available number
+            result = subprocess.run(
+                ['python3', 'scripts/utilities/get-next-number.py', '--directory', f'knowledge-base/{isced_path}'],
+                capture_output=True,
+                text=True,
+                cwd=ROOT
+            )
+
+            if result.returncode == 0:
+                next_num = result.stdout.strip()
+                rem['output_path'] = f"knowledge-base/{isced_path}/{next_num}-{rem['rem_id']}.md"
+                print(f"  ✓ Generated output_path: {rem['rem_id']} → {next_num}", file=sys.stderr)
+            else:
+                print(f"  ⚠️  Failed to generate number for {rem['rem_id']}: {result.stderr}", file=sys.stderr)
+                # Leave output_path empty - will be caught by validation
+
+    return enriched_rems
+
+
 def merge_tutor_suggestions(candidate_rems, tutor_response_json):
     """
     Merge tutor's typed_relations into candidate Rems.
@@ -261,6 +294,10 @@ def main():
         # Count relations added
         total_relations = sum(len(r.get("typed_relations", [])) for r in enriched_rems)
         print(f"✓ Total typed_relations added: {total_relations}", file=sys.stderr)
+
+        # Auto-generate missing output_path values
+        print("  Auto-generating missing output paths...", file=sys.stderr)
+        enriched_rems = auto_generate_output_paths(enriched_rems, args.isced_path)
 
         # Save enriched Rems
         with open(args.output, 'w', encoding='utf-8') as f:

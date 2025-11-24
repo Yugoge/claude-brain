@@ -201,11 +201,36 @@ def main():
 
     args = parser.parse_args()
 
+    # Validate output_path before processing
+    if not args.output_path or args.output_path in ['', '.', './']:
+        raise ValueError(
+            f"Invalid output_path: '{args.output_path}'\n"
+            f"   output_path must be a valid file path, not empty or current directory.\n"
+            f"   Fix: Use get-next-number.py to generate sequential number, then construct path."
+        )
+
+    output_path = Path(args.output_path)
+
+    # Check if path points to directory
+    if output_path.is_dir():
+        raise ValueError(
+            f"Invalid output_path: '{args.output_path}' is a directory, not a file.\n"
+            f"   output_path must point to a file, not a directory.\n"
+            f"   Fix: Add filename to path (e.g., 'knowledge-base/path/001-rem-id.md')"
+        )
+
+    # Check if path is just "."
+    if str(output_path) == '.':
+        raise ValueError(
+            f"Invalid output_path: '{args.output_path}' resolves to current directory.\n"
+            f"   This typically means output_path was empty or invalid.\n"
+            f"   Fix: Provide full path including filename."
+        )
+
     # Generate content
     content = generate_rem_content(args)
 
     # Ensure parent directory exists
-    output_path = Path(args.output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write file
