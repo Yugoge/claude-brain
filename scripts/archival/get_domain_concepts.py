@@ -5,8 +5,7 @@ Get Domain Concepts from Backlinks Index
 Extract all concepts in a specific ISCED domain for KB context injection.
 
 Usage:
-    python scripts/archival/get_domain_concepts.py --domain-path "0231-language-acquisition"
-    python scripts/archival/get_domain_concepts.py --domain-path "0412-finance-banking-insurance"
+    python scripts/archival/get_domain_concepts.py --domain-path "domain-path"
 
 Returns JSON array of concepts for tutor consultation context.
 """
@@ -40,7 +39,7 @@ def extract_domain_concepts(backlinks_data, domain_path):
 
     Args:
         backlinks_data: Complete backlinks.json data
-        domain_path: ISCED domain path (e.g., "0231-language-acquisition" or full path)
+        domain_path: ISCED domain path
 
     Returns:
         List of {"rem_id": concept_id, "title": title} dicts
@@ -77,7 +76,7 @@ def main():
         epilog=__doc__
     )
     parser.add_argument('--domain-path', required=True,
-                        help='ISCED domain path (e.g., "0231-language-acquisition")')
+                        help='ISCED domain path')
     parser.add_argument('--format', choices=['json', 'compact'], default='json',
                         help='Output format (json or compact)')
 

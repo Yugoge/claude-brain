@@ -6,7 +6,7 @@ Usage:
     python scripts/review/update_review.py <concept_id> <rating>
 
 Arguments:
-    concept_id: Rem ID (e.g., "french-time-expressions")
+    concept_id: Rem ID
     rating: User's self-rating (1-4: Again, Hard, Good, Easy)
 
 Returns:

@@ -6,7 +6,7 @@ Validate tutor-suggested relations against knowledge base index.
 Filter out invalid relations (non-existent concepts, invalid types).
 
 Usage:
-    python scripts/archival/validate_relations.py --relations-json '{...}' --domain-path "0231-language-acquisition"
+    python scripts/archival/validate_relations.py --relations-json '{...}' --domain-path "domain-path"
 
 Returns:
     JSON with valid_relations and invalid_relations arrays
@@ -50,7 +50,7 @@ def load_domain_concepts(domain_path):
     Load concepts in a specific domain from backlinks.json.
 
     Args:
-        domain_path: ISCED domain path (e.g., "0231-language-acquisition")
+        domain_path: ISCED domain path
 
     Returns:
         Set of concept IDs in this domain
@@ -164,7 +164,7 @@ def main():
     parser.add_argument('--relations-json', required=True,
                         help='JSON array of typed relations')
     parser.add_argument('--domain-path', required=True,
-                        help='ISCED domain path (e.g., "0231-language-acquisition")')
+                        help='ISCED domain path')
     parser.add_argument('--verbose', action='store_true',
                         help='Print detailed validation report')
 

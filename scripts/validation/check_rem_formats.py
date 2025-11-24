@@ -35,7 +35,7 @@ class RemFormatChecker:
     REQUIRED_FIELDS = [
         'rem_id',      # Unique identifier: {subdomain}-{concept-slug}
         'subdomain',   # Subdomain classification (e.g., 'equity-derivatives', 'french')
-        'isced',       # ISCED detailed code (e.g., '0412-finance-banking-insurance')
+        'isced',       # ISCED detailed code
         'created',     # Creation date (YYYY-MM-DD)
         'source',      # Source reference (e.g., 'chats/YYYY-MM/conversation.md')
     ]

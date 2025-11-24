@@ -13,7 +13,7 @@ because those are added during file creation (Step 16.1).
 Usage:
     python scripts/archival/pre_validator_light.py \\
         --enriched-rems /tmp/enriched_rems_final.json \\
-        --domain-path "0412-finance-banking-insurance"
+        --domain-path "domain-path"
 
 Exit Codes:
     0 = All validations passed
@@ -261,7 +261,7 @@ def main():
     parser.add_argument('--enriched-rems', required=True,
                         help='Path to enriched_rems JSON file')
     parser.add_argument('--domain-path', required=True,
-                        help='ISCED domain path (e.g., "0412-finance-banking-insurance")')
+                        help='ISCED domain path')
     parser.add_argument('--quiet', action='store_true',
                         help='Suppress output (only exit code)')
 

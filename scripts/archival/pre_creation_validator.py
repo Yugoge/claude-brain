@@ -13,8 +13,8 @@ Unified validation before creating Rem files. Checks:
 Usage:
     python scripts/archival/pre_creation_validator.py \\
         --concepts-json '{"concepts": [...]}' \\
-        --domain-path "0412-finance-banking-insurance" \\
-        --source-file "chats/2025-11/conversation.md"
+        --domain-path "NNNN-domain-slug" \\
+        --source-file "chats/YYYY-MM/conversation.md"
 
 Exit Codes:
     0 = All validations passed
@@ -235,19 +235,19 @@ def validate_isced_path(domain_path: str, result: ValidationResult):
     - Blocking error if path doesn't exist
     """
     # Parse domain_path to get ISCED hierarchy
-    # Format: "0412-finance-banking-insurance"
+    # Format: "NNNN-domain-slug"
     parts = domain_path.split('-')
     if len(parts) < 2:
         result.add_error(f"❌ Invalid ISCED path format: {domain_path}")
         return
 
-    isced_code = parts[0]  # e.g., "0412"
+    isced_code = parts[0]  # 4-digit ISCED code
 
     # Map ISCED code to directory structure
-    # 0412 → 04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/
-    broad_code = isced_code[:2]  # "04"
-    narrow_code = isced_code[:3]  # "041"
-    detailed_code = isced_code  # "0412"
+    # Format: NN-broad/NNN-narrow/NNNN-detailed/
+    broad_code = isced_code[:2]  # First 2 digits
+    narrow_code = isced_code[:3]  # First 3 digits
+    detailed_code = isced_code  # All 4 digits
 
     # Find matching directory
     isced_dirs = list(KB_DIR.glob(f"{broad_code}-*/{narrow_code}-*/{domain_path}/"))
@@ -283,7 +283,7 @@ def validate_concepts(concepts_data: Dict, domain_path: str, source_file: str) -
 
     Args:
         concepts_data: Dict with 'concepts' array
-        domain_path: ISCED domain path (e.g., "0412-finance-banking-insurance")
+        domain_path: ISCED domain path
         source_file: Path to source conversation file
 
     Returns:
@@ -372,7 +372,7 @@ def main():
     parser.add_argument('--concepts-json', required=True,
                         help='JSON string with concepts array')
     parser.add_argument('--domain-path', required=True,
-                        help='ISCED domain path (e.g., "0412-finance-banking-insurance")')
+                        help='ISCED domain path')
     parser.add_argument('--source-file', default='',
                         help='Path to source conversation file (optional)')
     parser.add_argument('--quiet', action='store_true',

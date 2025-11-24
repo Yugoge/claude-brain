@@ -8,15 +8,15 @@ Main agent provides complete session metadata, this script merges with enriched 
 Usage:
     python scripts/archival/construct_enriched_rems.py \\
         --enriched-rems enriched_rems.json \\
-        --session-id "qing-policies-2025-11-24" \\
-        --title "清代文化政策分析" \\
+        --session-id "topic-slug-2025-11-24" \\
+        --title "Session Title" \\
         --summary "User learned..." \\
         --archived-file "chats/2025-11/conversation.md" \\
         --session-type learn \\
-        --domain history \\
-        --subdomain qing-dynasty \\
+        --domain domain-name \\
+        --subdomain subdomain-slug \\
         --isced-path "02-.../0222-..." \\
-        --tags "清代,文字狱" \\
+        --tags "tag1,tag2" \\
         --output enriched_rems_complete.json
 
 Outputs: Complete JSON with full session_metadata ready for save_post_processor.py
@@ -45,15 +45,15 @@ def construct_complete_json(
 
     Args:
         enriched_rems_file: Path to enriched_rems.json from Step 5
-        session_id: Conversation ID (e.g., "topic-slug-2025-11-24")
+        session_id: Conversation ID
         title: Conversation title
         summary: 2-3 sentence summary of what user learned
         archived_file: Path to archived conversation
         session_type: learn | ask | review
-        domain: Domain name (e.g., "history")
-        subdomain: Subdomain slug (e.g., "qing-dynasty")
-        isced_path: Full ISCED path (e.g., "02-.../0222-...")
-        tags: Comma-separated tags (e.g., "清代,文字狱")
+        domain: Domain name
+        subdomain: Subdomain slug
+        isced_path: Full ISCED path
+        tags: Comma-separated tags
         output_file: Output path for complete JSON
 
     Returns: Exit code (0 = success, 1 = error)
@@ -119,7 +119,7 @@ def main():
 
     # Required args
     parser.add_argument('--enriched-rems', required=True, help='Path to Step 5 enriched_rems.json')
-    parser.add_argument('--session-id', required=True, help='Session ID (e.g., topic-slug-2025-11-24)')
+    parser.add_argument('--session-id', required=True, help='Session ID')
     parser.add_argument('--title', required=True, help='Conversation title')
     parser.add_argument('--summary', required=True, help='2-3 sentence summary')
     parser.add_argument('--archived-file', required=True, help='Path to archived conversation')

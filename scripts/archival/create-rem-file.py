@@ -9,28 +9,15 @@ Usage:
     python create-rem-file.py \\
         --rem-id "concept-slug" \\
         --title "Concept Title" \\
-        --isced "02-arts-and-humanities/023-languages/0231-language-acquisition" \\
-        --subdomain "english" \\
+        --isced "NN-broad/NNN-narrow/NNNN-detailed" \\
+        --subdomain "subdomain-name" \\
         --core-points '["Point 1", "Point 2", "Point 3"]' \\
         --usage-scenario "When to use this concept..." \\
         --mistakes '["❌ Wrong → ✅ Right", ...]' \\
         --related-rems '["rem-id-1", "rem-id-2"]' \\
-        --conversation-file "chats/2025-11/conversation.md" \\
+        --conversation-file "chats/YYYY-MM/conversation.md" \\
         --conversation-title "Conversation Title" \\
-        --output-path "knowledge-base/.../003-concept-slug.md"
-
-Example:
-    python create-rem-file.py \\
-        --rem-id "english-schwa-reduction" \\
-        --title "Schwa Reduction in Unstressed Syllables" \\
-        --isced "02-arts-and-humanities/023-languages/0231-language-acquisition" \\
-        --subdomain "english" \\
-        --core-points '["Schwa /ə/ is most common vowel", "Appears only in unstressed syllables"]' \\
-        --usage-scenario "Identify stress first, then expect vowel reduction" \\
-        --mistakes '["❌ Pronounce all vowels fully → ✅ Reduce unstressed"]' \\
-        --conversation-file "chats/2025-11/english-pronunciation.md" \\
-        --conversation-title "English Pronunciation Session" \\
-        --output-path "knowledge-base/.../004-english-schwa-reduction.md"
+        --output-path "knowledge-base/.../NNN-concept-slug.md"
 """
 
 import sys
@@ -188,7 +175,7 @@ def main():
     parser = argparse.ArgumentParser(description="Create standardized Rem file")
     parser.add_argument("--rem-id", required=True, help="Rem ID (slug format)")
     parser.add_argument("--title", required=True, help="Rem title")
-    parser.add_argument("--isced", required=True, help="ISCED path (e.g., 02-arts-and-humanities/023-languages/0231-language-acquisition)")
+    parser.add_argument("--isced", required=True, help="ISCED path")
     parser.add_argument("--subdomain", required=True, help="Subdomain (e.g., english, french, finance)")
     parser.add_argument("--core-points", required=True, help="JSON array of 1-3 core points")
     parser.add_argument("--usage-scenario", required=True, help="Usage scenario text (1-2 sentences)")

@@ -9,14 +9,8 @@ Usage:
     python scripts/archival/list_rems_in_domain.py --domain-path <path> --output <file>
 
 Examples:
-    # List all French language Rems
     python scripts/archival/list_rems_in_domain.py \
-        --domain-path "02-arts-and-humanities/023-languages/0231-language-acquisition" \
-        --output rems.json
-
-    # List all finance Rems
-    python scripts/archival/list_rems_in_domain.py \
-        --domain-path "04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance" \
+        --domain-path "path/to/domain" \
         --output rems.json
 """
 
@@ -145,7 +139,7 @@ def list_rems_in_domain(domain_path: str) -> list:
     Find all Rem files in a specific domain.
 
     Args:
-        domain_path: Relative path from knowledge-base (e.g., "02-arts-and-humanities/...")
+        domain_path: Relative path from knowledge-base
 
     Returns:
         List of dicts with rem metadata:
@@ -204,7 +198,7 @@ def main():
     parser.add_argument(
         '--domain-path',
         required=True,
-        help='Domain path relative to knowledge-base (e.g., "0231-language-acquisition")'
+        help='Domain path relative to knowledge-base'
     )
 
     parser.add_argument(
