@@ -13,18 +13,18 @@ def main():
             "status": "pending"
         },
         {
-            "content": "Step 2: Initial Journalist Consultation",
-            "activeForm": "Step 2: Initial Journalist Consultation",
+            "content": "Step 2: Dual Journalist Consultation (Pro/Con Verification)",
+            "activeForm": "Step 2: Dual Journalist Consultation (Pro/Con Verification)",
             "status": "pending"
         },
         {
-            "content": "Step 3: Validate and Parse Journalist Response",
-            "activeForm": "Step 3: Validate and Parse Journalist Response",
+            "content": "Step 3: Validate and Parse Dual Journalist Responses",
+            "activeForm": "Step 3: Validate and Parse Dual Journalist Responses",
             "status": "pending"
         },
         {
-            "content": "Step 4: Internalize Guidance and Respond Naturally",
-            "activeForm": "Step 4: Internalize Guidance and Respond Naturally",
+            "content": "Step 4: Synthesize Dual Perspectives and Respond Naturally",
+            "activeForm": "Step 4: Synthesize Dual Perspectives and Respond Naturally",
             "status": "pending"
         },
         {

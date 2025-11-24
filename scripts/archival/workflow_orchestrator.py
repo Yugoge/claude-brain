@@ -299,9 +299,21 @@ def main():
         print("  Auto-generating missing output paths...", file=sys.stderr)
         enriched_rems = auto_generate_output_paths(enriched_rems, args.isced_path)
 
-        # Save enriched Rems
+        # Build complete output structure (with session_metadata wrapper)
+        output_data = {
+            "session_metadata": {
+                "domain": args.domain,
+                "isced_path": args.isced_path,
+                "timestamp": None,  # Will be filled by save_post_processor
+                "agent": "main"
+            },
+            "rems": enriched_rems,
+            "rems_to_update": []
+        }
+
+        # Save enriched Rems with session_metadata wrapper
         with open(args.output, 'w', encoding='utf-8') as f:
-            json.dump(enriched_rems, f, indent=2, ensure_ascii=False)
+            json.dump(output_data, f, indent=2, ensure_ascii=False)
 
         print(f"✅ Saved enriched Rems to: {args.output}", file=sys.stderr)
         return 0
