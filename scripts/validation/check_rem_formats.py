@@ -191,20 +191,20 @@ class RemFormatChecker:
             ))
 
     def _check_isced_v3_format(self, data: Dict, file_path: Path):
-        """Check ISCED format (v3.0 simplified: full slug like '0412-finance-banking-insurance')"""
+        """Check ISCED format (v3.0 simplified: full slug)"""
         isced = data.get('isced')
         if not isced:
             return  # Already caught by required fields check
 
         # Format: 4-digit code followed by slug
-        # Example: 0412-finance-banking-insurance, 0231-language-acquisition
+        # Example: NNNN-domain-slug
         if not re.match(r'^\d{4}-[a-z]+(-[a-z]+)*$', str(isced)):
             self.errors.append(ValidationError(
                 file=str(file_path),
                 line=4,
                 column=1,
                 severity='error',
-                message=f"Invalid isced format: '{isced}' (use: NNNN-slug format, e.g., '0412-finance-banking-insurance')",
+                message=f"Invalid isced format: '{isced}' (use: NNNN-slug format)",
                 rule='isced-v3-format'
             ))
 
