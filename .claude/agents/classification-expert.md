@@ -78,7 +78,11 @@ These files contain:
 - Read `_taxonomy/04-business-administration-and-law/index.md` for business domains
 - Read `_taxonomy/04-business-administration-and-law/041-business-and-administration.md` for detailed codes (0411, 0412, 0413, etc.)
 
-### Step 2: Analyze Question Semantics
+### Step 2: Analyze Question/Conversation Semantics
+
+**⚠️ CRITICAL DISTINCTION**: For conversation archival, classify LEARNING CONTENT (what user learned), NOT pedagogical method (how it was taught).
+- If prompt says "methods used: fact-checking" but content is "Qing Dynasty policies" → History (0222), not Journalism (0321)
+- If prompt says "methods used: programming" but content is "option pricing" → Finance (0412), not ICT (0611)
 
 **Identify domain-specific terminology**:
 - Finance: Black-Scholes, derivatives, options, Greeks (delta, gamma, theta, vega), DCF, NPV, portfolio
