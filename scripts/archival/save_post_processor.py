@@ -122,6 +122,32 @@ def validate_before_creation(enriched_rems: List[Dict], domain: str, isced_path:
 
         print(f"  ✓ Light validation passed ({len(enriched_rems)} Rems)", file=sys.stderr)
 
+        # Validation 3: output_path existence and validity
+        print("  Validating output paths...", file=sys.stderr)
+        for rem in enriched_rems:
+            output_path_str = rem.get('output_path', '')
+
+            if not output_path_str:
+                print(f"  ❌ Missing output_path for {rem.get('rem_id', 'unknown')}", file=sys.stderr)
+                print(f"     Fix: Run get-next-number.py for knowledge-base/{isced_path}", file=sys.stderr)
+                print(f"     Command: python scripts/utilities/get-next-number.py --directory 'knowledge-base/{isced_path}'", file=sys.stderr)
+                return False
+
+            # Check if path is invalid (current directory indicator)
+            if output_path_str in ['', '.', './']:
+                print(f"  ❌ Invalid output_path for {rem.get('rem_id', 'unknown')}: '{output_path_str}'", file=sys.stderr)
+                print(f"     output_path must be a file path, not a directory", file=sys.stderr)
+                return False
+
+            # Check if output_path points to existing directory
+            output_path = Path(output_path_str)
+            if output_path.exists() and output_path.is_dir():
+                print(f"  ❌ output_path is directory for {rem.get('rem_id', 'unknown')}: {output_path_str}", file=sys.stderr)
+                print(f"     output_path must be a file path, not a directory", file=sys.stderr)
+                return False
+
+        print(f"  ✓ Output paths validated ({len(enriched_rems)} Rems)", file=sys.stderr)
+
         return True
 
     except Exception as e:

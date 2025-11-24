@@ -1,201 +1,136 @@
 # Personal Knowledge System
 
-An AI-powered personal knowledge management and spaced repetition learning system built on Claude Code.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-blueviolet)](https://claude.com/code)
+[![FSRS Algorithm](https://img.shields.io/badge/Review-FSRS-green)](https://github.com/open-spaced-repetition/fsrs4anki)
 
-## Overview
+An AI-powered personal knowledge management and spaced repetition learning system built on Claude Code. Combines Socratic dialogue-based learning with scientifically-optimized spaced repetition for deep knowledge retention across multiple domains.
 
-This system combines Socratic dialogue-based learning with scientifically-optimized spaced repetition to help you build and retain deep knowledge across multiple domains.
+## ✨ Key Features
 
-**Key Features:**
 - **Interactive Learning**: Socratic dialogue, not passive reading
-- **Smart Review**: FSRS algorithm for optimal retention (30-50% more efficient than SM-2)
+- **Smart Review**: FSRS algorithm for optimal retention (30-50% more efficient than traditional SM-2)
 - **Knowledge Graph**: RemNote-style organization with bidirectional links and typed relations
-- **Multi-Domain**: Finance, Programming, Language, Science, and more
+- **Multi-Domain**: Finance, Programming, Language, Medicine, Law, Science, and more
 - **Multi-Format**: PDF, EPUB, PowerPoint, Word, Excel, Markdown
 - **Git-Friendly**: Everything stored as Markdown for version control
 - **Token-Optimized**: 73% token savings through three-party consultation architecture
 
-## Quick Start
+---
 
-### 1. Initialize System
+## 🚀 Quick Start
 
+### Prerequisites
+
+- Python 3.9+
+- Claude Code (Desktop or CLI)
+- Git
+
+### Installation
+
+1. **Clone the repository**:
+```bash
+git clone <your-fork-url>
+cd knowledge-system
+```
+
+2. **Set up Python environment**:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+3. **Initialize the system**:
 ```bash
 /kb-init
 ```
 
-### 2. Add Learning Materials
-
-Place your materials in the appropriate domain folder:
-
-```
-learning-materials/
-├── finance/
-│   └── options-trading.pdf
-├── programming/
-│   └── algorithms-textbook.pdf
-└── language/
-    └── spanish-grammar.epub
-```
-
-### 3. Start Learning
+### Basic Workflow
 
 ```bash
+# 1. Add learning material to appropriate domain folder
+learning-materials/finance/options-trading.pdf
+
+# 2. Start learning session
 /learn learning-materials/finance/options-trading.pdf
-```
 
-The AI tutor will:
-- Present passages from the material
-- Ask Socratic questions to test understanding
-- Extract concepts as knowledge Rems
-- Track your progress automatically
+# 3. AI tutor asks Socratic questions to test understanding
 
-### 4. Save Your Session
-
-```bash
+# 4. Save session (extracts concepts, maintains graph, syncs to review)
 /save options-trading-session
+
+# 5. Review regularly using spaced repetition
+/review finance
+
+# 6. Track your progress
+/progress finance
 ```
 
-This one command will:
-- Extract concepts as ultra-minimal Rems (100-120 tokens)
-- Discover typed relations via domain tutors (mandatory for core domains)
-- Normalize wikilinks automatically
-- Rebuild knowledge graph with typed relations
-- Sync to FSRS review schedule
-- Archive the conversation
+---
 
-### 5. Review Regularly
-
-```bash
-/review                    # Review all due concepts
-/review finance            # Review finance concepts only
-/review [[concept-id]]     # Review specific concept
-```
-
-### 6. Discover Relations (Optional)
-
-For existing Rems without typed relations, use:
-
-```bash
-/discover-relations csharp-null-conditional-operator  # Single Rem
-/discover-relations --domain 0611-computer-use        # All Rems in domain
-```
-
-This retrospectively discovers semantic relationships (synonyms, prerequisites, contrasts) using domain tutors.
-
-### 7. Track Progress
-
-```bash
-/progress                  # Overall progress
-/progress finance          # Domain-specific
-/progress learning-materials/finance/options-trading.pdf  # Material-specific
-```
-
-## Core Commands
+## 📚 Core Commands
 
 | Command | Description |
 |---------|-------------|
 | `/learn <file-path>` | Start interactive Socratic learning session |
 | `/save [topic]` | Extract concepts, maintain graph, archive conversation (all-in-one) |
-| `/discover-relations <rem-id\|--domain path>` | Discover typed relations for existing Rems |
-| `/review [domain\|concept-id]` | Review concepts using FSRS algorithm |
-| `/sync-rems` | Manually sync Rems to review schedule (auto-called by `/save`) |
-| `/progress [domain\|file-path]` | View learning progress and analytics |
+| `/review [domain│concept-id]` | Review concepts using FSRS algorithm |
+| `/progress [domain│file-path]` | View learning progress and analytics |
 | `/ask <question>` | Ask any question with automatic web research |
+| `/discover-relations <rem-id│--domain path>` | Discover typed relations for existing Rems |
 | `/visualize [domain]` | Generate interactive knowledge graph visualization |
 | `/kb-init` | Initialize or repair knowledge system |
 
-## System Architecture
+---
+
+## 🏗️ System Architecture
 
 ```
 knowledge-system/
 ├── .claude/                    # Claude Code configuration
-│   ├── commands/               # Slash commands (/learn, /review, /ask, /save)
-│   ├── agents/                 # Specialized AI tutors
-│   │   ├── book-tutor/         # General learning consultant
-│   │   ├── language-tutor/     # Language domain consultant
-│   │   ├── finance-tutor/      # Finance domain consultant
-│   │   ├── programming-tutor/  # Programming domain consultant
-│   │   ├── review-master/      # Review conductor (standalone)
-│   │   ├── analyst/            # Universal Q&A (standalone)
-│   │   └── knowledge-indexer/  # Graph maintenance (utility)
-│   ├── hooks/                  # Event-driven automation scripts
+│   ├── commands/               # Slash commands
+│   ├── agents/                 # AI tutors (language, finance, programming, etc.)
+│   ├── hooks/                  # Event-driven automation
 │   ├── settings.json           # Hook configuration
 │   └── CLAUDE.md               # System instructions
 │
-├── learning-materials/         # Original learning materials + progress
-│   ├── .index.json             # Material metadata index
-│   ├── _templates/             # Progress file templates
-│   ├── finance/                # Finance domain materials
-│   ├── language/               # Language learning materials
-│   └── [domain]/               # Other domain materials
+├── learning-materials/         # Original materials + progress tracking
+│   ├── finance/
+│   ├── language/
+│   ├── programming/
+│   └── [domain]/
 │
 ├── knowledge-base/             # Extracted knowledge (Rem-style)
 │   ├── _index/                 # Auto-generated indexes
 │   │   ├── backlinks.json      # Bidirectional link index
 │   │   └── graph-data.json     # Knowledge graph cache
-│   ├── _taxonomy/              # Taxonomy reference files
-│   │   ├── 00-generic-programmes-and-qualifications/
-│   │   ├── 01-education/
-│   │   ├── 02-arts-and-humanities/
-│   │   ├── 03-social-sciences-journalism-and-information/
-│   │   ├── 04-business-administration-and-law/
-│   │   ├── 05-natural-sciences-mathematics-and-statistics/
-│   │   ├── 06-information-and-communication-technologies-icts/
-│   │   ├── 07-engineering-manufacturing-and-construction/
-│   │   ├── 08-agriculture-forestry-fisheries-and-veterinary/
-│   │   ├── 09-health-and-welfare/
-│   │   └── 10-services/
-│   ├── _templates/             # Rem templates
-│   ├── 02-arts-and-humanities/ # Language Rems (ISCED code 02)
-│   │   └── 023-languages/
-│   ├── 03-social-sciences-journalism-and-information/
-│   │   └── 031-social-and-behavioural-sciences/
-│   ├── 04-business-administration-and-law/  # Finance Rems (ISCED code 04)
-│   │   └── 041-business-and-administration/
-│   └── 06-information-and-communication-technologies-icts/  # Programming Rems (ISCED code 06)
-│       └── 061-ict-use/
+│   ├── _taxonomy/              # UNESCO ISCED taxonomy reference
+│   └── [ISCED-code]/           # Domain-organized concepts
 │
-├── .review/                    # FSRS review system data
-│   ├── schedule.json           # FSRS scheduling data
+├── .review/                    # FSRS review system
+│   ├── schedule.json           # Review scheduling
 │   ├── history.json            # Review history
-│   ├── adaptive-profile.json   # Adaptive difficulty profile
-│   ├── analytics-cache.json    # Pre-computed analytics
-│   ├── insights.json           # Learning insights
-│   ├── learning-goals.json     # Learning goals tracking
-│   ├── adaptive-history/       # Historical adaptive data
-│   └── backups/                # Schedule backups
+│   └── adaptive-profile.json   # Adaptive difficulty
 │
 ├── chats/                      # Conversation archives
-│   ├── index.json              # Searchable conversation index
-│   ├── README.md               # Archive documentation
-│   ├── _templates/             # Conversation templates
-│   ├── 2025-10/                # Monthly archive (October)
-│   └── 2025-11/                # Monthly archive (November)
+│   ├── index.json              # Searchable index
+│   └── [YYYY-MM]/              # Monthly archives
 │
-└── scripts/                    # Utility scripts
-    ├── analytics/              # Learning analytics
-    ├── archival/               # Conversation archival
-    ├── hooks/                  # Hook utilities
-    ├── knowledge-graph/        # Graph maintenance (rebuild-backlinks.py, etc.)
-    ├── learning-goals/         # Goals tracking
-    ├── learning-materials/     # File parsers (extract-pdf-chunk.py, parse-epub.py)
-    ├── memory/                 # MCP memory integration
-    ├── migration/              # Data migration utilities
-    ├── progress/               # Progress tracking
-    ├── review/                 # FSRS algorithm implementation
-    ├── services/               # Service utilities
-    ├── utilities/              # General utilities
-    ├── utils/                  # Helper functions
-    ├── validation/             # Data validation
-    └── visualizations/         # Knowledge graph visualization
+└── scripts/                    # Maintenance utilities
+    ├── archival/               # Conversation processing
+    ├── knowledge-graph/        # Graph maintenance
+    ├── learning-materials/     # File parsers
+    ├── review/                 # FSRS implementation
+    └── hooks/                  # Hook utilities
 ```
 
-## Agent Architecture
+### Agent Architecture
 
-The system uses a **three-party consultation pattern** for optimal token efficiency:
+The system uses a **three-party consultation pattern** for optimal efficiency:
 
 1. **Consultant Agents** (Silent domain experts):
-   - `language-tutor`, `finance-tutor`, `programming-tutor`, `book-tutor`
+   - `language-tutor`, `finance-tutor`, `programming-tutor`, `book-tutor`, `medicine-tutor`, `law-tutor`, `science-tutor`
    - Provide JSON consultations to main agent
    - Never interact with user directly
    - ~73% token savings vs direct interaction
@@ -207,18 +142,53 @@ The system uses a **three-party consultation pattern** for optimal token efficie
 3. **Utility Agents** (Background workers):
    - `knowledge-indexer` - Maintains knowledge graph structure
 
-**See**: `docs/architecture/agent-classification.md` for details
+**See**: `architecture/agent-classification.md` for details
 
-## Hook System
+---
+
+## 💡 Core Concepts
+
+### Rem-Style Knowledge Points
+
+Each concept is stored as a minimal Markdown file (~100-120 tokens) with:
+- **Hierarchical structure**: Parent → Child relationships
+- **Bidirectional links**: `[[concept-a]]` ↔ `[[concept-b]]`
+- **Typed relations**: synonym, antonym, prerequisite_of, etc.
+- **Tags**: Domain, difficulty, topic tags
+- **Dual taxonomy**: UNESCO ISCED + Dewey Decimal codes
+- **Metadata**: Creation date, review history, FSRS data
+
+### Typed Relations
+
+The system supports semantic relationships:
+- **Lexical**: synonym, antonym, hypernym, hyponym, part_of
+- **Conceptual**: is_a, prerequisite_of, cause_of, example_of
+- **Comparative**: contrasts_with, analogous_to, related
+
+**Discovery**: Automatically during `/save` or manually via `/discover-relations`
+
+**See**: `architecture/standards/RELATION_TYPES.md`
+
+### FSRS Review System
+
+- **Algorithm**: FSRS (Free Spaced Repetition Scheduler)
+- **Efficiency**: 30-50% more efficient than traditional SM-2
+- **Rating Scale**: 1-4 (1 = hard, 2 = medium, 3 = good, 4 = easy)
+- **Adaptive**: Based on difficulty, stability, and retrievability
+- **Conversation-based**: Not flashcards - test through Socratic dialogue
+
+---
+
+## 🔧 Automation & Hooks
 
 The system uses **9 hooks** for automatic safety checks and maintenance:
 
 | Hook | Purpose |
 |------|---------|
-| **SessionStart** | Log session timestamp |
-| **UserPromptSubmit** | Scan for dangerous commands in user input |
+| **SessionStart** | Display count of due reviews |
+| **UserPromptSubmit** | Prevent secret commits, review reminders |
 | **PreToolUse (Bash)** | Block dangerous AI commands |
-| **PreToolUse (Edit)** | Protect auto-generated indexes |
+| **PreToolUse (Edit)** | Protect critical indexes |
 | **PreToolUse (Read)** | Warn about large files (>5MB) |
 | **PostToolUse (Edit)** | Auto-rebuild backlinks after edits |
 | **SubagentStop** | Audit trail for review sessions |
@@ -227,80 +197,100 @@ The system uses **9 hooks** for automatic safety checks and maintenance:
 
 **Key Automation**: Every time you edit a knowledge file, the backlinks index is automatically rebuilt. No manual maintenance needed!
 
-**See**: `docs/architecture/hooks.md` for full documentation
+**See**: `architecture/hooks.md`
 
-## Large File Handling
+---
 
-The system automatically handles large files using smart chunking:
+## 📖 Learning Workflow
 
-### Content-Aware Processing
-- **Text-heavy PDFs** (textbooks): 5-10 pages at a time
-- **Image-heavy PDFs** (picture books): 1 page at a time
-- **Mixed content**: Adaptive 3-5 pages
+### 1. Add Learning Materials
 
-### Size Thresholds
-| Size Range | Action | Method |
-|-----------|--------|---------|
-| < 5 MB | ✅ Read normally | Standard `Read` tool |
-| 5-20 MB | ⚠️ Warn but allow | `Read` with warning |
-| > 20 MB | ⛔ Block `Read` | **MUST** use chunking |
+Place materials in the appropriate domain folder:
 
-### Zero-Pollution Single-Page Extraction
+```
+learning-materials/
+├── finance/
+│   ├── options-trading.pdf
+│   └── derivatives-handbook.epub
+├── programming/
+│   ├── python-deep-dive.pdf
+│   └── algorithms-textbook.pdf
+└── language/
+    ├── french-grammar.epub
+    └── spanish-vocab.pdf
+```
 
-For image-heavy PDFs, the system extracts one page at a time to temporary files, reads with full visual recognition, then immediately deletes. Zero permanent file pollution.
-
-**See**: `.claude/CLAUDE.md` for token processing guidelines
-
-## Knowledge Graph Features
-
-### Rem-Style Knowledge Points
-
-Each concept is stored as a Markdown file with:
-- **Hierarchical structure**: Parent → Child relationships
-- **Bidirectional links**: `[[concept-a]]` ↔ `[[concept-b]]`
-- **Typed relations**: synonym, antonym, prerequisite_of, etc.
-- **Tags**: Domain, difficulty, topic tags
-- **Dual taxonomy**: UNESCO ISCED + Dewey Decimal codes
-- **Metadata**: Creation date, review history, FSRS data
-
-### Minimal Rem Format
-
-Rems are intentionally brief (target 100-120 tokens) to enable high-throughput reviews:
-- 3-5 core memory points
-- 1 personal mistake/insight
-- 1-sentence usage scenario
-- Related concepts with reasons
-- learning_audit metadata
-
-**See**: `docs/architecture/standards/REM_FORMAT_GUIDELINES.md`
-
-### Typed Relations
-
-The system supports typed concept relationships:
-- **Lexical**: synonym, antonym, hypernym, hyponym, part_of
-- **Conceptual**: is_a, prerequisite_of, cause_of, example_of
-- **Comparative**: contrasts_with, analogous_to, related
-
-**Discovery Methods**:
-- **Automatic**: During `/save` (mandatory for programming, language, finance, science)
-- **Manual**: Run `/discover-relations` on existing Rems
-
-**See**: `docs/architecture/standards/RELATION_TYPES.md`
-
-## Review System (FSRS)
-
-- **Algorithm**: FSRS (Free Spaced Repetition Scheduler)
-- **Efficiency**: 30-50% more efficient than traditional SM-2
-- **Rating Scale**: 1-4 (1 = hard, 2 = medium, 3 = good, 4 = easy)
-- **Adaptive Intervals**: Based on difficulty, stability, and retrievability
-- **Conversation-based**: Not flashcards - test through Socratic dialogue
-
-## Maintenance Scripts
-
-The system includes automated maintenance via hooks. For manual operations:
+### 2. Interactive Learning
 
 ```bash
-# Rebuild bidirectional links with typed & inferred relations
+/learn learning-materials/finance/options-trading.pdf
+```
+
+The AI tutor will:
+- Present passages from the material
+- Ask Socratic questions to test understanding
+- Extract concepts as knowledge Rems
+- Track your progress automatically
+
+### 3. Save Session
+
+```bash
+/save options-trading-session
+```
+
+This one command:
+- Extracts concepts as ultra-minimal Rems (100-120 tokens)
+- Discovers typed relations via domain tutors
+- Normalizes wikilinks automatically
+- Rebuilds knowledge graph
+- Syncs to FSRS review schedule
+- Archives the conversation
+
+### 4. Review Regularly
+
+```bash
+/review                    # Review all due concepts
+/review finance            # Review finance concepts only
+/review [[concept-id]]     # Review specific concept
+```
+
+### 5. Track Progress
+
+```bash
+/progress                  # Overall progress
+/progress finance          # Domain-specific
+/progress learning-materials/finance/options-trading.pdf  # Material-specific
+```
+
+---
+
+## 📊 Knowledge Graph Visualization
+
+```bash
+/visualize              # Full knowledge graph (all domains)
+/visualize finance      # Finance concepts only
+```
+
+**Features**:
+- D3.js force-directed graph with domain-colored nodes
+- Interactive: zoom, pan, drag, click for details
+- Hover to highlight connected concepts
+- Search to filter and focus
+- Auto-detected clusters
+- Node size = review count
+
+Opens `knowledge-graph.html` in your browser.
+
+---
+
+## 🛠️ Maintenance & Utilities
+
+### Automatic Maintenance
+
+Most maintenance is automated via hooks. For manual operations:
+
+```bash
+# Rebuild bidirectional links with typed relations
 python3 scripts/knowledge-graph/rebuild-backlinks.py
 
 # Convert [[wikilinks]] to clickable file links
@@ -312,9 +302,6 @@ python3 scripts/knowledge-graph/add-relation.py \
 
 # Materialize two-hop inferred links (preview first!)
 python3 scripts/knowledge-graph/materialize-inferred-links.py --dry-run
-
-# Reset spaced repetition schedule (NUCLEAR OPTION)
-python3 scripts/review/reset-schedule.py --full-reset
 ```
 
 All scripts support:
@@ -322,40 +309,51 @@ All scripts support:
 - `--verbose` - Detailed debug output
 - `--help` - Full usage documentation
 
-**See**: `docs/archive/guides/REBUILD_UTILITIES.md`
+### Large File Handling
 
-## Universal Q&A System
+The system automatically handles large files using smart chunking:
 
-```bash
-/ask "Explain quantum computing"
-```
+**Content-Aware Processing**:
+- **Text-heavy PDFs** (textbooks): 5-10 pages at a time
+- **Image-heavy PDFs** (picture books): 1 page at a time
+- **Mixed content**: Adaptive 3-5 pages
 
-The **analyst** agent will:
-- 🔍 Search the web automatically
-- 📚 Check your existing knowledge base
-- 💻 Execute code if needed
-- 📖 Cite all sources
+**Size Thresholds**:
 
-After `/ask` or `/learn`, use `/save` to extract concepts and archive the conversation.
+| Size Range | Action | Method |
+|-----------|--------|---------|
+| < 5 MB | ✅ Read normally | Standard `Read` tool |
+| 5-20 MB | ⚠️ Warn but allow | `Read` with warning |
+| > 20 MB | ⛔ Block `Read` | **MUST** use chunking |
 
-## Visualization
+---
 
-```bash
-/visualize              # Full knowledge graph (all domains)
-/visualize finance      # Finance concepts only
-```
+## 🎯 Best Practices
 
-**Features**:
-- 🎨 D3.js force-directed graph with domain-colored nodes
-- 🔍 Interactive: zoom, pan, drag, click for details
-- 🔗 Hover to highlight connected concepts
-- 🔎 Search to filter and focus
-- 📊 Auto-detected clusters
-- 📈 Node size = review count
+### Learning
 
-Opens `knowledge-graph.html` in your browser.
+- **Daily consistency**: 30-60 minutes daily beats irregular long sessions
+- **Active engagement**: Answer questions thoughtfully, don't rush
+- **Make connections**: Link new concepts to existing knowledge
+- **Review regularly**: Follow FSRS schedule for optimal retention
 
-## Troubleshooting
+### Organization
+
+- **One domain per material**: Place files in appropriate domain folder
+- **Descriptive filenames**: Use clear, searchable names
+- **Tag generously**: Tags help discover related concepts
+- **Link proactively**: Create `[[links]]` during learning for better recall
+
+### Review
+
+- **Be honest**: Ratings must be accurate for FSRS to work
+- **Don't cram**: Spaced repetition is more effective than massing
+- **Apply knowledge**: Think about real-world applications
+- **Note weak spots**: Concepts with low ratings need extra attention
+
+---
+
+## 🔍 Troubleshooting
 
 ### "Context limit exceeded"
 - Materials are chunked automatically
@@ -373,27 +371,9 @@ Opens `knowledge-graph.html` in your browser.
 - Verify agents exist in `.claude/agents/`
 - Run `/kb-init` to repair
 
-## Best Practices
+---
 
-### Learning
-- **Daily consistency**: 30-60 minutes daily beats irregular long sessions
-- **Active engagement**: Answer questions thoughtfully, don't rush
-- **Make connections**: Link new concepts to existing knowledge
-- **Review regularly**: Follow FSRS schedule for optimal retention
-
-### Organization
-- **One domain per material**: Place files in appropriate domain folder
-- **Descriptive filenames**: Use clear, searchable names
-- **Tag generously**: Tags help discover related concepts
-- **Link proactively**: Create `[[links]]` during learning for better recall
-
-### Review
-- **Be honest**: Ratings must be accurate for FSRS to work
-- **Don't cram**: Spaced repetition is more effective than massing
-- **Apply knowledge**: Think about real-world applications
-- **Note weak spots**: Concepts with low ratings need extra attention
-
-## Git Workflow
+## 📝 Git Workflow
 
 ### Initial Setup
 ```bash
@@ -420,23 +400,23 @@ git pull   # Before starting work
 git push   # After sessions
 ```
 
-## Documentation
+---
+
+## 📚 Documentation
 
 ### For Users
 - **[README.md](./README.md)** - This file (quick start and overview)
-- **[.claude/CLAUDE.md](./.claude/CLAUDE.md)** - System instructions and guidelines
+- **[architecture/](./architecture/)** - System architecture documentation
 
 ### For Developers
-- **[docs/README.md](./docs/README.md)** - Complete system documentation index
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - Architecture overview and design
-- **[docs/architecture/](./docs/architecture/)** - Detailed architecture documentation
-- **[docs/architecture/standards/](./docs/architecture/standards/)** - Standards and conventions
+- **[architecture/agent-classification.md](./architecture/agent-classification.md)** - Agent types and consultation pattern
+- **[architecture/hooks.md](./architecture/hooks.md)** - Hook system documentation
+- **[architecture/conversation-index.md](./architecture/conversation-index.md)** - Conversation archive schema
+- **[architecture/standards/](./architecture/standards/)** - Standards and conventions
 
-### Archives
-- **[docs/archive/](./docs/archive/)** - Historical documentation and deprecated features
-- **[docs/archive/deprecated/](./docs/archive/deprecated/)** - Phase 2 baseline documentation
+---
 
-## Contributing
+## 🤝 Contributing
 
 This is a personal knowledge system template. Customize to your needs:
 
@@ -445,16 +425,48 @@ This is a personal knowledge system template. Customize to your needs:
 3. Modify progress tracking granularity
 4. Adjust FSRS parameters for your learning style
 
-## License
+---
+
+## 📄 License
 
 MIT License - Use freely for personal learning
 
-## Credits
+---
 
-Built with Claude Code by Anthropic
+## 🙏 Credits
 
-Inspired by SuperMemo, RemNote, and Zettelkasten methodology
+Built with [Claude Code](https://claude.com/code) by Anthropic
+
+Inspired by:
+- **SuperMemo** - Spaced repetition pioneer
+- **RemNote** - Knowledge graph and bidirectional links
+- **Zettelkasten** - Note-taking methodology
+- **FSRS** - Modern spaced repetition algorithm
+
+---
+
+## 🌟 System Highlights
+
+### What Makes This System Unique?
+
+1. **Socratic Dialogue**: Unlike traditional flashcards, the system uses AI-powered Socratic questioning to develop deep understanding
+
+2. **Three-Party Architecture**: Innovative consultation pattern reduces token usage by 73% while maintaining expert guidance
+
+3. **Typed Relations**: Semantic relationships between concepts (prerequisite_of, synonym, contrasts_with) enable intelligent review scheduling and knowledge discovery
+
+4. **Automatic Maintenance**: Hooks ensure indexes and links stay synchronized without manual intervention
+
+5. **Multi-Format Support**: Learn from PDFs, EPUBs, PowerPoint, Word, Excel, and Markdown with intelligent chunking
+
+6. **Domain Expertise**: Specialized tutors for Language, Finance, Programming, Medicine, Law, and Science provide tailored learning experiences
+
+7. **Git-Based**: Everything is Markdown - version control, sync across devices, full ownership of your data
+
+8. **FSRS Algorithm**: State-of-the-art spaced repetition 30-50% more efficient than traditional methods
 
 ---
 
 Happy learning! 🎓
+
+For questions or issues, please open an issue on GitHub.
