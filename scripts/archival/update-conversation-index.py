@@ -28,7 +28,8 @@ import argparse
 
 # Add scripts to path for rebuild_utils
 ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
+SCRIPT_DIR = Path(__file__).parent
+sys.path.insert(0, str(ROOT / "scripts" / "knowledge-graph"))  # For rebuild_utils
 
 from rebuild_utils import cleanup_old_backups
 

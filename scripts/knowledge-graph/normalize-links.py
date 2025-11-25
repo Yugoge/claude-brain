@@ -99,7 +99,8 @@ def convert_content(content: str, current_file: Path, idx: Dict[str, Tuple[str, 
         if not entry:
             return match.group(0)  # leave as-is
         title, target_abs = entry
-        rel_path = target_abs.relative_to(current_file.parent if target_abs.is_absolute() else current_file.parent).as_posix()
+        # Use os.path.relpath to handle cross-domain links (supports ../ navigation)
+        rel_path = os.path.relpath(target_abs, current_file.parent)
         md_link = f"[{title}]({rel_path})"
         if mode == 'annotate':
             out = f"[[{concept_id}]] ({md_link})"
