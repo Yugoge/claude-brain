@@ -63,7 +63,25 @@ def construct_complete_json(
         with open(enriched_rems_file, 'r', encoding='utf-8') as f:
             step5_data = json.load(f)
 
-        enriched_rems = step5_data.get('rems', [])
+        # Validate and normalize input format (supports both list and dict)
+        if isinstance(step5_data, list):
+            # Format: [{rem_id: ..., ...}, ...]
+            print(f"⚠️  Warning: Input is raw array format (legacy)", file=sys.stderr)
+            print(f"   Auto-converting to standard dict format...", file=sys.stderr)
+            enriched_rems = step5_data
+        elif isinstance(step5_data, dict):
+            # Format: {"rems": [...], "session_metadata": {...}}
+            enriched_rems = step5_data.get('rems', [])
+            if not enriched_rems:
+                print(f"❌ Error: Dict format but missing 'rems' key or empty array", file=sys.stderr)
+                print(f"   Expected format: {{'rems': [...], 'session_metadata': {{...}}}}", file=sys.stderr)
+                print(f"   Received keys: {list(step5_data.keys())}", file=sys.stderr)
+                return 1
+        else:
+            print(f"❌ Error: Invalid JSON type: {type(step5_data).__name__}", file=sys.stderr)
+            print(f"   Expected: list (legacy) or dict with 'rems' key (standard)", file=sys.stderr)
+            print(f"   Standard format: {{'rems': [...], 'session_metadata': {{...}}}}", file=sys.stderr)
+            return 1
 
         if not enriched_rems:
             print(f"❌ No Rems found in {enriched_rems_file}", file=sys.stderr)
