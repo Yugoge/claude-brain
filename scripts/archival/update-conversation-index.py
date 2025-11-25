@@ -30,7 +30,7 @@ import argparse
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from knowledge_graph.rebuild_utils import cleanup_old_backups
+from rebuild_utils import cleanup_old_backups
 
 
 def load_index(index_file: Path) -> dict:
