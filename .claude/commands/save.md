@@ -383,6 +383,11 @@ source venv/bin/activate && python scripts/archival/construct_enriched_rems.py \
   --output enriched_rems_complete.json
 ```
 
+**Data Format Support**:
+- Script accepts **both** legacy array format `[{...}]` and standard dict format `{"rems": [...], "session_metadata": {...}}`
+- Auto-converts legacy format with warning
+- See `docs/architecture/data-formats.md` for complete format specification
+
 **Execute post-processor**:
 
 ```bash

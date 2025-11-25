@@ -127,33 +127,17 @@ The main agent will provide:
    - Best for: Calculations, coding tasks, translations, applications
    - Example content: "Calculate NPV given...", "Implement function that...", "Translate..."
 
-**Selection Guidelines** (Content-First Strategy):
+**Selection Guidelines**:
 
-**Priority Order** (check top-down, use first match):
-1. **Has formulas/equations** → **Cloze** (even if count=0)
-   - Example: "F = S × (1 + r - d)" → Cloze deletion format
-   - Reason: Formulas need precise recall, Cloze is 8/10 effective
+Choose format based on:
+1. Content characteristics (formulas favor cloze, calculations favor problem-solving, conceptual content favors short-answer)
+2. Session diversity (avoid 3+ consecutive same formats if session_context shows repetition)
+3. Learning phase (first review vs later reviews - harder formats for mastered content)
+4. Format effectiveness: Short-answer 9/10, Problem-solving 8.5/10, Cloze 8/10, MCQ 6.5/10
 
-2. **Vocabulary with precise spelling requirement** → **Cloze** (even if count=0)
-   - Example: "minuscule" (NOT "miniscule") → Test spelling precision
-   - Indicators: "Common misspelling", "Spelling trap", "中文: ..."
-   - Reason: Vocabulary needs exact recall, Cloze prevents recognition bias
+**All formats work for all content types**. Use judgment. Formulas can be short-answer if testing understanding. Conceptual content can be MCQ for variety. Calculations can mix explanation (short-answer hybrid).
 
-3. **Has calculations with concrete numbers** → **Problem-Solving** (even if count=0)
-   - Example: "Calculate NPV given..." → Problem-solving format
-   - Indicators: Numeric examples, "Calculate", "Given X, find Y"
-   - Reason: Application-based testing ensures transfer (8.5/10 effective)
-
-4. **Conceptual/theoretical content** → **Short Answer** (default for count=0)
-   - Example: Mechanisms, explanations, "why/how" concepts
-   - Reason: Open-ended format tests deep understanding (9/10 for concepts)
-
-5. **If last 2 reviews used same format** → **Switch to different format**
-   - Prevents monotony, maintains engagement
-
-**YOU decide** based on what you read in the Rem file (Core Memory Points section)
-
-**Key Principle**: Match format to content type for optimal memory encoding, even on first review
+**YOU decide** based on Rem content and session context.
 
 ---
 
