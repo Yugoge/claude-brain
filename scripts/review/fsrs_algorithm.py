@@ -10,7 +10,8 @@ Key Concepts:
 - Retrievability (R): Current memory strength (0-1)
 
 Formula:
-next_interval = S * (1 / desired_retention - 1)
+next_interval = S * log(desired_retention) / log(0.9)
+(When desired_retention = 0.9, this simplifies to: next_interval = S)
 """
 
 import math
@@ -120,12 +121,15 @@ class FSRSAlgorithm:
         """
         if rating == 1:  # Again (forgot)
             # Forgotten: Reset stability
+            # Formula: S' = w11 * D^(-w12) * ((S+1)^w13 - 1) * e^(w14*(1-R))
             new_stability = (
                 self.w[11] *
                 (difficulty ** -self.w[12]) *
-                ((stability + 1) ** self.w[13]) *
+                ((stability + 1) ** self.w[13] - 1) *  # Fixed: added - 1
                 math.exp(self.w[14] * (1 - retrievability))
             )
+            # Cap at old stability: forgetting cannot increase stability
+            new_stability = min(new_stability, stability)
         else:  # Remembered (Hard, Good, Easy)
             # Remembered: Increase stability
             # Calculate base multiplier
@@ -163,17 +167,23 @@ class FSRSAlgorithm:
         """
         Calculate next review interval.
 
-        Formula: interval = S * (R_target / (1 - R_target))
-        Where R_target is desired_retention (default 0.9)
+        Formula (FSRS official): interval = S * log(DR) / log(0.9)
+        Where DR is desired_retention (default 0.9)
+
+        When DR = 0.9, this simplifies to interval = S
+        (because log(0.9)/log(0.9) = 1)
+
+        Source: https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm
 
         Args:
-            stability: Current stability
+            stability: Current stability (days)
 
         Returns:
             Days until next review
         """
-        interval = stability * (1 / self.desired_retention - 1)
-        return max(1, min(int(interval), self.maximum_interval))
+        # Official FSRS formula
+        interval = stability * math.log(self.desired_retention) / math.log(0.9)
+        return max(1, min(int(round(interval)), self.maximum_interval))
 
     def review(
         self,
