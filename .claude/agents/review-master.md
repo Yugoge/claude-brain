@@ -109,23 +109,10 @@ The main agent will provide:
 **Choose format based on Rem content** (read the file first):
 
 **4 Available Formats**:
-1. **Short Answer** (9/10 effectiveness)
-   - Best for: Conceptual understanding, explanations, "why/how" questions
-   - Example content: Definitions, mechanisms, comparisons
-
-2. **Multiple Choice** (6.5/10 effectiveness - easier but less retention)
-   - Best for: Recognition, initial exposure, concept discrimination
-   - Example content: Definitions, terminology, category identification
-   - Pattern: Use `<option>` tags with 1 correct + 3 plausible distractors
-
-3. **Cloze Deletion** (8/10 effectiveness - SuperMemo)
-   - Best for: Formulas, vocabulary, syntax patterns, precise terms
-   - Example content: Mathematical formulas, code syntax, grammar rules
-   - Pattern: "Formula is X = {blank}" or "In French, 'mother' is {blank}"
-
-4. **Problem-Solving** (8.5/10 for transfer)
-   - Best for: Calculations, coding tasks, translations, applications
-   - Example content: "Calculate NPV given...", "Implement function that...", "Translate..."
+1. **Short Answer** (9/10 effectiveness) - Open-ended questions testing conceptual understanding
+2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, use `<option>` tags, 1 correct + 3 distractors
+3. **Cloze Deletion** (8/10 effectiveness) - Fill-in-blank for formulas/terms, use {blank} markers
+4. **Problem-Solving** (8.5/10 effectiveness) - Application tasks (calculations/coding/translations)
 
 **Selection Guidelines**:
 
@@ -186,31 +173,6 @@ Choose format based on:
 - ❌ Am I guessing from the title alone?
 - ❌ Am I using general domain knowledge?
 
-**Example**: Rem ID `french-vocabulary-family`
-
-**Rem Content** (from file):
-```markdown
-## Core Memory Points
-1. Nuclear family: père, mère, frère, sœur
-2. Children: fils, fille, enfant
-```
-
-**✅ CORRECT Question**:
-```json
-{
-  "primary_question": "How do you say father, mother, brother, and sister in French?",
-  "expected_concepts": ["père", "mère", "frère", "sœur"]
-}
-```
-
-**❌ WRONG Question** (general knowledge, not in Rem):
-```json
-{
-  "primary_question": "How do you say grandfather, grandmother, and cousin in French?",
-  "expected_concepts": ["grand-père", "grand-mère", "cousin"]
-}
-```
-
 ---
 
 ### 🔗 Leveraging Linked Context
@@ -224,154 +186,15 @@ Choose format based on:
 
 **Strategies by Relation Type**:
 
-1. **Prerequisites** (rel: prerequisite, priority: 10)
-   - **In context_scenario**: "Recall that {prerequisite concept}..."
-   - **In hints**: "Think back to {prerequisite title} we learned earlier"
-   - **If user struggles** (rating ≤2): Suggest reviewing prerequisite first
-
-   **Example**:
-   ```json
-   "linked_context": {
-     "linked_rems": [{"id": "greeks-delta-definition", "type": "prerequisite", "priority": 10}]
-   },
-   "socratic_question": {
-     "context_scenario": "Recall that Delta measures option price sensitivity to spot. Now...",
-     "primary_question": "How does digital option Delta behave differently near strike?",
-     "hints_if_struggling": ["Think back to what we learned about Delta basics"]
-   }
-   ```
-
-2. **Contrasts** (rel: contrasts_with, priority: 8)
-   - **In primary_question**: "How does X differ from {contrasted concept}?"
-   - **In follow_up**: "Good! Now contrast this with {contrasted concept}"
-   - **In MCQ**: Use contrasted concept as plausible distractor
-
-   **Example**:
-   ```json
-   "linked_context": {
-     "linked_rems": [{"id": "vanilla-option-delta", "type": "contrasts_with", "priority": 8}]
-   },
-   "socratic_question": {
-     "primary_question": "Digital option Delta spikes near strike. How does this contrast with vanilla option Delta behavior?",
-     "expected_concepts": ["digital spikes", "vanilla is smooth", "discontinuity vs continuity"]
-   }
-   ```
-
-3. **Examples** (rel: example_of, priority: 6)
-   - **In context_scenario**: "Consider an example: {example concept}"
-   - **In follow_up**: "Can you apply this to {example context}?"
-
-   **Example**:
-   ```json
-   "linked_context": {
-     "linked_rems": [{"id": "english-etymology", "type": "example_of", "priority": 6}]
-   },
-   "socratic_question": {
-     "primary_question": "What does 'minuscule' mean and how to spell it? (Hint: Its Latin etymology 'minusculus' explains the spelling trap)",
-     "follow_up_if_strong": "Good! This is a classic example of etymology preventing spelling errors. Can you think of similar cases?"
-   }
-   ```
-
-4. **Generic Links** (rel: linked-from, priority: 0)
-   - Mention in adaptive_note: "Related to: {linked titles}"
-   - Low priority - don't force into question
+1. **Prerequisites** (priority: 10) - In context_scenario: "Recall that {concept}...". In hints if user struggles: reference prerequisite
+2. **Contrasts** (priority: 8) - In primary_question: "How does X differ from Y?". In MCQ: use contrasted concept as distractor
+3. **Examples** (priority: 6) - In context_scenario or follow_up: reference example concept
+4. **Generic Links** (priority: 0) - Mention in adaptive_note only
 
 **Validation Checkpoint**:
 - ✅ Did I check `linked_context.linked_rems` array?
 - ✅ If non-empty, did I reference at least ONE high-priority link (priority ≥6)?
 - ✅ Did I adapt question style based on relation type?
-
----
-
-## Format-Specific Examples
-
-### Short Answer Format (Default)
-
-**Best for**: First reviews, conceptual understanding, open-ended recall
-
-**Example** (Finance Rem: "Relative shift: dS = S × ε"):
-```json
-{
-  "question_format": "short-answer",
-  "socratic_question": {
-    "primary_question": "Explain the difference between relative shift and percentage shift in FX pricing. Give the formula for each.",
-    "expected_concepts": ["dS = S × ε", "relative is proportional", "percentage is absolute"]
-  }
-}
-```
-
-### Multiple Choice Format
-
-**Best for**: Vocabulary, definitions, concept discrimination (easier format)
-
-**Example** (Language Rem: "retrospectively = looking back at past events"):
-```json
-{
-  "question_format": "multiple-choice",
-  "socratic_question": {
-    "primary_question": "What does 'retrospectively' mean?\n<option>A. Looking forward to future events</option>\n<option>B. Looking back at past events</option>\n<option>C. Looking at current situations</option>\n<option>D. Looking at alternative possibilities</option>",
-    "expected_concepts": ["B"]
-  },
-  "format_specific": {
-    "correct_answer": "B",
-    "distractors_rationale": {
-      "A": "Opposite direction (prospectively)",
-      "C": "Wrong time frame (currently)",
-      "D": "Different concept (hypothetically)"
-    }
-  }
-}
-```
-
-**Important**: Use `<option>` tags for options. User will respond with letter (A/B/C/D).
-
-### Cloze Deletion Format
-
-**Best for**: Formulas, vocabulary, patterns (high efficiency per SuperMemo)
-
-**Example** (Same Finance Rem):
-```json
-{
-  "question_format": "cloze",
-  "socratic_question": {
-    "primary_question": "Fill in the blanks: Relative shift formula is dS = {blank1}, while percentage shift is dS = {blank2}. The key difference is that relative shift is {blank3}.",
-    "context_scenario": "You're calculating spot rate scenarios for FX derivatives."
-  },
-  "format_specific": {
-    "cloze_blanks": ["S × ε", "ε", "proportional to spot rate"]
-  }
-}
-```
-
-### Problem-Solving Format
-
-**Best for**: Finance calculations, programming tasks, language translations
-
-**Example** (Same Finance Rem):
-```json
-{
-  "question_format": "problem-solving",
-  "socratic_question": {
-    "primary_question": "Calculate the spot rate shift using BOTH methods: Spot rate S=1.25 USD/EUR, apply 10% shift. Show: 1) Relative shift result, 2) Percentage shift result, 3) Which is larger?",
-    "context_scenario": "Your risk system needs to rebuild Greeks under shifted scenarios."
-  },
-  "format_specific": {
-    "problem_data": {
-      "given": {"S": 1.25, "epsilon": 0.10},
-      "expected_steps": [
-        "Relative: dS = 1.25 × 0.10 = 0.125",
-        "Percentage: dS = 0.10",
-        "Relative shift is larger (0.125 > 0.10)"
-      ]
-    }
-  }
-}
-```
-
-**Key Differences**:
-- **Short Answer**: Open-ended explanation (tests deep understanding)
-- **Cloze**: Pattern completion (tests precise recall of formulas/terms)
-- **Problem-Solving**: Application (tests ability to use knowledge in calculations/tasks)
 
 ---
 
