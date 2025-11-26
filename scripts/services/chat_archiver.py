@@ -525,8 +525,8 @@ def detect_subagent_name(content: str, is_sidechain: bool = False, role: str = N
         # If no specific agent found, don't mark as subagent
         return None
 
-    # ✅ Pattern 3: Standalone agents invoked via Task tool or slash commands
-    # These include analyst (/ask), review-master (/review), knowledge-indexer
+    # ✅ Pattern 3: Consultant agents invoked via Task tool or slash commands
+    # These include analyst (/ask), review-master (/review), and other consultants
     # Detect by typical opening phrases in sidechain assistant messages
     if role == 'assistant' and is_sidechain:
         # Analyst patterns

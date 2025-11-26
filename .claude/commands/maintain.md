@@ -142,10 +142,7 @@ source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-fro
 source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names.py --domain <domain> [--dry-run] [--verbose]
 ```
 
-- **Interactive**: Ask user which domain to process
-  - `02-arts-and-humanities/023-languages/0231-language-acquisition` - Language Rems
-  - `04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance` - Finance Rems
-  - `06-information-and-communication-technologies-icts/061-ict-use/0611-computer-use` - Programming Rems
+- **Interactive**: Ask user which domain to process (auto-discover available ISCED paths by scanning knowledge-base)
 - Use `--dry-run` for preview
 - Run last because it renames files and updates references
 
@@ -178,7 +175,7 @@ Select tasks to run (comma-separated, e.g., 1,2,5 or 'all' or 'validate'):
 ### Mode Behaviors
 
 **--validate**: Run tasks 1-4 (validation only)
-**--check-only**: Run all 8 tasks with dry-run flags
+**--check-only**: Run all 7 tasks with dry-run flags
 **--fix-all**:
 1. Run tasks 1-4 (validation - no changes)
 2. Run task 5 with `--execute` (basic fixes)

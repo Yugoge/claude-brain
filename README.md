@@ -79,7 +79,6 @@ learning-materials/finance/options-trading.pdf
 | `/progress [domain│file-path]` | View learning progress and analytics |
 | `/ask <question>` | Ask any question with automatic web research |
 | `/discover-relations <rem-id│--domain path>` | Discover typed relations for existing Rems |
-| `/visualize [domain]` | Generate interactive knowledge graph visualization |
 | `/kb-init` | Initialize or repair knowledge system |
 
 ---
@@ -264,10 +263,9 @@ This one command:
 
 ## 📊 Knowledge Graph Visualization
 
-```bash
-/visualize              # Full knowledge graph (all domains)
-/visualize finance      # Finance concepts only
-```
+The knowledge graph visualization is **automatically generated** after every `/save` command.
+
+**Generated file**: `knowledge-graph.html` (in project root)
 
 **Features**:
 - D3.js force-directed graph with domain-colored nodes
@@ -277,7 +275,7 @@ This one command:
 - Auto-detected clusters
 - Node size = review count
 
-Opens `knowledge-graph.html` in your browser.
+**How to view**: Simply open `knowledge-graph.html` in your browser after any `/save` operation.
 
 ---
 

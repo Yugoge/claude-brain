@@ -177,6 +177,32 @@ def extract_frontmatter(file_path: Path) -> Optional[Dict]:
         return None
 
 
+def extract_markdown_title(file_path: Path) -> Optional[str]:
+    """
+    Extract title from first Markdown heading (# ...) in Rem file.
+
+    Returns:
+        Title string (without # prefix), or None if not found
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Skip frontmatter (between --- markers)
+        content_without_fm = re.sub(r'^---\n.*?\n---\n', '', content, flags=re.DOTALL)
+
+        # Find first level-1 heading (# Title)
+        match = re.search(r'^#\s+(.+)$', content_without_fm, re.MULTILINE)
+        if match:
+            return match.group(1).strip()
+
+        return None
+
+    except Exception as e:
+        print(f"⚠️  Error extracting title from {file_path}: {e}")
+        return None
+
+
 def is_reviewable_rem(file_path: Path, frontmatter: Dict) -> bool:
     """
     Determine if a Rem file should be added to review schedule.
@@ -236,7 +262,8 @@ def find_all_rems(domain_filter: Optional[str] = None) -> List[tuple]:
         domain_filter: Optional domain to filter by
 
     Returns:
-        List of (domain, rem_id, file_path, frontmatter) tuples
+        List of (domain, rem_id, file_path, frontmatter, title) tuples
+        where title is extracted from Markdown heading (# ...)
     """
     rems = []
 
@@ -256,7 +283,12 @@ def find_all_rems(domain_filter: Optional[str] = None) -> List[tuple]:
             continue
 
         rem_id = frontmatter['rem_id']
-        rems.append((domain, rem_id, md_file, frontmatter))
+
+        # Extract title from Markdown heading (# ...)
+        # Fallback chain: frontmatter title → Markdown heading → rem_id
+        title = frontmatter.get('title') or extract_markdown_title(md_file) or rem_id
+
+        rems.append((domain, rem_id, md_file, frontmatter, title))
 
     return rems
 
@@ -377,7 +409,7 @@ def main():
     # Group by domain for display
     by_domain = {}
     by_type = {}
-    for domain, rem_id, file_path, frontmatter in all_rems:
+    for domain, rem_id, file_path, frontmatter, title in all_rems:
         by_domain.setdefault(domain, []).append(rem_id)
 
 
@@ -401,12 +433,12 @@ def main():
     update_rems = []  # Existing Rems to update (preserve FSRS state)
     skipped_rems = []
 
-    for domain, rem_id, file_path, frontmatter in all_rems:
+    for domain, rem_id, file_path, frontmatter, title in all_rems:
         if rem_id in existing_concepts:
             if args.force:
                 # PRESERVE existing FSRS state, only update metadata
                 existing_entry = schedule['concepts'][rem_id]
-                update_rems.append((domain, rem_id, file_path, frontmatter, existing_entry))
+                update_rems.append((domain, rem_id, file_path, frontmatter, title, existing_entry))
                 if args.verbose:
                     print(f"  🔄 Will update {rem_id} (preserving FSRS history)")
             else:
@@ -415,7 +447,7 @@ def main():
                     print(f"  ⏭️  Skipping {rem_id} (already in schedule)")
         else:
             # New Rem - create with initial state
-            new_rems.append((domain, rem_id, file_path, frontmatter))
+            new_rems.append((domain, rem_id, file_path, frontmatter, title))
             if args.verbose:
                 print(f"  ➕ Will add {rem_id} ({domain})")
 
@@ -456,8 +488,8 @@ def main():
     if new_rems:
         print(f"\n➕ Adding {len(new_rems)} NEW Rem(s) to schedule...")
 
-        for domain, rem_id, file_path, frontmatter in new_rems:
-            title = frontmatter.get('title', rem_id)  # Get title from frontmatter
+        for domain, rem_id, file_path, frontmatter, title in new_rems:
+            # title is already extracted from Markdown heading
             if args.algorithm == 'fsrs':
                 rem_entry = create_initial_fsrs_state(rem_id, domain, title, args.initial_date)
             else:
@@ -470,14 +502,14 @@ def main():
                     next_date = rem_entry['fsrs_state']['next_review']
                 else:
                     next_date = rem_entry['sm2_state']['next_review_date']
-                print(f"  ✅ Added {rem_id} (next review: {next_date})")
+                print(f"  ✅ Added {rem_id} (title: {title}, next review: {next_date})")
 
     # Update EXISTING Rems (preserve FSRS state)
     if update_rems:
         print(f"\n🔄 Updating {len(update_rems)} EXISTING Rem(s) (preserving FSRS history)...")
 
-        for domain, rem_id, file_path, frontmatter, existing_entry in update_rems:
-            title = frontmatter.get('title', rem_id)
+        for domain, rem_id, file_path, frontmatter, title, existing_entry in update_rems:
+            # title is already extracted from Markdown heading
 
             # PRESERVE all FSRS state data
             # Only update metadata fields
@@ -495,10 +527,10 @@ def main():
                     next_date = existing_entry['fsrs_state']['next_review']
                     difficulty = existing_entry['fsrs_state']['difficulty']
                     review_count = existing_entry['fsrs_state']['review_count']
-                    print(f"  ✅ Updated {rem_id} (next: {next_date}, D: {difficulty:.2f}, reviews: {review_count})")
+                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date}, D: {difficulty:.2f}, reviews: {review_count})")
                 else:
                     next_date = existing_entry['sm2_state']['next_review_date']
-                    print(f"  ✅ Updated {rem_id} (next: {next_date})")
+                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date})")
 
     # Update metadata
     schedule['metadata']['concepts_due_today'] = len([

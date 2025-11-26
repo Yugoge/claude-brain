@@ -49,22 +49,16 @@ class Colors:
     CYAN = '\033[96m'
 
 
-# Required directory structure
+# Required directory structure (core system directories only)
+# Note: ISCED 3-level paths (e.g., 0231-language-acquisition) are created on-demand by /save
 REQUIRED_DIRS = {
     "knowledge-base/": "Main knowledge repository",
     "knowledge-base/_index/": "Generated indexes (backlinks, graph-data)",
-    "knowledge-base/_taxonomy/": "ISCED-F 2013 taxonomy classification system",
     "knowledge-base/_templates/": "Rem templates for different domains",
-    "knowledge-base/02-arts-and-humanities/023-languages/0231-language-acquisition/": "Language learning (ISCED 0231)",
-    "knowledge-base/03-social-sciences-journalism-and-information/031-social-and-behavioural-sciences/0311-economics/": "Economics (ISCED 0311)",
-    "knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/": "Finance (ISCED 0412)",
-    "knowledge-base/05-natural-sciences-mathematics-and-statistics/054-mathematics-and-statistics/0541-mathematics/": "Mathematics (ISCED 0541)",
-    "knowledge-base/06-information-and-communication-technologies-icts/061-ict-use/0611-computer-use/": "Programming (ISCED 0611)",
     "learning-materials/": "Source materials (PDFs, EPUBs, etc.)",
     "learning-materials/finance/": "Finance materials",
     "learning-materials/programming/": "Programming materials",
     "learning-materials/language/": "Language materials",
-    "learning-materials/science/": "Science materials",
     ".review/": "Spaced repetition data (FSRS algorithm)",
     ".review/backups/": "FSRS schedule backups",
     "chats/": "Archived conversations",
@@ -74,16 +68,35 @@ REQUIRED_DIRS = {
     ".claude/commands/": "Custom slash commands"
 }
 
+# ISCED-F 2013 Taxonomy Structure (11 broad fields + core files)
+# This validates the complete taxonomy system that classification-expert depends on
+REQUIRED_TAXONOMY = {
+    "knowledge-base/_taxonomy/": "ISCED-F 2013 taxonomy root",
+    "knowledge-base/_taxonomy/index.md": "Taxonomy system overview",
+    "knowledge-base/_taxonomy/isced-index.md": "ISCED broad fields index",
+    "knowledge-base/_taxonomy/00-generic-programmes-and-qualifications/": "ISCED 00: Generic programmes",
+    "knowledge-base/_taxonomy/01-education/": "ISCED 01: Education",
+    "knowledge-base/_taxonomy/02-arts-and-humanities/": "ISCED 02: Arts and humanities",
+    "knowledge-base/_taxonomy/03-social-sciences-journalism-and-information/": "ISCED 03: Social sciences",
+    "knowledge-base/_taxonomy/04-business-administration-and-law/": "ISCED 04: Business and law",
+    "knowledge-base/_taxonomy/05-natural-sciences-mathematics-and-statistics/": "ISCED 05: Natural sciences",
+    "knowledge-base/_taxonomy/06-information-and-communication-technologies-icts/": "ISCED 06: ICT",
+    "knowledge-base/_taxonomy/07-engineering-manufacturing-and-construction/": "ISCED 07: Engineering",
+    "knowledge-base/_taxonomy/08-agriculture-forestry-fisheries-and-veterinary/": "ISCED 08: Agriculture",
+    "knowledge-base/_taxonomy/09-health-and-welfare/": "ISCED 09: Health",
+    "knowledge-base/_taxonomy/10-services/": "ISCED 10: Services"
+}
+
 # JSON file schemas
 JSON_SCHEMAS = {
     "knowledge-base/_index/backlinks.json": {
-        "required_fields": ["version", "last_updated", "concepts"],
+        "required_fields": ["version", "description", "links"],
         "version_format": r"^\d+\.\d+\.\d+$",
         "repair_strategy": "rebuild",
         "template": {
-            "version": "1.0.0",
-            "last_updated": None,
-            "concepts": {}
+            "version": "1.1.0",
+            "description": "Bidirectional link index for all knowledge Rems, with typed and inferred links",
+            "links": {}
         }
     },
     "chats/index.json": {
@@ -265,6 +278,18 @@ class InitReport:
                 print(f"  📄 JSON Files: ✅ {valid} valid, ❌ {failed} failed")
             else:
                 print(f"  📄 JSON Files: ✅ {valid} valid")
+
+        if "taxonomy" in self.sections:
+            taxonomy = self.sections["taxonomy"]
+            total = len(REQUIRED_TAXONOMY)
+            valid = len(taxonomy.get("valid", []))
+            missing = len(taxonomy.get("missing", []))
+            if missing == 0:
+                print(f"  📚 Taxonomy System: ✅ {total} components")
+            elif missing == total:
+                print(f"  📚 Taxonomy System: ❌ Missing entirely ({total} components)")
+            else:
+                print(f"  📚 Taxonomy System: ⚠️  {valid}/{total} components ({missing} missing)")
 
         if "agents" in self.sections:
             agents = self.sections["agents"]
@@ -573,6 +598,57 @@ def repair_schema(
         report.add_repair(f"Repaired schema: {path}")
 
 
+def validate_taxonomy(
+    dry_run: bool = False,
+    non_interactive: bool = False,
+    verbose: bool = False,
+    report: Optional[InitReport] = None
+) -> Dict[str, List[str]]:
+    """Validate ISCED-F 2013 taxonomy structure completeness."""
+    status = {"valid": [], "missing": [], "created": []}
+
+    for path_str, description in REQUIRED_TAXONOMY.items():
+        path = Path(path_str)
+
+        # Check if it's a file or directory
+        is_file = path_str.endswith('.md')
+
+        if path.exists():
+            status["valid"].append(path_str)
+            if verbose:
+                print(f"  ✅ {path_str}")
+        else:
+            print(f"  ⚠️  Missing: {path_str}")
+            status["missing"].append(path_str)
+
+            if dry_run:
+                print(f"     Would create: {path_str}")
+                continue
+
+            # For now, just report missing taxonomy components
+            # In the future, could add template-based creation
+            issue = f"Missing taxonomy component: {path_str}"
+            if report:
+                report.add_issue(issue)
+
+    # Summary
+    total = len(REQUIRED_TAXONOMY)
+    valid_count = len(status["valid"])
+    missing_count = len(status["missing"])
+
+    if missing_count == 0:
+        if verbose:
+            print(f"\n  ✅ Taxonomy complete: {valid_count}/{total} components")
+    elif missing_count == total:
+        print(f"\n  ❌ Taxonomy missing entirely ({total} components)")
+        if report:
+            report.add_issue("Complete taxonomy system missing - classification-expert will not work")
+    else:
+        print(f"\n  ⚠️  Taxonomy incomplete: {valid_count}/{total} components ({missing_count} missing)")
+
+    return status
+
+
 def validate_agents(
     dry_run: bool = False,
     non_interactive: bool = False,
@@ -824,7 +900,12 @@ def kb_init(
     json_status = validate_json_files(dry_run, non_interactive, repair_all, verbose, report)
     report.add_section("json_files", json_status)
 
-    # Phase 3: Agent Files
+    # Phase 3: Taxonomy System
+    print("\n📚 Validating taxonomy structure...")
+    taxonomy_status = validate_taxonomy(dry_run, non_interactive, verbose, report)
+    report.add_section("taxonomy", taxonomy_status)
+
+    # Phase 4: Agent Files
     print("\n🤖 Verifying agent files...")
     agent_status = validate_agents(dry_run, non_interactive, verbose)
     report.add_section("agents", agent_status)
