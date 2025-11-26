@@ -32,13 +32,15 @@ Automated maintenance for Rem files and knowledge graph.
 
 ## Implementation
 
-**IMPORTANT**: Use TodoWrite to track progress through all 8 tasks.
+**IMPORTANT**: Use TodoWrite to track progress through all 7 tasks.
 
 Mark each task as in_progress before starting, completed after finishing.
 
 ### Task Execution Order (Logical Flow)
 
 Tasks are ordered from validation → basic fixes → advanced maintenance.
+
+**Note**: Wikilink normalization is automatically handled by `/save` command. This command focuses on manual maintenance tasks.
 
 ---
 
@@ -104,21 +106,22 @@ source venv/bin/activate && python scripts/add-missing-rem-ids.py [--execute]
 - Dry-run by default, use `--execute` to apply
 - Run early to ensure all Rems have IDs
 
-### Task 6: Convert Wikilinks
-**Purpose**: Convert [[wikilinks]] to markdown [Title](path.md) format
-**Benefits**: Better compatibility, clearer references
-
-```bash
-source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --mode replace
-```
-
-- Dry-run by default, use `--execute` to apply
-- Automatically resolves file paths and extracts titles
-- Run after adding rem_ids for better link resolution
-
 ---
 
 ## Phase 3: Advanced Maintenance (Graph & Naming)
+
+### Task 6: Rebuild Backlinks (Full Rebuild)
+**Purpose**: Full rebuild of backlinks index from scratch
+**When to use**: After major changes, when backlinks.json is corrupted, or for periodic deep maintenance
+
+```bash
+source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py [--verbose]
+```
+
+- Full scan of all Rems in knowledge-base
+- Rebuilds backlinks.json with typed relations
+- Use when incremental updates (from `/save`) are insufficient
+- **Note**: `/save` automatically does incremental updates; this is for manual deep maintenance
 
 ### Task 7: Sync Related Rems from Backlinks
 **Purpose**: Auto-populate "Related Rems" sections from backlinks index
@@ -140,9 +143,9 @@ source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names
 ```
 
 - **Interactive**: Ask user which domain to process
-  - `language/french` - French language Rems
-  - `finance` - Finance Rems
-  - `programming` - Programming Rems
+  - `02-arts-and-humanities/023-languages/0231-language-acquisition` - Language Rems
+  - `04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance` - Finance Rems
+  - `06-information-and-communication-technologies-icts/061-ict-use/0611-computer-use` - Programming Rems
 - Use `--dry-run` for preview
 - Run last because it renames files and updates references
 
@@ -163,9 +166,9 @@ PHASE 1: VALIDATION
 
 PHASE 2: BASIC FIXES
 5. Add Missing rem_ids
-6. Convert Wikilinks
 
 PHASE 3: ADVANCED MAINTENANCE
+6. Rebuild Backlinks (full rebuild)
 7. Sync Related Rems from Backlinks
 8. Standardize Rem Names (domain-specific)
 
@@ -178,8 +181,8 @@ Select tasks to run (comma-separated, e.g., 1,2,5 or 'all' or 'validate'):
 **--check-only**: Run all 8 tasks with dry-run flags
 **--fix-all**:
 1. Run tasks 1-4 (validation - no changes)
-2. Run tasks 5-6 with `--execute` (basic fixes)
-3. Run tasks 7-8 with execution flags (advanced maintenance)
+2. Run task 5 with `--execute` (basic fixes)
+3. Run tasks 6-8 with execution flags (advanced maintenance)
 4. Ask for domain when reaching task 8
 
 ### Summary Report
@@ -195,12 +198,21 @@ Maintenance Summary:
 Recommendations:
 • Run /kb-init --repair-all if major issues found
 • Review validation reports for manual fixes
-• Consider running rebuild-backlinks.py if graph changed
+• Run Task 6 (rebuild backlinks) if major graph changes detected
 ```
 
 ## Notes
 
 - **Execution Order Matters**: Validation first, basic fixes second, advanced maintenance last
-- **Dependencies**: Some tasks depend on others (e.g., wikilink conversion works better after rem_ids are added)
+- **Dependencies**: Task 7 requires Task 6 (backlinks must be up-to-date before syncing)
 - **Safety**: All tasks support dry-run mode for preview
 - **Impact**: Task 8 (standardize names) has highest impact - review carefully before executing
+- **Graph Maintenance**: Wikilink normalization is automatically handled by `/save` command
+
+## Architecture Notes
+
+**Why these tasks, not others?**
+
+- ✅ **Included**: Manual maintenance tasks (validation, deep rebuild, batch sync)
+- ❌ **Excluded**: Auto-maintenance tasks handled by `/save` (wikilink normalization, incremental backlinks update)
+- 🎯 **Purpose**: `/maintain` is for periodic deep maintenance, not daily workflow

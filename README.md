@@ -129,18 +129,16 @@ knowledge-system/
 
 The system uses a **three-party consultation pattern** for optimal efficiency:
 
-1. **Consultant Agents** (Silent domain experts):
-   - `language-tutor`, `finance-tutor`, `programming-tutor`, `book-tutor`, `medicine-tutor`, `law-tutor`, `science-tutor`
-   - Provide JSON consultations to main agent
-   - Never interact with user directly
-   - ~73% token savings vs direct interaction
+**Consultant Agents** (Silent domain experts):
+- `language-tutor`, `finance-tutor`, `programming-tutor`, `book-tutor`, `medicine-tutor`, `law-tutor`, `science-tutor`, `review-master`, `analyst`
+- Provide JSON consultations to main agent
+- Never interact with user directly
+- ~73% token savings vs direct interaction
+- **Note**: All learning/review dialogue is conducted by main agent. Consultant agents provide silent JSON guidance.
 
-2. **Standalone Agents** (User-facing):
-   - `analyst` - Universal Q&A with web research
-   - `review-master` - Conducts spaced repetition sessions
-
-3. **Utility Agents** (Background workers):
-   - `knowledge-indexer` - Maintains knowledge graph structure
+**Knowledge Graph Maintenance** (Direct script calls):
+- Auto-maintained by PostToolUse hooks + `/save` command
+- No agent overhead - uses direct Python scripts
 
 **See**: `architecture/agent-classification.md` for details
 

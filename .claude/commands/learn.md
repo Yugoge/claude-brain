@@ -58,7 +58,6 @@ Use output to create TodoWrite with all workflow steps.
    - Science materials → `science-tutor`
 4. **Starts Socratic dialogue** teaching session
 5. **Tracks progress** at page/chapter/concept level
-6. **Updates indexes** via `knowledge-indexer`
 
 ## Implementation
 
@@ -376,7 +375,7 @@ Process:
 #### PHASE 4: Progress Update
 
 - Update progress file: new position, learned concepts, session count
-- Task call to `knowledge-indexer` to update indexes after session
+- Indexes are auto-updated by PostToolUse hooks when Rem files are modified
 
 ### Step 11: Post-Session Actions
 

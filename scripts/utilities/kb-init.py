@@ -52,8 +52,9 @@ class Colors:
 # Required directory structure
 REQUIRED_DIRS = {
     "knowledge-base/": "Main knowledge repository",
-    "knowledge-base/_index/": "Generated indexes (backlinks, domains, tags)",
+    "knowledge-base/_index/": "Generated indexes (backlinks, graph-data)",
     "knowledge-base/_taxonomy/": "ISCED-F 2013 taxonomy classification system",
+    "knowledge-base/_templates/": "Rem templates for different domains",
     "knowledge-base/02-arts-and-humanities/023-languages/0231-language-acquisition/": "Language learning (ISCED 0231)",
     "knowledge-base/03-social-sciences-journalism-and-information/031-social-and-behavioural-sciences/0311-economics/": "Economics (ISCED 0311)",
     "knowledge-base/04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance/": "Finance (ISCED 0412)",
@@ -64,9 +65,11 @@ REQUIRED_DIRS = {
     "learning-materials/programming/": "Programming materials",
     "learning-materials/language/": "Language materials",
     "learning-materials/science/": "Science materials",
-    ".review/": "Spaced repetition data (SM-2/FSRS)",
+    ".review/": "Spaced repetition data (FSRS algorithm)",
+    ".review/backups/": "FSRS schedule backups",
     "chats/": "Archived conversations",
     "scripts/": "Utility scripts",
+    "docs/": "System documentation",
     ".claude/agents/": "Agent instruction files",
     ".claude/commands/": "Custom slash commands"
 }
@@ -83,16 +86,6 @@ JSON_SCHEMAS = {
             "concepts": {}
         }
     },
-    "knowledge-base/.taxonomy.json": {
-        "required_fields": ["version", "isced_mappings", "dewey_mappings"],
-        "version_format": r"^\d+\.\d+\.\d+$",
-        "repair_strategy": "regenerate",
-        "template": {
-            "version": "2.0.0",
-            "isced_mappings": {},
-            "dewey_mappings": {}
-        }
-    },
     "chats/index.json": {
         "required_fields": ["version", "conversations", "metadata"],
         "version_format": r"^\d+\.\d+\.\d+$",
@@ -105,6 +98,7 @@ JSON_SCHEMAS = {
                 "total_conversations": 0,
                 "total_turns": 0,
                 "total_concepts_extracted": 0,
+                "total_rems_extracted": 0,
                 "by_domain": {},
                 "by_agent": {},
                 "by_month": {}
@@ -112,64 +106,94 @@ JSON_SCHEMAS = {
         }
     },
     ".review/schedule.json": {
-        "required_fields": ["concepts"],
-        "version_format": None,
+        "required_fields": ["version", "default_algorithm", "concepts"],
+        "version_format": r"^\d+\.\d+\.\d+$",
         "repair_strategy": "reset",
         "template": {
-            "concepts": []
+            "version": "2.0.0",
+            "default_algorithm": "fsrs",
+            "description": "FSRS-based spaced repetition schedule for all Rems",
+            "concepts": {}
         }
     }
 }
 
-# Required agent files
+# Required agent files (updated for flat .md structure)
+# Note: Section validation removed - agent structures are intentionally diverse
 REQUIRED_AGENTS = {
-    ".claude/agents/book-tutor/instructions.md": {
+    ".claude/agents/book-tutor.md": {
         "name": "book-tutor",
-        "description": "Socratic teaching for books/reports",
-        "required_sections": ["Your Mission", "Core Principles", "Learning Flow"]
+        "description": "Socratic teaching for books/reports"
     },
-    ".claude/agents/language-tutor/instructions.md": {
+    ".claude/agents/language-tutor.md": {
         "name": "language-tutor",
-        "description": "Language learning specialist",
-        "required_sections": ["Your Mission", "Teaching Approach", "Concept Extraction"]
+        "description": "Language learning specialist (JSON consultant)"
     },
-    ".claude/agents/finance-tutor/instructions.md": {
+    ".claude/agents/finance-tutor.md": {
         "name": "finance-tutor",
-        "description": "Finance domain specialist",
-        "required_sections": ["Your Mission", "Teaching Approach"]
+        "description": "Finance domain specialist (JSON consultant)"
     },
-    ".claude/agents/programming-tutor/instructions.md": {
+    ".claude/agents/programming-tutor.md": {
         "name": "programming-tutor",
-        "description": "Programming domain specialist",
-        "required_sections": ["Your Mission", "Teaching Approach"]
+        "description": "Programming domain specialist (JSON consultant)"
     },
-    ".claude/agents/review-master/instructions.md": {
+    ".claude/agents/medicine-tutor.md": {
+        "name": "medicine-tutor",
+        "description": "Medical & healthcare domain specialist (JSON consultant)"
+    },
+    ".claude/agents/law-tutor.md": {
+        "name": "law-tutor",
+        "description": "Legal domain specialist (JSON consultant)"
+    },
+    ".claude/agents/science-tutor.md": {
+        "name": "science-tutor",
+        "description": "Science domain specialist (JSON consultant)"
+    },
+    ".claude/agents/review-master.md": {
         "name": "review-master",
-        "description": "Review conductor",
-        "required_sections": ["Your Mission", "Review Process"]
+        "description": "Review conductor (JSON consultant)"
     },
-    ".claude/agents/conversation-archiver/instructions.md": {
-        "name": "conversation-archiver",
-        "description": "Conversation knowledge extractor",
-        "required_sections": ["Your Mission", "Extraction Process"]
+    ".claude/agents/analyst.md": {
+        "name": "analyst",
+        "description": "Universal AI assistant for research (JSON consultant)"
     },
-    ".claude/agents/knowledge-indexer/instructions.md": {
-        "name": "knowledge-indexer",
-        "description": "Knowledge graph maintainer",
-        "required_sections": ["Your Mission", "Index Maintenance"]
+    ".claude/agents/classification-expert.md": {
+        "name": "classification-expert",
+        "description": "Domain classification specialist (UNESCO ISCED)"
+    },
+    ".claude/agents/journalist.md": {
+        "name": "journalist",
+        "description": "Media analysis expert (JSON consultant)"
     }
 }
 
-# Required executable scripts
+# Required executable scripts (updated paths for current architecture)
 REQUIRED_SCRIPTS = [
-    "scripts/rebuild-backlinks.py",
-    "scripts/rebuild-indexes.py",
-    "scripts/reset-schedule.py",
-    "scripts/validate-taxonomy.py",
-    "scripts/validate-conversation-index.py",
-    "scripts/migrate-conversation-index.py",
-    "scripts/estimate_tokens.py",
-    "scripts/compress_pdf.py"
+    # Knowledge graph scripts
+    "scripts/knowledge-graph/rebuild-backlinks.py",
+    "scripts/knowledge-graph/generate-graph-data.py",
+    "scripts/knowledge-graph/normalize-links.py",
+
+    # Archival scripts (core /save workflow)
+    "scripts/archival/save_orchestrator.py",
+    "scripts/archival/save_post_processor.py",
+    "scripts/archival/workflow_orchestrator.py",
+
+    # Review scripts (core /review workflow)
+    "scripts/review/run_review.py",
+    "scripts/review/update_review.py",
+
+    # Progress scripts
+    "scripts/progress/display_progress.py",
+
+    # Utilities
+    "scripts/utilities/scan-and-populate-rems.py",
+    "scripts/utilities/kb-init.py",
+
+    # Learning materials
+    "scripts/learning-materials/estimate_tokens.py",
+    "scripts/learning-materials/extract-pdf-chunk.py",
+    "scripts/learning-materials/check-file-size.py"
 ]
 
 
@@ -502,7 +526,7 @@ def backup_and_repair(path: Path, schema: Dict[str, Any], report: Optional[InitR
 
     if strategy == "rebuild":
         # Try to run rebuild script, fall back to template if not available
-        rebuild_script = Path("scripts/rebuild-backlinks.py")
+        rebuild_script = Path("scripts/knowledge-graph/rebuild-backlinks.py")
         if "backlinks" in str(path) and rebuild_script.exists():
             try:
                 subprocess.run(["python3", str(rebuild_script)], check=True)
@@ -554,7 +578,7 @@ def validate_agents(
     non_interactive: bool = False,
     verbose: bool = False
 ) -> Dict[str, List]:
-    """Verify agent files exist and have correct structure."""
+    """Verify agent files exist and are readable."""
     status = {"valid": [], "missing": [], "invalid": []}
 
     for file_path, spec in REQUIRED_AGENTS.items():
@@ -565,19 +589,14 @@ def validate_agents(
             status["missing"].append(file_path)
             continue
 
-        # Basic validation: check if file has required sections
+        # Basic validation: check if file is readable and not empty
         try:
             with open(path) as f:
                 content = f.read()
 
-            missing_sections = [
-                section for section in spec["required_sections"]
-                if section not in content
-            ]
-
-            if missing_sections:
-                print(f"  ⚠️  {spec['name']}: Missing sections: {', '.join(missing_sections)}")
-                status["invalid"].append((file_path, missing_sections))
+            if len(content.strip()) < 100:
+                print(f"  ⚠️  {spec['name']}: File too short (possibly empty)")
+                status["invalid"].append((file_path, ["File too short"]))
             else:
                 status["valid"].append(file_path)
                 if verbose:

@@ -41,14 +41,13 @@ knowledge-system/
 - **medicine-tutor**: Medical & healthcare domain specialist
 - **law-tutor**: Legal domain specialist
 - **science-tutor**: Science domain specialist (physics, chemistry, biology, earth science)
-- **review-master**: Review conductor
-- **knowledge-indexer**: Knowledge graph maintainer
-- **analyst**: Universal AI assistant for research and problem-solving
+- **review-master**: Review conductor (JSON consultant)
+- **analyst**: Universal AI assistant for research and problem-solving (JSON consultant)
 
-**Agent Architecture**: The system uses three types of agents:
-1. **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor, medicine-tutor, law-tutor, science-tutor) - Domain expert consultants providing JSON consultations
-2. **Standalone Agents** (analyst, review-master) - User-facing interactive agents
-3. **Utility Agents** (knowledge-indexer) - Background workers for system maintenance
+**Agent Architecture**: The system uses consultant agents only:
+- **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor, medicine-tutor, law-tutor, science-tutor, review-master, analyst) - Domain expert consultants providing JSON consultations to main agent
+
+**Key Point**: All learning/review interactions are conducted by the **main agent**. Consultant agents provide silent JSON guidance behind the scenes. Claude Code architecture does not support subagents directly interacting with users.
 
 **For agent design decisions**, see `docs/architecture/agent-classification.md`
 

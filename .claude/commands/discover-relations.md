@@ -178,7 +178,7 @@ source venv/bin/activate && python scripts/knowledge-graph/normalize-links.py --
    ✅ Backlinks rebuilt
    ✅ Links normalized
 
-💡 Tip: Run /visualize to see updated knowledge graph
+💡 Tip: Open knowledge-graph.html to see updated knowledge graph (auto-generated after /save)
 ```
 
 ## Notes
