@@ -322,7 +322,7 @@ Architecture Reminder:
 - Maintain evidence parity: if you re-consult one, re-consult both
 - JSON responses synthesized by you into natural analysis
 
-Re-consultation (if needed):
+Re-consultation (standard):
 
 **Track A Update: Pro-Advocate**
 ```
@@ -373,6 +373,31 @@ Use Task tool with:
 ```
 
 Receive both updates → Validate → Synthesize → Respond naturally
+
+---
+
+**OPTIONAL: Extreme Questioning Mode** (Step 5a)
+
+**Trigger signals** (3+ occurrences):
+- User rejects both evidence tracks
+- Demands primary source documents
+- Questions verification methodology
+- Provides contradicting evidence
+
+**Decision framework**:
+- Assess confidence level + topic stakes + evidence quality
+- Use judgment: escalate if deeper verification would add substantial value
+
+**Escalation approach** (if chosen):
+- Continue calling journalist (BOTH pro + con tracks in parallel)
+- Each round: request deeper verification from consultants (source tracing, cross-referencing, methodology validation)
+- Synthesize findings naturally without revealing escalation
+- Cap at 2-3 rounds maximum
+
+**Stop conditions**:
+- User satisfied OR 3 rounds reached OR no new evidence available
+
+Return to standard flow after escalation.
 
 **Dialogue Length Protection**:
 

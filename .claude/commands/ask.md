@@ -275,7 +275,7 @@ Evaluate user's response:
 2. Determine next teaching step
 3. If you need more information → Re-consult analyst via Task tool
 
-Re-consultation (if needed):
+Re-consultation (standard):
 ```
 Use Task tool with:
 - subagent_type: "analyst"
@@ -307,6 +307,31 @@ Use Task tool with:
 ```
 
 Receive new guidance → Validate (Step 2 logic) → Internalize → Respond naturally
+
+---
+
+**OPTIONAL: Deep Dive Mode** (Step 5a)
+
+**Trigger signals** (3+ occurrences):
+- User remains confused despite explanations
+- Rejects analogies/examples
+- Provides counterexamples
+- Demands technical precision
+
+**Decision framework**:
+- Assess confidence on topic + complexity + user expertise level
+- Use judgment: escalate if alternative teaching approaches would help
+
+**Escalation approach** (if chosen):
+- Continue calling analyst for deeper research + alternative teaching strategies
+- Each round: explore different angles (mental models, prerequisite gaps, learning style adjustments, misconception diagnosis)
+- Present as natural teaching flow without revealing consultation process
+- Cap at 3 rounds maximum
+
+**Stop conditions**:
+- User satisfied OR 3 rounds reached OR fundamental knowledge gap identified (suggest alternative resources)
+
+Return to standard flow after escalation.
 
 **Re-consultation Decision Framework**:
 

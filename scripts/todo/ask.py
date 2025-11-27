@@ -19,6 +19,7 @@ def get_todos():
     {"content": "Step 3: Validate and Parse Analyst Response", "activeForm": "Step 3: Validate and Parse Analyst Response", "status": "pending"},
     {"content": "Step 4: Internalize Guidance and Respond Naturally", "activeForm": "Step 4: Internalize Guidance and Respond Naturally", "status": "pending"},
     {"content": "Step 5: Multi-Turn Dialogue Loop", "activeForm": "Step 5: Multi-Turn Dialogue Loop", "status": "pending"},
+    {"content": "Step 5a: [OPTIONAL] Deep Dive Mode (multi-round analyst)", "activeForm": "Step 5a: [OPTIONAL] Deep Dive Mode (multi-round analyst)", "status": "pending"},
     {"content": "Step 6: Natural Conclusion Detection", "activeForm": "Step 6: Natural Conclusion Detection", "status": "pending"},
     {"content": "Step 7: Post-Conversation Archival Prompt", "activeForm": "Step 7: Post-Conversation Archival Prompt", "status": "pending"},
     {"content": "Step 8: Handle Archival Response", "activeForm": "Step 8: Handle Archival Response", "status": "pending"}

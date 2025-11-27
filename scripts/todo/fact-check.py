@@ -33,6 +33,11 @@ def main():
             "status": "pending"
         },
         {
+            "content": "Step 5a: [OPTIONAL] Extreme Questioning Mode (multi-round journalist)",
+            "activeForm": "Step 5a: [OPTIONAL] Extreme Questioning Mode (multi-round journalist)",
+            "status": "pending"
+        },
+        {
             "content": "Step 6: Natural Conclusion Detection",
             "activeForm": "Step 6: Natural Conclusion Detection",
             "status": "pending"
