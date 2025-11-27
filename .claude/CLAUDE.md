@@ -28,7 +28,7 @@ knowledge-system/
 - **`/save [topic]`** - **One-stop-shop**: Extract concepts as ultra-minimal Rems + discover typed relations + maintain graph + auto-sync to FSRS
 - `/discover-relations <rem-id | --domain path>` - Discover typed relations for existing Rems using domain tutors
 - `/review [topic]` - Review knowledge using FSRS algorithm (1-4 rating scale)
-- `/sync-rems` - Manually sync all Rems to review schedule (auto-called by `/save`)
+- `/maintain` - Run maintenance tasks (validation, fixes, graph rebuild, FSRS sync)
 - `/progress [topic]` - View learning progress
 - `/kb-init` - Initialize knowledge system
 

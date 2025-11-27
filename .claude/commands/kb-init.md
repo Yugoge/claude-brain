@@ -4,7 +4,13 @@ allowed-tools: Bash, Read, TodoWrite
 argument-hint: "[--dry-run | --non-interactive | --verbose | --repair-all]"
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
+**⚠️ CRITICAL**: Load todos from `scripts/todo/kb-init.py` at start:
+
+```bash
+source venv/bin/activate && python scripts/todo/kb-init.py
+```
+
+Use output to create TodoWrite with all 10 checks. Mark each check as in_progress before starting, completed immediately after.
 
 # Knowledge Base Init Command
 

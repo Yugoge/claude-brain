@@ -139,7 +139,20 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 
 **IMPORTANT**: Extract Rems from **active session context** (NOT from `archived_file`). The file is only used for Rem `source` field paths.
 
-1. Extract minimal Rems capturing what user learned. DO NOT extract based on conversation content alone - extract based on knowledge user actually mastered
+**Extraction Priority** (highest to lowest):
+1. **Formulas & Equations**: Mathematical expressions, pricing models, technical calculations
+2. **Professional Terminology**: Domain-specific terms, abbreviations, technical jargon, standard definitions
+3. **Concepts & Mechanisms**: How systems work, causal relationships, theoretical frameworks
+4. **Grammar Patterns & Rules**: Language structures, syntax rules, exception patterns (language domains)
+5. **Procedures & Methods**: Step-by-step workflows, algorithms, problem-solving approaches
+
+**LOW PRIORITY** (extract ONLY if user actively practiced/applied):
+- Conversational examples, story contexts, narrative illustrations
+- Background information, historical anecdotes
+- Single-word vocabulary without grammar patterns or usage rules
+
+**Extraction Process**:
+1. Scan conversation for HIGH-PRIORITY content that user engaged with (questions, corrections, practice)
 2. If user specified topic in /save arguments → Extract only concepts related to that topic
 3. **Write extracted Rems to temp file** for Step 5:
 
@@ -155,7 +168,11 @@ cat > /tmp/candidate_rems.json << 'EOF'
 EOF
 ```
 
-**Extraction Rules**: ✅ User's understanding verified through practice or follow-up questions. ❌ AI's explanations user didn't engage with.
+**Verification Rules**:
+- ✅ User demonstrated understanding through practice, follow-up questions, or corrections
+- ✅ Content has long-term retention value (formulas, mechanisms, patterns, not stories)
+- ❌ AI's explanations user didn't engage with
+- ❌ Narrative context without technical substance
 
 **Output**: `/tmp/candidate_rems.json` ready for Step 5 enrichment
 

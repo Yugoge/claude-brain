@@ -32,9 +32,13 @@ Automated maintenance for Rem files and knowledge graph.
 
 ## Implementation
 
-**IMPORTANT**: Use TodoWrite to track progress through all 7 tasks.
+**IMPORTANT**: Load todos from `scripts/todo/maintain.py` at start:
 
-Mark each task as in_progress before starting, completed after finishing.
+```bash
+source venv/bin/activate && python scripts/todo/maintain.py
+```
+
+Use output to create TodoWrite with all 9 tasks. Mark each task as in_progress before starting, completed after finishing.
 
 ### Task Execution Order (Logical Flow)
 
@@ -146,6 +150,19 @@ source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names
 - Use `--dry-run` for preview
 - Run last because it renames files and updates references
 
+### Task 9: Sync to FSRS Review Schedule
+**Purpose**: Sync all Rems to review system (add new, update metadata)
+**When to use**: After adding rem_ids (Task 5), importing external Rems, or updating Rem titles
+
+```bash
+source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py [--force] [--verbose]
+```
+
+- Add new Rems to `.review/schedule.json` with initial FSRS state
+- With `--force`: Update metadata (title, domain) while preserving FSRS history (difficulty, stability, review_count)
+- **Note**: `/save` automatically syncs; this is for manual maintenance only
+- Extracts titles from Markdown headings (`# Title`) for better readability in review sessions
+
 ---
 
 ## Workflow Logic
@@ -168,19 +185,21 @@ PHASE 3: ADVANCED MAINTENANCE
 6. Rebuild Backlinks (full rebuild)
 7. Sync Related Rems from Backlinks
 8. Standardize Rem Names (domain-specific)
+9. Sync to FSRS Review Schedule
 
-Select tasks to run (comma-separated, e.g., 1,2,5 or 'all' or 'validate'):
+Select tasks to run (comma-separated, e.g., 1,2,5,9 or 'all' or 'validate'):
 ```
 
 ### Mode Behaviors
 
 **--validate**: Run tasks 1-4 (validation only)
-**--check-only**: Run all 7 tasks with dry-run flags
+**--check-only**: Run all 9 tasks with dry-run flags
 **--fix-all**:
 1. Run tasks 1-4 (validation - no changes)
 2. Run task 5 with `--execute` (basic fixes)
 3. Run tasks 6-8 with execution flags (advanced maintenance)
-4. Ask for domain when reaching task 8
+4. Run task 9 with `--yes` (sync to FSRS)
+5. Ask for domain when reaching task 8
 
 ### Summary Report
 
