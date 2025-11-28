@@ -356,15 +356,13 @@ def generate_analytics():
       2. generate-graph-data.py (force rebuild)
       3. generate-visualization-html.py (outputs to knowledge-graph.html)
       4. generate-dashboard-html.py (outputs to analytics-dashboard.html)
-      5. deploy-to-github-pages.sh (copy to docs/ for GitHub Pages)
 
     Environment Variables (optional):
       ANALYTICS_PERIOD: Time period in days (default: 30)
       ANALYTICS_DOMAIN: Filter by domain (default: all domains)
 
     Output:
-      - Root: analytics-dashboard.html, knowledge-graph.html (private viewing)
-      - docs/: Same files (for GitHub Pages deployment)
+      - Root: analytics-dashboard.html, knowledge-graph.html
     """
     print("\n" + "="*60, file=sys.stderr)
     print("📊 Generate Analytics & Visualizations", file=sys.stderr)
@@ -434,19 +432,6 @@ def generate_analytics():
     else:
         print(f"  ✓ Analytics dashboard → analytics-dashboard.html", file=sys.stderr)
 
-    # Sub-step 5: Deploy to GitHub Pages
-    print("  Deploying to GitHub Pages (docs/)...", file=sys.stderr)
-    result = subprocess.run(
-        ['bash', 'scripts/analytics/deploy-to-github-pages.sh'],
-        cwd=ROOT,
-        capture_output=True,
-        text=True
-    )
-    if result.returncode != 0:
-        print(f"  ⚠️  GitHub Pages deployment failed: {result.stderr}", file=sys.stderr)
-    else:
-        print(f"  ✓ Deployed to docs/ for GitHub Pages", file=sys.stderr)
-
 
 def display_completion_report(
     metadata: Dict,
@@ -488,7 +473,6 @@ def display_completion_report(
     print(f"   • 30-day statistics updated", file=sys.stderr)
     print(f"   • knowledge-graph.html (graph visualization)", file=sys.stderr)
     print(f"   • analytics-dashboard.html (dashboard)", file=sys.stderr)
-    print(f"   • Deployed to docs/ for GitHub Pages", file=sys.stderr)
 
     print(f"\n⏱️  Performance:", file=sys.stderr)
     print(f"   • Total time: {elapsed:.1f}s", file=sys.stderr)
