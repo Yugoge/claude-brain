@@ -2,7 +2,9 @@
   "env": {
     "REVIEW_GATE_ENABLED": "1",
     "REVIEW_GATE_COMMANDS": "/learn,/ask,/fact-check",
-    "REVIEW_GATE_THRESHOLD": "1"
+    "REVIEW_GATE_THRESHOLD": "1",
+    "ANALYTICS_PERIOD": "90",
+    "ANALYTICS_DOMAIN": "finance"
   },
   "permissions": {
     "allow": [
