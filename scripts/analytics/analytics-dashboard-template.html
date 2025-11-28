@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .chart-container.large {
+            height: 400px;
+        }
+
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Learning Analytics Dashboard</h1>
+            <p class="subtitle" id="lastUpdated">Last updated: Loading...</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Current Streak</h3>
+                <div class="value" id="streakValue">-</div>
+                <div class="label">consecutive days</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Concepts</h3>
+                <div class="value" id="conceptsValue">-</div>
+                <div class="label">tracked concepts</div>
+            </div>
+            <div class="stat-card">
+                <h3>Review Adherence</h3>
+                <div class="value" id="adherenceValue">-</div>
+                <div class="label">on-time reviews</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Velocity</h3>
+                <div class="value" id="velocityValue">-</div>
+                <div class="label">concepts/week</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h2>📈 Retention Curves</h2>
+                <div class="chart-container">
+                    <canvas id="retentionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>⚡ Learning Velocity</h2>
+                <div class="chart-container">
+                    <canvas id="velocityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>🎯 Review Adherence</h2>
+                <div class="chart-container">
+                    <canvas id="adherenceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>⏰ Time Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom: 30px;">
+            <h2>🔥 Activity Heatmap (30 days)</h2>
+            <div class="chart-container large">
+                <canvas id="heatmapChart"></canvas>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated by Knowledge System • Data source: .review/analytics-cache.json</p>
+        </div>
+    </div>
+
+    <script>
+        // ANALYTICS_DATA_PLACEHOLDER
+        const analyticsData = null;  // Will be replaced by actual data
+
+        // Initialize dashboard
+        function initDashboard() {
+            if (!analyticsData) {
+                document.body.innerHTML = '<div class="no-data"><h2>No analytics data available</h2><p>Run /save or /stats to generate analytics data</p></div>';
+                return;
+            }
+
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent =
+                `Last updated: ${new Date(analyticsData.metadata.generated_at).toLocaleString()}`;
+
+            // Update summary stats
+            updateSummaryStats();
+
+            // Create charts
+            createRetentionChart();
+            createVelocityChart();
+            createAdherenceChart();
+            createTimeDistributionChart();
+            createActivityHeatmap();
+        }
+
+        function updateSummaryStats() {
+            const summary = analyticsData.summary || {};
+            document.getElementById('streakValue').textContent = summary.current_streak || 0;
+            document.getElementById('conceptsValue').textContent = summary.total_concepts || 0;
+            document.getElementById('adherenceValue').textContent =
+                summary.review_adherence ? `${Math.round(summary.review_adherence)}%` : '0%';
+            document.getElementById('velocityValue').textContent =
+                summary.avg_velocity ? summary.avg_velocity.toFixed(1) : '0';
+        }
+
+        function createRetentionChart() {
+            const ctx = document.getElementById('retentionChart');
+            const retention = analyticsData.retention_curves || {};
+
+            // Sample top 5 concepts by retention
+            const concepts = Object.entries(retention.concepts || {})
+                .slice(0, 5)
+                .map(([id, data]) => ({
+                    label: id.split('/').pop().replace('.md', ''),
+                    data: data.curve || []
+                }));
+
+            if (concepts.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No retention data</div>';
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `Day ${i+1}`),
+                    datasets: concepts.map((concept, idx) => ({
+                        label: concept.label,
+                        data: concept.data,
+                        borderColor: `hsl(${idx * 70}, 70%, 50%)`,
+                        backgroundColor: `hsla(${idx * 70}, 70%, 50%, 0.1)`,
+                        tension: 0.4
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Retention %' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createVelocityChart() {
+            const ctx = document.getElementById('velocityChart');
+            const velocity = analyticsData.learning_velocity || {};
+            const weekly = velocity.weekly_data || [];
+
+            if (weekly.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No velocity data</div>';
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weekly.map(w => `Week ${w.week}`),
+                    datasets: [{
+                        label: 'Concepts Mastered',
+                        data: weekly.map(w => w.concepts_mastered || 0),
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Concepts' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAdherenceChart() {
+            const ctx = document.getElementById('adherenceChart');
+            const adherence = analyticsData.review_adherence || {};
+            const onTime = adherence.on_time_percentage || 0;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['On Time', 'Late'],
+                    datasets: [{
+                        data: [onTime, 100 - onTime],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(200, 200, 200, 0.3)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function createTimeDistributionChart() {
+            const ctx = document.getElementById('timeChart');
+            const time = analyticsData.time_distribution || {};
+            const domains = time.by_domain || {};
+
+            const entries = Object.entries(domains);
+            if (entries.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No time data</div>';
+                return;
+            }
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: entries.map(([domain]) => domain),
+                    datasets: [{
+                        data: entries.map(([, hours]) => hours),
+                        backgroundColor: entries.map((_, idx) =>
+                            `hsla(${idx * 360 / entries.length}, 70%, 60%, 0.8)`
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function createActivityHeatmap() {
+            const ctx = document.getElementById('heatmapChart');
+            const streak = analyticsData.streak_tracking || {};
+            const calendar = streak.calendar || [];
+
+            if (calendar.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No activity data</div>';
+                return;
+            }
+
+            // Create bar chart for daily activity (last 30 days)
+            const last30 = calendar.slice(-30);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: last30.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [{
+                        label: 'Reviews Completed',
+                        data: last30.map(d => d.review_count || 0),
+                        backgroundColor: last30.map(d => {
+                            const count = d.review_count || 0;
+                            if (count === 0) return 'rgba(200, 200, 200, 0.3)';
+                            if (count < 3) return 'rgba(102, 126, 234, 0.4)';
+                            if (count < 6) return 'rgba(102, 126, 234, 0.6)';
+                            return 'rgba(102, 126, 234, 0.9)';
+                        }),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Reviews' }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        initDashboard();
+    </script>
+</body>
+</html>

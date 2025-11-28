@@ -60,7 +60,10 @@ orchestrator_metadata.json
 # They should NOT be synced to public repositories
 
 # Private Documentation (use architecture/ in root instead)
+# EXCEPTION: Allow docs/*.html for GitHub Pages
 docs/
+!docs/*.html
+!docs/index.html
 
 # Personal Learning Materials (your private files)
 learning-materials/

@@ -354,6 +354,8 @@ def generate_analytics():
       1. generate-analytics.py (30-day stats)
       2. generate-graph-data.py (force rebuild)
       3. generate-visualization-html.py (interactive graph)
+      4. generate-dashboard-html.py (analytics dashboard)
+      5. publish-to-github-pages.py (copy to docs/ for GitHub Pages)
     """
     print("\n" + "="*60, file=sys.stderr)
     print("📊 Generate Analytics & Visualizations", file=sys.stderr)
@@ -398,6 +400,32 @@ def generate_analytics():
     else:
         print(f"  ✓ Visualization HTML generated", file=sys.stderr)
 
+    # Sub-step 4: Analytics Dashboard
+    print("  Generating analytics dashboard HTML...", file=sys.stderr)
+    result = subprocess.run(
+        ['python3', 'scripts/analytics/generate-dashboard-html.py'],
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print(f"  ⚠️  Dashboard generation failed: {result.stderr}", file=sys.stderr)
+    else:
+        print(f"  ✓ Analytics dashboard HTML generated", file=sys.stderr)
+
+    # Sub-step 5: Publish to GitHub Pages
+    print("  Publishing to GitHub Pages (docs/)...", file=sys.stderr)
+    result = subprocess.run(
+        ['python3', 'scripts/analytics/publish-to-github-pages.py'],
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print(f"  ⚠️  GitHub Pages publish failed: {result.stderr}", file=sys.stderr)
+    else:
+        print(f"  ✓ Published to docs/ for GitHub Pages", file=sys.stderr)
+
 
 def display_completion_report(
     metadata: Dict,
@@ -438,6 +466,8 @@ def display_completion_report(
     print(f"\n📊 Analytics:", file=sys.stderr)
     print(f"   • 30-day statistics updated", file=sys.stderr)
     print(f"   • Knowledge graph visualization regenerated", file=sys.stderr)
+    print(f"   • Analytics dashboard HTML generated", file=sys.stderr)
+    print(f"   • Published to GitHub Pages (docs/)", file=sys.stderr)
 
     print(f"\n⏱️  Performance:", file=sys.stderr)
     print(f"   • Total time: {elapsed:.1f}s", file=sys.stderr)
