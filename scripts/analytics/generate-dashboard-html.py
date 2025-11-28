@@ -19,7 +19,7 @@ def main():
                        help='Input analytics cache JSON file')
     parser.add_argument('--template', type=str, default='scripts/analytics/analytics-dashboard-template.html',
                        help='HTML template file')
-    parser.add_argument('--output', type=str, default='analytics-dashboard.html',
+    parser.add_argument('--output', type=str, default='docs/analytics-dashboard.html',
                        help='Output HTML file')
     args = parser.parse_args()
 
@@ -63,6 +63,7 @@ def main():
 
     # Write output
     output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure docs/ exists
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 

@@ -78,9 +78,8 @@ knowledge-base/
 chats/
 
 # Analytics and Progress Data
-analytics-dashboard.html
-knowledge-graph.html
 enriched_rems.json
+# Note: analytics-dashboard.html and knowledge-graph.html now generated directly to docs/
 
 # Test directories
 tests/
