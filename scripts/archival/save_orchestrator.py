@@ -488,10 +488,10 @@ def main():
             'completed_stages': [stage.name for stage in completed_stages]
         }
 
-        with open('orchestrator_metadata.json', 'w') as f:
+        with open('/tmp/orchestrator_metadata.json', 'w') as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"\n✅ Steps 1-4 completed. Metadata saved to orchestrator_metadata.json", file=sys.stderr)
+        print(f"\n✅ Steps 1-4 completed. Metadata saved to /tmp/orchestrator_metadata.json", file=sys.stderr)
         print("Next: Main agent performs Steps 2-9 with orchestrator enforcement", file=sys.stderr)
 
         return 0

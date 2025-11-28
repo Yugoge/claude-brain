@@ -26,8 +26,7 @@ class ConceptExtractor:
         self.technical_indicators = [
             'error', 'function', 'class', 'algorithm', 'data', 'code',
             'implement', 'design', 'pattern', 'method', 'variable',
-            'database', 'api', 'framework', 'library', 'module',
-            '错误', '函数', '算法', '数据', '代码', '实现', '设计'
+            'database', 'api', 'framework', 'library', 'module'
         ]
 
         # Cache for duplicate detection
@@ -255,7 +254,7 @@ class ConceptExtractor:
         domain_keywords = {
             'programming': ['code', 'function', 'algorithm', 'programming'],
             'finance': ['option', 'stock', 'trading', 'delta', 'gamma'],
-            'language': ['语言', 'grammar', 'vocabulary', 'pronunciation'],
+            'language': ['language', 'grammar', 'vocabulary', 'pronunciation'],
             'science': ['physics', 'chemistry', 'biology', 'research']
         }
 

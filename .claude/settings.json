@@ -1,4 +1,9 @@
 {
+  "env": {
+    "REVIEW_GATE_ENABLED": "1",
+    "REVIEW_GATE_COMMANDS": "/learn,/ask,/fact-check",
+    "REVIEW_GATE_THRESHOLD": "1"
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -158,6 +163,12 @@
       {
         "matcher": "SlashCommand",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-pre-command-review-check.py",
+            "stdin_json": true,
+            "on_error": "warn"
+          },
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-checklist-injection.py",

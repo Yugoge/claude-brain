@@ -117,6 +117,12 @@ See individual command files for complete implementation examples with proper im
 ## Hooks & Indexes
 
 - **Hooks**: `.claude/settings.json` provides safety checks and automation
+  - **NEW**: Review gating - Enforces mini review session (1 rem) before input commands
+    - **Triggers**: `/learn`, `/ask`, `/fact-check` (configurable via env)
+    - **Purpose**: Maintain input-output balance, prevent knowledge accumulation without consolidation
+    - **Workflow**: Hook → Select random due rem → Main agent conducts review → Update FSRS → Execute command
+    - **Configuration**: Environment variables (`REVIEW_GATE_ENABLED`, `REVIEW_GATE_COMMANDS`)
+    - **Rationale**: `/save` is output task, no gating needed
   - See `docs/architecture/hooks.md` for complete documentation
 - **Chats index**: `chats/index.json` tracks archived conversations with `metadata` aggregates
   - See `docs/architecture/conversation-index.md` for schema details

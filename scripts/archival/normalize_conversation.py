@@ -33,7 +33,7 @@ def slugify(text: str, max_length: int = 50) -> str:
 
     Handles:
     - French accents: é → e, à → a, etc.
-    - Chinese characters: 经济增长 → jingji-zengzhang (pinyin)
+    - Chinese characters: convert to pinyin (jingji-zengzhang)
     - Special characters: punctuation removed
     - Fallback: use metadata ID if all characters are non-ASCII
 

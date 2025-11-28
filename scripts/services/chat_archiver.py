@@ -14,9 +14,9 @@ Features:
 ========================================
 BUG 8 (P0): Imprecise First-Message Matching (Greedy Strategy) - CRITICAL
   - Problem: Substring matching too loose + greedy first-match strategy
-    * "继续" matches many conversations, stops at first match (wrong one)
+    * Common words match many conversations, stops at first match (wrong one)
     * No scoring mechanism to find BEST match
-    * Common words like "继续" matched 2025-10-27 (2 messages) instead of 2025-10-30 (242 messages)
+    * Common words matched wrong sessions (2 messages) instead of intended (242 messages)
   - Impact: Historical conversations (french-1453) consistently matched wrong sessions
   - Root Cause: parse_conversation() uses "pattern in content" which matches any occurrence
   - Fix: Implemented intelligent match scoring system:
@@ -126,11 +126,11 @@ BUG 13 (P0): No Tiered Fallback for Repeated First/Last Patterns - CRITICAL [FIX
     * Tier 3: Auto-fallback when last message not found in date range (split sessions)
     * Tier 4: Auto-fallback when all else fails, finds oldest matching first message
   - Benefit: Robust extraction handles all edge cases (split sessions, repeated patterns, remote reorganization)
-  - Test Scenario: 10-day period with repeated "继续" first messages - Tier 4 correctly extracts oldest match
+  - Test Scenario: 10-day period with repeated first messages - Tier 4 correctly extracts oldest match
 
 BUG 10 (P1): Command-Args Content Filtering
   - Problem: <command-args> tags were completely filtered out, losing user input in slash commands
-  - Impact: Slash command arguments like "/learn 今天继续学法语1453" had the argument removed
+  - Impact: Slash command arguments like "/learn [topic]" had the argument removed
   - Fix: Modified filter_user_content() to EXTRACT <command-args> content instead of removing it
   - Status: ALREADY FIXED in previous version (lines 717-726)
 

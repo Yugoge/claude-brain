@@ -133,14 +133,14 @@ Options:
 **Usage**:
 ```bash
 source venv/bin/activate && python scripts/archival/add_typed_relations.py \
-  --enriched-rems enriched_rems.json
+  --enriched-rems /tmp/enriched_rems.json
 ```
 
 **Optional Parameters**:
 - `--dry-run`: Preview changes without writing files
 
 **Required Parameters**:
-- `--enriched-rems`: Path to enriched_rems.json (output from workflow_orchestrator.py)
+- `--enriched-rems`: Path to enriched_rems.json (output from workflow_orchestrator.py, typically in /tmp/)
 
 **Behavior**:
 - Reads existing Rem file content

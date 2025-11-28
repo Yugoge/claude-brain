@@ -228,7 +228,7 @@ def main():
     input_group.add_argument('--candidate-rems', help='JSON file with candidate Rems (legacy)')
     input_group.add_argument('--candidate-rems-json', help='Inline JSON string with candidate Rems (preferred)')
 
-    parser.add_argument('--output', default='enriched_rems.json', help='Output file path')
+    parser.add_argument('--output', default='/tmp/enriched_rems.json', help='Output file path')
 
     # Tutor response modes (optional, mutually exclusive)
     tutor_group = parser.add_mutually_exclusive_group()

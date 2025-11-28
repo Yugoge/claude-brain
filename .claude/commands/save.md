@@ -69,7 +69,7 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 
 **Outputs**:
 - Filtered archived conversation (`chats/YYYY-MM/conversation-YYYY-MM-DD.md`)
-- Session metadata (`orchestrator_metadata.json`)
+- Session metadata (`/tmp/orchestrator_metadata.json`)
 
 **Exit codes**:
 - `0` = Valid → Continue to Step 2
@@ -154,7 +154,7 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 **Extraction Process**:
 1. Scan conversation for HIGH-PRIORITY content that user engaged with (questions, corrections, practice)
 2. If user specified topic in /save arguments → Extract only concepts related to that topic
-3. **Write extracted Rems to temp file** for Step 5:
+3. **Write extracted Rems to temp file** for validation:
 
 ```bash
 cat > /tmp/candidate_rems.json << 'EOF'
@@ -168,13 +168,22 @@ cat > /tmp/candidate_rems.json << 'EOF'
 EOF
 ```
 
+4. **Validate format immediately** (blocks on errors):
+
+```bash
+source venv/bin/activate && python scripts/archival/validate_extraction_format.py \
+  --candidate-rems /tmp/candidate_rems.json
+```
+
+Exit codes: 0=valid, 1=invalid (blocks pipeline)
+
 **Verification Rules**:
 - ✅ User demonstrated understanding through practice, follow-up questions, or corrections
 - ✅ Content has long-term retention value (formulas, mechanisms, patterns, not stories)
 - ❌ AI's explanations user didn't engage with
 - ❌ Narrative context without technical substance
 
-**Output**: `/tmp/candidate_rems.json` ready for Step 5 enrichment
+**Output**: Validated `/tmp/candidate_rems.json` ready for Step 5 enrichment
 
 ---
 
@@ -265,12 +274,13 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --domain "$domain" \
   --isced-path "$isced_detailed_path" \
   --candidate-rems /tmp/candidate_rems.json \
-  --tutor-response /tmp/tutor_response.json
+  --tutor-response /tmp/tutor_response.json \
+  --output /tmp/enriched_rems.json
 ```
 
 Script validates all IDs and merges typed_relations.
 
-**Output**: Enriched Rems with validated typed_relations (stored in AI memory for Step 8)
+**Output**: Enriched Rems saved to `/tmp/enriched_rems.json` (ready for Step 9)
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 
@@ -381,13 +391,23 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 ### Step 9: Execute Automated Post-Processing
 
-**⚠️ CRITICAL**: ONLY execute after user approval.
+**⚠️ CRITICAL - MANDATORY USE OF SCRIPTS**:
+- ✅ MUST use `save_post_processor.py` for ALL file creation
+- ❌ NEVER create Rem files manually (Write/Edit tools)
+- ❌ NEVER bypass pipeline even if validation fails
+- ⚠️ ONLY execute after user approval
+
+**If post-processor fails**:
+1. Read error message carefully
+2. Fix data format (usually enriched_rems.json)
+3. Rerun post-processor
+4. DO NOT create files manually as workaround
 
 **Construct complete enriched_rems.json** (Bug 2 fix: merge Step 5 output with session metadata):
 
 ```bash
 source venv/bin/activate && python scripts/archival/construct_enriched_rems.py \
-  --enriched-rems enriched_rems.json \
+  --enriched-rems /tmp/enriched_rems.json \
   --session-id "{topic-slug-YYYY-MM-DD}" \
   --title "{Conversation title}" \
   --summary "{2-3 sentence summary of what user learned}" \
@@ -397,7 +417,7 @@ source venv/bin/activate && python scripts/archival/construct_enriched_rems.py \
   --subdomain "{topic-slug}" \
   --isced-path "{from Step 2}" \
   --tags "{comma,separated,tags}" \
-  --output enriched_rems_complete.json
+  --output /tmp/enriched_rems_complete.json
 ```
 
 **Data Format Support**:
@@ -409,7 +429,7 @@ source venv/bin/activate && python scripts/archival/construct_enriched_rems.py \
 
 ```bash
 source venv/bin/activate && python scripts/archival/save_post_processor.py \
-  --enriched-rems enriched_rems_complete.json \
+  --enriched-rems /tmp/enriched_rems_complete.json \
   --archived-file "{from Step 1}" \
   --session-type "{learn|ask|review}"
 ```

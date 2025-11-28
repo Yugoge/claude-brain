@@ -255,7 +255,7 @@ class ReviewLoader:
         3. Sort clusters by urgency (earliest due cluster first)
         4. Within cluster: sort by urgency
 
-        Result: Related Rems review consecutively (联想学习)
+        Result: Related Rems review consecutively (associative learning)
 
         Args:
             rems: List of Rem entries

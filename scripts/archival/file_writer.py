@@ -308,6 +308,19 @@ class FileWriter:
 
         print("✅ Rollback complete", file=sys.stderr)
 
+        # Recovery guide
+        print("", file=sys.stderr)
+        print("="*60, file=sys.stderr)
+        print("What to do next?", file=sys.stderr)
+        print("="*60, file=sys.stderr)
+        print("", file=sys.stderr)
+        print("1. Check error message above", file=sys.stderr)
+        print("2. Fix data format (usually enriched_rems file)", file=sys.stderr)
+        print("3. Rerun save_post_processor.py", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("❌ DO NOT create files manually as workaround", file=sys.stderr)
+        print("="*60, file=sys.stderr)
+
     def _cleanup_backups(self):
         """Clean up backup files after successful transaction"""
         for backup_path in self.backups.values():
@@ -361,12 +374,36 @@ class FileWriter:
                 # Create Knowledge Rems
                 print("\n📝 Creating Knowledge Rems...", file=sys.stderr)
                 for rem in enriched_rems:
+                    # Validate core_points field with helpful error
+                    try:
+                        core_points = rem['core_points']
+                    except KeyError:
+                        detected_fields = list(rem.keys())
+                        raise WriteError(
+                            f"Data format error: Rem '{rem['rem_id']}' missing 'core_points' field\n"
+                            f"\n"
+                            f"Detected fields: {detected_fields}\n"
+                            f"\n"
+                            f"✅ Correct format:\n"
+                            f"   \"core_points\": [\"point1\", \"point2\", \"point3\"]\n"
+                            f"\n"
+                            f"❌ Wrong format:\n"
+                            f"   \"content\": \"markdown string\"\n"
+                            f"\n"
+                            f"Fix:\n"
+                            f"1. Edit enriched_rems file\n"
+                            f"2. Change 'content' field to 'core_points' array\n"
+                            f"3. Rerun save_post_processor.py\n"
+                            f"\n"
+                            f"Format spec: docs/architecture/data-formats.md"
+                        )
+
                     rem_path = self.create_rem_file(
                         rem_id=rem['rem_id'],
                         title=rem['title'],
                         isced_path=conversation_metadata['isced_path'],
                         subdomain=conversation_metadata['subdomain'],
-                        core_points=rem['core_points'],
+                        core_points=core_points,
                         usage_scenario=rem.get('usage_scenario', ''),
                         mistakes=rem.get('my_mistakes', []),
                         typed_relations=rem.get('typed_relations', []),

@@ -148,7 +148,7 @@ def main():
 
     # Optional args
     parser.add_argument('--tags', default='', help='Comma-separated tags')
-    parser.add_argument('--output', default='enriched_rems_complete.json', help='Output file path')
+    parser.add_argument('--output', default='/tmp/enriched_rems_complete.json', help='Output file path')
 
     args = parser.parse_args()
 
