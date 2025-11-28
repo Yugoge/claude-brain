@@ -354,15 +354,15 @@ def generate_analytics():
     Executes:
       1. generate-analytics.py (configurable period/domain via env vars)
       2. generate-graph-data.py (force rebuild)
-      3. generate-visualization-html.py (outputs to docs/knowledge-graph.html)
-      4. generate-dashboard-html.py (outputs to docs/analytics-dashboard.html)
+      3. generate-visualization-html.py (outputs to knowledge-graph.html)
+      4. generate-dashboard-html.py (outputs to analytics-dashboard.html)
 
     Environment Variables (optional):
       ANALYTICS_PERIOD: Time period in days (default: 30)
       ANALYTICS_DOMAIN: Filter by domain (default: all domains)
 
     Output:
-      All HTML files generated directly to docs/ directory for GitHub Pages
+      HTML files generated to root directory (private repo tracks these)
     """
     print("\n" + "="*60, file=sys.stderr)
     print("📊 Generate Analytics & Visualizations", file=sys.stderr)
@@ -407,7 +407,7 @@ def generate_analytics():
         print(f"  ✓ Graph data generated", file=sys.stderr)
 
     # Sub-step 3: Visualization
-    print("  Generating visualization HTML (docs/)...", file=sys.stderr)
+    print("  Generating visualization HTML...", file=sys.stderr)
     result = subprocess.run(
         ['python3', 'scripts/knowledge-graph/generate-visualization-html.py'],
         cwd=ROOT,
@@ -417,10 +417,10 @@ def generate_analytics():
     if result.returncode != 0:
         print(f"  ⚠️  Visualization generation failed: {result.stderr}", file=sys.stderr)
     else:
-        print(f"  ✓ Knowledge graph → docs/knowledge-graph.html", file=sys.stderr)
+        print(f"  ✓ Knowledge graph → knowledge-graph.html", file=sys.stderr)
 
     # Sub-step 4: Analytics Dashboard
-    print("  Generating analytics dashboard HTML (docs/)...", file=sys.stderr)
+    print("  Generating analytics dashboard HTML...", file=sys.stderr)
     result = subprocess.run(
         ['python3', 'scripts/analytics/generate-dashboard-html.py'],
         cwd=ROOT,
@@ -430,7 +430,7 @@ def generate_analytics():
     if result.returncode != 0:
         print(f"  ⚠️  Dashboard generation failed: {result.stderr}", file=sys.stderr)
     else:
-        print(f"  ✓ Analytics dashboard → docs/analytics-dashboard.html", file=sys.stderr)
+        print(f"  ✓ Analytics dashboard → analytics-dashboard.html", file=sys.stderr)
 
 
 def display_completion_report(
@@ -471,8 +471,8 @@ def display_completion_report(
 
     print(f"\n📊 Analytics:", file=sys.stderr)
     print(f"   • 30-day statistics updated", file=sys.stderr)
-    print(f"   • docs/knowledge-graph.html (graph visualization)", file=sys.stderr)
-    print(f"   • docs/analytics-dashboard.html (dashboard)", file=sys.stderr)
+    print(f"   • knowledge-graph.html (graph visualization)", file=sys.stderr)
+    print(f"   • analytics-dashboard.html (dashboard)", file=sys.stderr)
 
     print(f"\n⏱️  Performance:", file=sys.stderr)
     print(f"   • Total time: {elapsed:.1f}s", file=sys.stderr)
