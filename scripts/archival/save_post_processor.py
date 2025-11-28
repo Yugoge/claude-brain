@@ -351,20 +351,36 @@ def generate_analytics():
     Generate Analytics & Visualizations
 
     Executes:
-      1. generate-analytics.py (30-day stats)
+      1. generate-analytics.py (configurable period/domain via env vars)
       2. generate-graph-data.py (force rebuild)
       3. generate-visualization-html.py (interactive graph)
       4. generate-dashboard-html.py (analytics dashboard)
       5. publish-to-github-pages.py (copy to docs/ for GitHub Pages)
+
+    Environment Variables (optional):
+      ANALYTICS_PERIOD: Time period in days (default: 30)
+      ANALYTICS_DOMAIN: Filter by domain (default: all domains)
     """
+    import os
+
     print("\n" + "="*60, file=sys.stderr)
     print("📊 Generate Analytics & Visualizations", file=sys.stderr)
     print("="*60, file=sys.stderr)
 
+    # Get configuration from environment variables
+    period = os.getenv('ANALYTICS_PERIOD', '30')
+    domain = os.getenv('ANALYTICS_DOMAIN', None)
+
     # Sub-step 1: Analytics
-    print("  Generating analytics...", file=sys.stderr)
+    analytics_cmd = ['python3', 'scripts/analytics/generate-analytics.py', '--period', period]
+    if domain:
+        analytics_cmd.extend(['--domain', domain])
+        print(f"  Generating analytics (domain={domain}, period={period} days)...", file=sys.stderr)
+    else:
+        print(f"  Generating analytics (period={period} days, all domains)...", file=sys.stderr)
+
     result = subprocess.run(
-        ['python3', 'scripts/analytics/generate-analytics.py', '--period', '30'],
+        analytics_cmd,
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -372,7 +388,9 @@ def generate_analytics():
     if result.returncode != 0:
         print(f"  ⚠️  Analytics generation failed: {result.stderr}", file=sys.stderr)
     else:
-        print(f"  ✓ Analytics generated (30-day period)", file=sys.stderr)
+        period_desc = f"{period}-day period" if period != '30' else "30-day period"
+        domain_desc = f" (domain: {domain})" if domain else ""
+        print(f"  ✓ Analytics generated ({period_desc}{domain_desc})", file=sys.stderr)
 
     # Sub-step 2: Graph data
     print("  Generating graph data...", file=sys.stderr)
