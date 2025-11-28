@@ -64,6 +64,7 @@ Exit Codes:
 """
 
 import json
+import os
 import sys
 import subprocess
 from pathlib import Path
@@ -361,8 +362,6 @@ def generate_analytics():
       ANALYTICS_PERIOD: Time period in days (default: 30)
       ANALYTICS_DOMAIN: Filter by domain (default: all domains)
     """
-    import os
-
     print("\n" + "="*60, file=sys.stderr)
     print("📊 Generate Analytics & Visualizations", file=sys.stderr)
     print("="*60, file=sys.stderr)
