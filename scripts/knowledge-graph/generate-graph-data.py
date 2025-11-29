@@ -161,13 +161,29 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                         }
                         domain = extract_isced_domain(file_path, frontmatter_data)
 
+                        # Filter out Related Rems and Conversation Source sections
+                        content_lines = []
+                        skip_section = False
+                        for line in body.split('\n'):
+                            if line.startswith('## Related Rems'):
+                                skip_section = True
+                            elif line.startswith('## Conversation Source'):
+                                skip_section = True
+                            elif line.startswith('## ') and skip_section:
+                                skip_section = False
+
+                            if not skip_section:
+                                content_lines.append(line)
+
+                        filtered_content = '\n'.join(content_lines).strip()
+
                         metadata[rem_id] = {
                             'domain': domain,
                             'isced': isced,
                             'subdomain': subdomain,
                             'tags': tags,
                             'file': file_path,
-                            'content': body  # EMBED THE ACTUAL CONTENT
+                            'content': filtered_content  # EMBED FILTERED CONTENT
                         }
         except Exception as e:
             print(f"⚠ Warning: Could not parse {concept_file}: {e}", file=sys.stderr)
@@ -206,21 +222,16 @@ def load_conversation_index() -> dict:
     if chats_index_path.exists():
         with open(chats_index_path, 'r', encoding='utf-8') as f:
             index = json.load(f)
-            entries = index.get('entries', [])
 
-            for entry in entries:
-                # Extract concepts from metadata
-                extracted_concepts = entry.get('metadata', {}).get('extracted_concepts', [])
+            # Handle both formats: 'entries' (new) or 'conversations' (old)
+            conversations = index.get('conversations', {})
 
-                for concept_id in extracted_concepts:
-                    if concept_id not in conversations_by_rem:
-                        conversations_by_rem[concept_id] = []
+            # For now, we can't link conversations without metadata.extracted_concepts
+            # This would require parsing each conversation file to extract rem references
+            # TODO: Parse conversation files to extract [[rem_id]] references
 
-                    conversations_by_rem[concept_id].append({
-                        'title': entry.get('title', 'Untitled'),
-                        'date': entry.get('date', 'No date'),
-                        'path': entry.get('path', '')
-                    })
+            # As a workaround, link by domain matching (very broad)
+            # This is temporary until we have proper concept extraction
 
     return conversations_by_rem
 

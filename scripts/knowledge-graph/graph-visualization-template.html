@@ -367,12 +367,13 @@
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
 
-            const tagsHtml = d.tags.length > 0
-                ? d.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
-                : '<span class="tag">No tags</span>';
+            const tags = d.tags || [];
+            const tagsHtml = tags.length > 0
+                ? tags.map(tag => `<span class="tag">${tag}</span>`).join('')
+                : '<span style="color: #999; font-size: 12px;">No tags</span>';
 
-            // Find typed relations
-            const outgoingRelations = graphData.edges
+            // Find typed relations (only outgoing to avoid confusion)
+            const typedRelations = graphData.edges
                 .filter(e => e.source.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
                 .map(e => {
                     const targetNode = graphData.nodes.find(n => n.id === e.target.id);
@@ -381,20 +382,10 @@
                 })
                 .join('');
 
-            const incomingRelations = graphData.edges
-                .filter(e => e.target.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
-                .map(e => {
-                    const sourceNode = graphData.nodes.find(n => n.id === e.source.id);
-                    const label = sourceNode ? sourceNode.label : e.source.id;
-                    return `<li><strong>${e.type}:</strong> <a href="#" onclick="focusNode('${e.source.id}'); return false;">${label}</a></li>`;
-                })
-                .join('');
-
-            const relationsHtml = (outgoingRelations || incomingRelations)
+            const relationsHtml = typedRelations
                 ? `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
                      <p><strong>Typed Relations:</strong></p>
-                     ${outgoingRelations ? `<ul style="margin-left: 15px; margin-bottom: 10px;">${outgoingRelations}</ul>` : ''}
-                     ${incomingRelations ? `<p style="margin-top: 10px;"><em>Incoming:</em></p><ul style="margin-left: 15px;">${incomingRelations}</ul>` : ''}
+                     <ul style="margin-left: 15px; margin-bottom: 10px;">${typedRelations}</ul>
                    </div>`
                 : '';
 

@@ -95,10 +95,10 @@ class AnalyticsEngine:
 
         for concept_id, data in concepts.items():
             # Filter by domain if specified
-            if domain and data.get('domain', '').startswith(domain):
-                pass
-            elif domain:
-                continue
+            if domain:
+                concept_domain = data.get('domain', '')
+                if not (domain in concept_domain or concept_domain.startswith(domain)):
+                    continue
 
             # Extract FSRS parameters
             fsrs_state = data.get('fsrs_state', {})
@@ -172,8 +172,10 @@ class AnalyticsEngine:
         # Get mastered concepts (FSRS: stability > 30 or 5+ reviews)
         mastered_concepts = []
         for concept_id, data in concepts.items():
-            if domain and not data.get('domain', '').startswith(domain):
-                continue
+            if domain:
+                concept_domain = data.get('domain', '')
+                if not (domain in concept_domain or concept_domain.startswith(domain)):
+                    continue
 
             fsrs_state = data.get('fsrs_state', {})
             stability = fsrs_state.get('stability', 0)
@@ -377,8 +379,10 @@ class AnalyticsEngine:
         concepts = self.schedule.get('concepts', {})
 
         for concept_id, data in concepts.items():
-            if domain and not data.get('domain', '').startswith(domain):
-                continue
+            if domain:
+                concept_domain = data.get('domain', '')
+                if not (domain in concept_domain or concept_domain.startswith(domain)):
+                    continue
 
             # Calculate mastery score using FSRS parameters
             fsrs_state = data.get('fsrs_state', {})
