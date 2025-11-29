@@ -416,6 +416,7 @@
         const RELATION_TRANSLATIONS = {
             'uses': 'uses',
             'used_by': 'is used by',
+            'used_in': 'is used in',
             'implements': 'implements',
             'implemented_by': 'is implemented by',
             'extends': 'extends',
@@ -718,11 +719,11 @@
                     .replace(/\n/g, '<br>');
             };
 
-            // Format summary with proper line breaks
+            // Format summary with markdown formatting
             const summaryHtml = conv.summary ? `
                 <div class="conversation-summary">
-                    <strong>Summary:</strong><br>
-                    ${conv.summary}
+                    <strong>Summary:</strong><br><br>
+                    <p style="margin:6px 0;font-size:12px;line-height:1.6;">${formatMarkdown(conv.summary)}</p>
                 </div>
             ` : '';
 
@@ -850,7 +851,7 @@
             link.style('display', 'block');
             label.style('display', 'block');
             simulation.nodes(graphData.nodes);
-            simulation.alpha(0.3).restart();
+            // Don't restart simulation - just restore all nodes without repositioning
         }
 
         // Keyboard shortcuts

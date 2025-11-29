@@ -245,28 +245,24 @@
             document.getElementById('conceptsValue').textContent = summary.total_concepts || 0;
             document.getElementById('adherenceValue').textContent =
                 summary.review_adherence ? `${Math.round(summary.review_adherence)}%` : '0%';
-            const velocity = summary.avg_velocity || 0;
+            const velocity = summary.avg_velocity;
             document.getElementById('velocityValue').textContent =
-                velocity === 0 ? 'Building...' : velocity.toFixed(1);
+                (velocity === undefined || velocity === null) ? 'Building...' : velocity.toFixed(1);
         }
 
         function createRetentionChart() {
             const ctx = document.getElementById('retentionChart');
-            const retention = analyticsData.retention_curves || {};
+            const retentionByDomain = analyticsData.retention_by_domain || {};
 
-            // Try both old format (concepts) and direct format
-            let retentionData = retention.concepts || retention || {};
-
-            // Sample top 5 concepts by retention
-            const concepts = Object.entries(retentionData)
-                .filter(([key]) => key !== 'error' && key !== 'metadata')
-                .slice(0, 5)
-                .map(([id, data]) => ({
-                    label: id,  // Use full concept ID (will be improved with title lookup)
-                    data: data.curve ? data.curve.map(d => d.retention) : []
+            // Convert domain retention curves to chart data
+            const domains = Object.entries(retentionByDomain)
+                .map(([domain, data]) => ({
+                    label: domain,
+                    data: data.curve ? data.curve.map(d => d.retention) : [],
+                    conceptCount: data.conceptCount || 0
                 }));
 
-            if (concepts.length === 0) {
+            if (domains.length === 0) {
                 ctx.parentElement.innerHTML = '<div class="no-data">No retention data available yet. Review some concepts to see retention curves.</div>';
                 return;
             }
@@ -274,10 +270,10 @@
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({length: 30}, (_, i) => `Day ${i+1}`),
-                    datasets: concepts.map((concept, idx) => ({
-                        label: concept.label,
-                        data: concept.data,
+                    labels: Array.from({length: 31}, (_, i) => `Day ${i}`),
+                    datasets: domains.map((domain, idx) => ({
+                        label: `${domain.label} (${domain.conceptCount} concepts)`,
+                        data: domain.data,
                         borderColor: `hsl(${idx * 70}, 70%, 50%)`,
                         backgroundColor: `hsla(${idx * 70}, 70%, 50%, 0.1)`,
                         tension: 0.4
@@ -302,13 +298,18 @@
 
         function createVelocityChart() {
             const ctx = document.getElementById('velocityChart');
-            const velocity = analyticsData.learning_velocity || {};
+            const velocityByDomain = analyticsData.velocity_by_domain || {};
 
-            // Simple bar showing total concepts mastered and velocity
-            const conceptsMastered = velocity.conceptsMastered || 0;
-            const vel = velocity.velocity || 0;
+            // Convert domain velocity to chart data
+            const domains = Object.entries(velocityByDomain)
+                .map(([domain, data]) => ({
+                    domain: domain,
+                    velocity: data.velocity || 0,
+                    reviews: data.reviewsCompleted || 0,
+                    hours: data.hoursInvested || 0
+                }));
 
-            if (conceptsMastered === 0) {
+            if (domains.length === 0) {
                 ctx.parentElement.innerHTML = '<div class="no-data">No velocity data yet. Complete learning sessions to track velocity.</div>';
                 return;
             }
@@ -316,10 +317,10 @@
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Current Period'],
+                    labels: domains.map(d => d.domain),
                     datasets: [{
-                        label: 'Concepts Mastered',
-                        data: [conceptsMastered],
+                        label: 'Reviews/Hour',
+                        data: domains.map(d => d.velocity),
                         backgroundColor: 'rgba(102, 126, 234, 0.7)',
                         borderColor: 'rgba(102, 126, 234, 1)',
                         borderWidth: 2
@@ -330,15 +331,24 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        title: {
-                            display: true,
-                            text: `Velocity: ${vel.toFixed(2)} concepts/hour`
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = domains[idx];
+                                    return [
+                                        `Velocity: ${d.velocity.toFixed(2)} reviews/hour`,
+                                        `Reviews: ${d.reviews}`,
+                                        `Hours: ${d.hours.toFixed(1)}`
+                                    ];
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Concepts Mastered' }
+                            title: { display: true, text: 'Reviews per Hour' }
                         }
                     }
                 }
@@ -347,36 +357,58 @@
 
         function createAdherenceChart() {
             const ctx = document.getElementById('adherenceChart');
-            const adherence = analyticsData.review_adherence || {};
-            const onTime = adherence.adherence || 0;
-            const totalDue = adherence.totalDue || 0;
+            const adherenceByDomain = analyticsData.adherence_by_domain || {};
 
-            if (totalDue === 0) {
+            // Convert domain adherence to chart data
+            const domains = Object.entries(adherenceByDomain)
+                .map(([domain, data]) => ({
+                    domain: domain,
+                    rate: data.rate || 0,
+                    dueReviews: data.dueReviews || 0,
+                    completedReviews: data.completedReviews || 0
+                }));
+
+            if (domains.length === 0) {
                 ctx.parentElement.innerHTML = '<div class="no-data">No review data yet. Reviews will appear here once scheduled.</div>';
                 return;
             }
 
             new Chart(ctx, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['On Time', 'Late'],
+                    labels: domains.map(d => d.domain),
                     datasets: [{
-                        data: [onTime, 100 - onTime],
-                        backgroundColor: [
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(200, 200, 200, 0.3)'
-                        ],
-                        borderWidth: 0
+                        label: 'Adherence Rate (%)',
+                        data: domains.map(d => d.rate),
+                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: {
-                            display: true,
-                            text: `${totalDue} reviews due (${adherence.classification || 'N/A'})`
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = domains[idx];
+                                    return [
+                                        `Adherence: ${d.rate.toFixed(1)}%`,
+                                        `Completed: ${d.completedReviews}`,
+                                        `Due: ${d.dueReviews}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Adherence %' }
                         }
                     }
                 }

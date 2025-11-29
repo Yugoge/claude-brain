@@ -459,6 +459,7 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
 
     # Build connection counts for each node (count unique related Rems, not total edges)
     # This counts unique neighbors connected via typed, regular, and inferred links
+    # EXCLUDE SELF from neighbors count
     connection_counts = {}
 
     for concept_id in concept_metadata.keys():
@@ -467,29 +468,29 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
         # Get link info for this concept
         link_info = links_data.get(concept_id, {})
 
-        # Collect outgoing neighbors
+        # Collect outgoing neighbors (EXCLUDE SELF)
         for typed_link in link_info.get('typed_links_to', []):
             target = typed_link.get('to') if isinstance(typed_link, dict) else typed_link
-            if target and target in concept_metadata:
+            if target and target in concept_metadata and target != concept_id:
                 unique_neighbors.add(target)
 
         for target in link_info.get('links_to', []):
-            if target and target in concept_metadata:
+            if target and target in concept_metadata and target != concept_id:
                 unique_neighbors.add(target)
 
         for inferred_item in link_info.get('inferred_links_to', []):
             target = inferred_item.get('to') if isinstance(inferred_item, dict) else inferred_item
-            if target and target in concept_metadata:
+            if target and target in concept_metadata and target != concept_id:
                 unique_neighbors.add(target)
 
-        # Collect incoming neighbors
+        # Collect incoming neighbors (EXCLUDE SELF)
         for source in link_info.get('linked_from', []):
-            if source and source in concept_metadata:
+            if source and source in concept_metadata and source != concept_id:
                 unique_neighbors.add(source)
 
         for typed_link_from in link_info.get('typed_linked_from', []):
             source = typed_link_from.get('from') if isinstance(typed_link_from, dict) else typed_link_from
-            if source and source in concept_metadata:
+            if source and source in concept_metadata and source != concept_id:
                 unique_neighbors.add(source)
 
         connection_counts[concept_id] = len(unique_neighbors)
