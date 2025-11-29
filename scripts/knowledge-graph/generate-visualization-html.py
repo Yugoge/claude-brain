@@ -52,9 +52,12 @@ def main():
     print(f"✓ Visualization generated successfully")
     print(f"  Nodes: {graph_data['metadata']['nodeCount']}")
     print(f"  Edges: {graph_data['metadata']['edgeCount']}")
-    print(f"  Clusters: {graph_data['metadata']['clusters']}")
+    domain_dist = graph_data['metadata'].get('domainDistribution', {})
+    if domain_dist:
+        domain_count = len(domain_dist)
+        print(f"  Domains: {domain_count} ({', '.join(f'{d}({c})' for d, c in sorted(domain_dist.items(), key=lambda x: -x[1])[:3])})")
     if graph_data['metadata'].get('domainFilter'):
-        print(f"  Domain: {graph_data['metadata']['domainFilter']}")
+        print(f"  Domain filter: {graph_data['metadata']['domainFilter']}")
     print(f"  Output: {output_path.absolute()}")
     print(f"\nOpen in browser: file://{output_path.absolute()}")
 

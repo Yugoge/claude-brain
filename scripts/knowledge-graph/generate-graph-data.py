@@ -174,39 +174,26 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
     return metadata
 
 
-def calculate_pagerank(graph: nx.Graph) -> dict:
-    """Calculate PageRank for each node"""
-    if len(graph.nodes()) == 0:
-        return {}
-    try:
-        return nx.pagerank(graph, alpha=0.85)
-    except:
-        # Return uniform distribution if PageRank fails
-        return {node: 1.0 / len(graph.nodes()) for node in graph.nodes()}
+def load_review_stats() -> dict:
+    """Load review statistics from schedule.json and history.json"""
+    review_stats = {}
 
+    # Load schedule for review counts
+    schedule_path = Path('.review/schedule.json')
+    if schedule_path.exists():
+        with open(schedule_path, 'r', encoding='utf-8') as f:
+            schedule = json.load(f)
+            concepts = schedule.get('concepts', {})
+            for rem_id, rem_data in concepts.items():
+                fsrs_state = rem_data.get('fsrs_state', {})
+                review_stats[rem_id] = {
+                    'review_count': fsrs_state.get('reviews', 0),
+                    'stability': round(fsrs_state.get('stability', 0), 2),
+                    'difficulty': round(fsrs_state.get('difficulty', 0), 2),
+                    'last_reviewed': rem_data.get('last_reviewed', '')
+                }
 
-def detect_communities(graph: nx.Graph) -> dict:
-    """Detect communities using Louvain algorithm"""
-    if len(graph.nodes()) == 0:
-        return {}
-
-    try:
-        from networkx.algorithms import community
-        communities = community.louvain_communities(graph)
-        node_to_community = {}
-        for idx, comm in enumerate(communities):
-            for node in comm:
-                node_to_community[node] = idx
-        return node_to_community
-    except ImportError:
-        print("⚠ Warning: Louvain algorithm not available, using connected components")
-        # Fallback to connected components
-        components = list(nx.connected_components(graph))
-        node_to_community = {}
-        for idx, comp in enumerate(components):
-            for node in comp:
-                node_to_community[node] = idx
-        return node_to_community
+    return review_stats
 
 
 def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, domain_filter: str = None) -> dict:
@@ -214,6 +201,9 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
 
     links_data = backlinks_data.get('links', {})
     concepts_data = backlinks_data.get('concepts', {})
+
+    # Load review statistics
+    review_stats = load_review_stats()
 
     # Filter by domain if specified
     if domain_filter:
@@ -230,26 +220,36 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
                 filtered_links[concept_id] = links_data[concept_id]
         links_data = filtered_links
 
-    # Build NetworkX graph for analysis
+    # Build NetworkX graph for calculating degree (connections)
     G = nx.Graph()
 
     # Add all nodes first
     for concept_id in concept_metadata.keys():
         G.add_node(concept_id)
 
-    # Add edges from links_to
+    # Add edges from all link types
     for node_id, link_info in links_data.items():
         if node_id not in concept_metadata:
             continue
 
-        links_to = link_info.get('links_to', [])
-        for target in links_to:
+        # Typed links
+        for typed_link in link_info.get('typed_links_to', []):
+            target = typed_link.get('to') if isinstance(typed_link, dict) else typed_link
             if target in concept_metadata:
                 G.add_edge(node_id, target)
 
-    # Calculate metrics
-    pagerank = calculate_pagerank(G) if len(G.nodes()) > 0 else {}
-    communities = detect_communities(G) if len(G.nodes()) > 0 else {}
+        # Regular links
+        for target in link_info.get('links_to', []):
+            if target in concept_metadata:
+                G.add_edge(node_id, target)
+
+        # Inferred links
+        for inferred_item in link_info.get('inferred_links_to', []):
+            target = inferred_item.get('to') if isinstance(inferred_item, dict) else inferred_item
+            if target in concept_metadata:
+                G.add_edge(node_id, target)
+
+    # Calculate degree (number of connections)
     degree = dict(G.degree())
 
     # Domain color mapping (UNESCO ISCED categories)
@@ -272,24 +272,33 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
     nodes = []
     for concept_id, metadata in concept_metadata.items():
         domain = metadata.get('domain', 'generic')
+        isced = metadata.get('isced', '')
+        subdomain = metadata.get('subdomain', '')
         tags = metadata.get('tags', [])
 
         # Get title from concepts_data if available
         title = concepts_data.get(concept_id, {}).get('title', concept_id)
 
-        # Review count (currently 0 as we don't have review data yet)
-        review_count = 0
+        # Get review statistics
+        stats = review_stats.get(concept_id, {})
+        review_count = stats.get('review_count', 0)
+        stability = stats.get('stability', 0)
+        difficulty = stats.get('difficulty', 0)
+        last_reviewed = stats.get('last_reviewed', '')
 
         nodes.append({
             'id': concept_id,
             'label': title,
-            'domain': domain,
+            'isced': isced,
+            'subdomain': subdomain,
+            'domain': domain,  # Keep for backward compatibility
             'color': domain_colors.get(domain, domain_colors['generic']),
             'size': 10 + (3 * (1 + review_count) ** 0.5),  # Logarithmic scaling
             'reviewCount': review_count,
-            'pageRank': pagerank.get(concept_id, 0),
-            'cluster': communities.get(concept_id, 0),
-            'degree': degree.get(concept_id, 0),
+            'stability': stability,
+            'difficulty': difficulty,
+            'lastReviewed': last_reviewed,
+            'connections': degree.get(concept_id, 0),
             'tags': tags,
             'file': metadata.get('file', '')
         })
@@ -390,6 +399,12 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
                     })
                     edge_id_set.add(edge_key)
 
+    # Calculate domain distribution
+    domain_counts = {}
+    for node in nodes:
+        domain = node['domain']
+        domain_counts[domain] = domain_counts.get(domain, 0) + 1
+
     return {
         'nodes': nodes,
         'edges': edges,
@@ -397,7 +412,7 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'nodeCount': len(nodes),
             'edgeCount': len(edges),
             'domainFilter': domain_filter,
-            'clusters': len(set(communities.values())) if communities else 0,
+            'domainDistribution': domain_counts,
             'generated': datetime.now().isoformat()
         }
     }
@@ -468,7 +483,9 @@ def main():
     print(f"✓ Graph data generated successfully")
     print(f"  Nodes: {metadata['nodeCount']}")
     print(f"  Edges: {metadata['edgeCount']}")
-    print(f"  Clusters: {metadata['clusters']}")
+    domain_dist = metadata.get('domainDistribution', {})
+    if domain_dist:
+        print(f"  Domains: {', '.join(f'{d}({c})' for d, c in sorted(domain_dist.items(), key=lambda x: -x[1])[:5])}")
     if args.domain:
         print(f"  Domain filter: {args.domain}")
     print(f"  Output: {output_path}")
