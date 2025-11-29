@@ -144,6 +144,8 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                     isced = ''
                     subdomain = ''
                     tags = []
+                    title = None  # Extract title from H1
+                    source = None  # Extract source path from frontmatter
 
                     for line in frontmatter.split('\n'):
                         line = line.strip()
@@ -153,12 +155,21 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                             isced = line.split(':', 1)[1].strip()
                         elif line.startswith('subdomain:'):
                             subdomain = line.split(':', 1)[1].strip()
+                        elif line.startswith('source:'):
+                            source = line.split(':', 1)[1].strip()
                         elif line.startswith('tags:'):
                             # Parse tags array
                             tags_str = line.split(':', 1)[1].strip()
                             if tags_str.startswith('[') and tags_str.endswith(']'):
                                 tags_str = tags_str[1:-1]
                                 tags = [t.strip().strip('"\'') for t in tags_str.split(',') if t.strip()]
+
+                    # Extract title from first H1 in body
+                    for line in body.split('\n'):
+                        line = line.strip()
+                        if line.startswith('# '):
+                            title = line[2:].strip()
+                            break
 
                     if rem_id:
                         file_path = str(concept_file.relative_to(knowledge_base_path.parent))
@@ -183,8 +194,21 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                         }
                         domain = extract_isced_domain(file_path, frontmatter_data)
 
-                        # Extract conversation source and filter content
+                        # Create conversation link from frontmatter source
                         conversation_link = None
+                        if source and source.startswith('chats/'):
+                            # Extract title from source filename
+                            source_name = Path(source).stem
+                            # Convert filename to title (e.g., "understanding-vix-delta..." -> "Understanding VIX Delta...")
+                            conv_title = source_name.replace('-conversation-', ' - ').replace('-', ' ').title()
+                            conversation_link = {
+                                'title': conv_title,
+                                'path': source,
+                                'date': ''  # Could extract from filename if needed
+                            }
+
+                        # Also check body for additional conversation source (legacy format)
+                        body_conversation_link = None
                         content_lines = []
                         skip_section = False
                         in_conv_source = False
@@ -201,8 +225,8 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                                 skip_section = False
                                 in_conv_source = False
 
-                            # Extract conversation link from source section
-                            if in_conv_source and '> See:' in line:
+                            # Extract conversation link from source section (legacy format)
+                            if in_conv_source and ('> See:' in line or '→ See:' in line):
                                 # Extract title and path from markdown link
                                 match = re.search(r'\[([^\]]+)\]\(([^\)]+)\)', line)
                                 if match:
@@ -210,7 +234,7 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                                     conv_path = match.group(2)
                                     # Normalize path (remove ../../.. prefix)
                                     conv_path = conv_path.replace('../', '')
-                                    conversation_link = {
+                                    body_conversation_link = {
                                         'title': conv_title,
                                         'path': conv_path,
                                         'date': ''  # Can extract from filename if needed
@@ -221,14 +245,18 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
 
                         filtered_content = '\n'.join(content_lines).strip()
 
+                        # Prefer frontmatter source, fallback to body conversation link
+                        final_conversation = conversation_link or body_conversation_link
+
                         metadata[rem_id] = {
+                            'title': title or rem_id,  # Use title if available, fallback to rem_id
                             'domain': domain,
                             'isced': isced,
                             'subdomain': subdomain,
                             'tags': tags,
                             'file': file_path,
                             'content': filtered_content,  # EMBED FILTERED CONTENT
-                            'conversation': conversation_link  # ADD CONVERSATION LINK
+                            'conversation': final_conversation  # ADD CONVERSATION LINK
                         }
         except Exception as e:
             print(f"⚠ Warning: Could not parse {concept_file}: {e}", file=sys.stderr)
@@ -308,37 +336,40 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
                 filtered_links[concept_id] = links_data[concept_id]
         links_data = filtered_links
 
-    # Build NetworkX graph for calculating degree (connections)
-    G = nx.Graph()
+    # Build edge counts for each node (total edges, not unique neighbors)
+    # This counts all typed, regular, and inferred links (both incoming and outgoing)
+    edge_counts = {concept_id: 0 for concept_id in concept_metadata.keys()}
 
-    # Add all nodes first
-    for concept_id in concept_metadata.keys():
-        G.add_node(concept_id)
-
-    # Add edges from all link types
+    # First pass: count outgoing edges
     for node_id, link_info in links_data.items():
         if node_id not in concept_metadata:
             continue
 
-        # Typed links
-        for typed_link in link_info.get('typed_links_to', []):
-            target = typed_link.get('to') if isinstance(typed_link, dict) else typed_link
-            if target in concept_metadata:
-                G.add_edge(node_id, target)
+        typed_count = len(link_info.get('typed_links_to', []))
+        regular_count = len(link_info.get('links_to', []))
+        inferred_count = len(link_info.get('inferred_links_to', []))
 
-        # Regular links
+        edge_counts[node_id] += typed_count + regular_count + inferred_count
+
+    # Second pass: count incoming edges (edges pointing to this node)
+    for node_id, link_info in links_data.items():
+        if node_id not in concept_metadata:
+            continue
+
+        # For each outgoing edge, increment the target's incoming count
+        for target_link in link_info.get('typed_links_to', []):
+            target = target_link.get('to') if isinstance(target_link, dict) else target_link
+            if target in edge_counts:
+                edge_counts[target] += 1
+
         for target in link_info.get('links_to', []):
-            if target in concept_metadata:
-                G.add_edge(node_id, target)
+            if target in edge_counts:
+                edge_counts[target] += 1
 
-        # Inferred links
         for inferred_item in link_info.get('inferred_links_to', []):
             target = inferred_item.get('to') if isinstance(inferred_item, dict) else inferred_item
-            if target in concept_metadata:
-                G.add_edge(node_id, target)
-
-    # Calculate degree (number of connections)
-    degree = dict(G.degree())
+            if target in edge_counts:
+                edge_counts[target] += 1
 
     # Domain color mapping (UNESCO ISCED categories)
     domain_colors = {
@@ -364,8 +395,8 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
         subdomain = metadata.get('subdomain', '')
         tags = metadata.get('tags', [])
 
-        # Get title from concepts_data if available
-        title = concepts_data.get(concept_id, {}).get('title', concept_id)
+        # Get title from metadata (extracted from H1) or fallback to backlinks then concept_id
+        title = metadata.get('title') or concepts_data.get(concept_id, {}).get('title', concept_id)
 
         # Get review statistics
         stats = review_stats.get(concept_id, {})
@@ -386,7 +417,7 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'stability': stability,
             'difficulty': difficulty,
             'lastReviewed': last_reviewed,
-            'connections': degree.get(concept_id, 0),
+            'connections': edge_counts.get(concept_id, 0),
             'tags': tags,
             'file': metadata.get('file', ''),
             'content': metadata.get('content', ''),  # EMBED CONTENT HERE

@@ -162,11 +162,15 @@ cat > /tmp/candidate_rems.json << 'EOF'
   {
     "rem_id": "{subdomain}-{concept-slug}",
     "title": "{Concept Title}",
-    "core_points": ["{point1}", "{point2}", "{point3}"]
+    "core_points": ["{point1}", "{point2}", "{point3}"],
+    "usage_scenario": "",
+    "my_mistakes": []
   }
 ]
 EOF
 ```
+
+**Note**: `usage_scenario` and `my_mistakes` are initially empty. They will be filled by the domain tutor in Step 5.
 
 4. **Validate format immediately** (blocks on errors):
 

@@ -262,7 +262,7 @@
                 .filter(([key]) => key !== 'error' && key !== 'metadata')
                 .slice(0, 5)
                 .map(([id, data]) => ({
-                    label: id.split('-').slice(-3).join('-').replace('.md', ''),
+                    label: id,  // Use full concept ID (will be improved with title lookup)
                     data: data.curve ? data.curve.map(d => d.retention) : []
                 }));
 
@@ -303,35 +303,42 @@
         function createVelocityChart() {
             const ctx = document.getElementById('velocityChart');
             const velocity = analyticsData.learning_velocity || {};
-            const weekly = velocity.weekly_data || [];
 
-            if (weekly.length === 0) {
-                ctx.parentElement.innerHTML = '<div class="no-data">No velocity data</div>';
+            // Simple bar showing total concepts mastered and velocity
+            const conceptsMastered = velocity.conceptsMastered || 0;
+            const vel = velocity.velocity || 0;
+
+            if (conceptsMastered === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No velocity data yet. Complete learning sessions to track velocity.</div>';
                 return;
             }
 
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: weekly.map(w => `Week ${w.week}`),
+                    labels: ['Current Period'],
                     datasets: [{
                         label: 'Concepts Mastered',
-                        data: weekly.map(w => w.concepts_mastered || 0),
+                        data: [conceptsMastered],
                         backgroundColor: 'rgba(102, 126, 234, 0.7)',
                         borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 1
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `Velocity: ${vel.toFixed(2)} concepts/hour`
+                        }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Concepts' }
+                            title: { display: true, text: 'Concepts Mastered' }
                         }
                     }
                 }
@@ -341,7 +348,13 @@
         function createAdherenceChart() {
             const ctx = document.getElementById('adherenceChart');
             const adherence = analyticsData.review_adherence || {};
-            const onTime = adherence.on_time_percentage || 0;
+            const onTime = adherence.adherence || 0;
+            const totalDue = adherence.totalDue || 0;
+
+            if (totalDue === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No review data yet. Reviews will appear here once scheduled.</div>';
+                return;
+            }
 
             new Chart(ctx, {
                 type: 'doughnut',
@@ -360,7 +373,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: `${totalDue} reviews due (${adherence.classification || 'N/A'})`
+                        }
                     }
                 }
             });
@@ -369,11 +386,11 @@
         function createTimeDistributionChart() {
             const ctx = document.getElementById('timeChart');
             const time = analyticsData.time_distribution || {};
-            const domains = time.by_domain || {};
+            const domains = time.byDomain || {};  // Fixed: byDomain not by_domain
 
             const entries = Object.entries(domains);
             if (entries.length === 0) {
-                ctx.parentElement.innerHTML = '<div class="no-data">No time data</div>';
+                ctx.parentElement.innerHTML = '<div class="no-data">No time data yet. Learning sessions will appear here.</div>';
                 return;
             }
 
@@ -392,7 +409,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: `Total: ${time.totalHours || 0} hours`
+                        }
                     }
                 }
             });
@@ -401,49 +422,53 @@
         function createActivityHeatmap() {
             const ctx = document.getElementById('heatmapChart');
             const streak = analyticsData.streak_tracking || {};
-            const calendar = streak.calendar || [];
 
-            if (calendar.length === 0) {
-                ctx.parentElement.innerHTML = '<div class="no-data">No activity data</div>';
+            // Show summary stats instead of calendar (since calendar field not available)
+            const currentStreak = streak.currentStreak || 0;
+            const longestStreak = streak.longestStreak || 0;
+            const totalActiveDays = streak.totalActiveDays || 0;
+            const lastActivity = streak.lastActivity || 'Never';
+
+            if (totalActiveDays === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No activity tracked yet. Start learning to see your streak!</div>';
                 return;
             }
 
-            // Create bar chart for daily activity (last 30 days)
-            const last30 = calendar.slice(-30);
-
+            // Create simple bar chart showing streak metrics
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: last30.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    labels: ['Current Streak', 'Longest Streak', 'Total Active Days'],
                     datasets: [{
-                        label: 'Reviews Completed',
-                        data: last30.map(d => d.review_count || 0),
-                        backgroundColor: last30.map(d => {
-                            const count = d.review_count || 0;
-                            if (count === 0) return 'rgba(200, 200, 200, 0.3)';
-                            if (count < 3) return 'rgba(102, 126, 234, 0.4)';
-                            if (count < 6) return 'rgba(102, 126, 234, 0.6)';
-                            return 'rgba(102, 126, 234, 0.9)';
-                        }),
-                        borderWidth: 0
+                        label: 'Days',
+                        data: [currentStreak, longestStreak, totalActiveDays],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.6)',
+                            'rgba(46, 204, 113, 0.6)',
+                            'rgba(241, 196, 15, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(102, 126, 234, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(241, 196, 15, 1)'
+                        ],
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `Last Activity: ${lastActivity}`
+                        }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Reviews' }
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
+                            title: { display: true, text: 'Days' }
                         }
                     }
                 }

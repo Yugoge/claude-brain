@@ -1555,7 +1555,10 @@ def extract_and_save(jsonl_file: Path, quiet: bool = False, first_message: str =
 
         if not conversation['messages']:
             if not quiet:
-                print(f"⚠️  Skipping {jsonl_file.name}: No messages found")
+                print(f"⚠️  Skipping {jsonl_file.name}: No messages found", file=sys.stderr)
+            else:
+                # In quiet mode, still report to stderr (orchestrator checks this)
+                print(f"⚠️  No messages found in {jsonl_file.name}", file=sys.stderr)
             return None
 
         # Generate output filename

@@ -6,9 +6,13 @@ Early validation to prevent wrong data format from propagating through pipeline.
 
 Validates:
 - Required fields: rem_id, title, core_points
-- Forbidden fields: content (common mistake)
-- core_points must be array, not string
+- Optional fields: domain, isced (allowed but not required)
+- Forbidden fields: content, source, created, subdomain, output_path (auto-generated)
+- core_points must be array (1-3 items), not string
 - rem_id must be kebab-case
+- No duplicate rem_ids
+- No excessive nesting or markdown in core_points
+- typed_relations (if present) must follow RELATION_TYPES.md standard
 
 Usage:
     source venv/bin/activate && python scripts/archival/validate_extraction_format.py \
@@ -24,7 +28,7 @@ import sys
 import re
 import argparse
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any, Set
 
 
 def validate_rem_id(rem_id: str) -> Tuple[bool, str]:
