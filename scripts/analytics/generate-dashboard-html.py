@@ -56,10 +56,19 @@ def main():
 
     # Embed analytics data
     analytics_data_js = f"const analyticsData = {json.dumps(analytics_data, indent=2)};"
+
+    # Replace placeholder (handle both old and new format)
     html = template.replace(
         '// ANALYTICS_DATA_PLACEHOLDER\n        const analyticsData = null;  // Will be replaced by actual data',
         analytics_data_js
     )
+
+    # Fallback: Also try single-line format
+    if 'const analyticsData = null;' in html:
+        html = html.replace(
+            'const analyticsData = null;  // Will be replaced by actual data',
+            analytics_data_js
+        )
 
     # Write output
     output_path = Path(args.output)

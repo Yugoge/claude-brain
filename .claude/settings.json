@@ -4,7 +4,8 @@
     "REVIEW_GATE_COMMANDS": "/learn,/ask,/fact-check",
     "REVIEW_GATE_THRESHOLD": "1",
     "ANALYTICS_PERIOD": "90",
-    "ANALYTICS_DOMAIN": "finance"
+    "ANALYTICS_DOMAIN": "finance",
+    "NETLIFY_AUTH_TOKEN": "nfp_TGhirwYRmVJDWbKRL5eVJ5HxtDgkyMz3aaed"
   },
   "permissions": {
     "allow": [

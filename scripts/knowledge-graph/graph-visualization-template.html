@@ -262,12 +262,16 @@
             .force('center', d3.forceCenter(width / 2, height / 2))
             .force('collision', d3.forceCollide().radius(d => d.size + 5));
 
-        // Draw links
+        // Draw links with colors and styles
         const link = g.append('g')
             .selectAll('line')
             .data(graphData.edges)
             .join('line')
-            .attr('class', d => d.bidirectional ? 'link bidirectional' : 'link');
+            .attr('class', d => d.bidirectional ? 'link bidirectional' : 'link')
+            .attr('stroke', d => d.color || '#999')
+            .attr('stroke-width', d => (d.weight || 1) * 1.5)
+            .attr('stroke-dasharray', d => d.dashed ? '5,5' : '0')
+            .attr('stroke-opacity', d => d.dashed ? 0.4 : 0.6);
 
         // Draw nodes
         const node = g.append('g')
@@ -356,8 +360,8 @@
             label.attr('opacity', 1);
         }
 
-        // Show details panel
-        function showDetails(d) {
+        // Show details panel with enhanced content
+        async function showDetails(d) {
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
 
@@ -365,18 +369,149 @@
                 ? d.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
                 : '<span class="tag">No tags</span>';
 
+            // Find typed relations
+            const outgoingRelations = graphData.edges
+                .filter(e => e.source.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
+                .map(e => {
+                    const targetNode = graphData.nodes.find(n => n.id === e.target.id);
+                    const label = targetNode ? targetNode.label : e.target.id;
+                    return `<li><strong>${e.type}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
+                })
+                .join('');
+
+            const incomingRelations = graphData.edges
+                .filter(e => e.target.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
+                .map(e => {
+                    const sourceNode = graphData.nodes.find(n => n.id === e.source.id);
+                    const label = sourceNode ? sourceNode.label : e.source.id;
+                    return `<li><strong>${e.type}:</strong> <a href="#" onclick="focusNode('${e.source.id}'); return false;">${label}</a></li>`;
+                })
+                .join('');
+
+            const relationsHtml = (outgoingRelations || incomingRelations)
+                ? `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                     <p><strong>Typed Relations:</strong></p>
+                     ${outgoingRelations ? `<ul style="margin-left: 15px; margin-bottom: 10px;">${outgoingRelations}</ul>` : ''}
+                     ${incomingRelations ? `<p style="margin-top: 10px;"><em>Incoming:</em></p><ul style="margin-left: 15px;">${incomingRelations}</ul>` : ''}
+                   </div>`
+                : '';
+
             content.innerHTML = `
                 <h3>${d.label}</h3>
-                <p><strong>Domain:</strong> ${d.domain}</p>
+                <p><strong>Domain:</strong> <span style="color: ${d.color}; font-weight: bold;">${d.domain}</span></p>
                 <p><strong>Review Count:</strong> ${d.reviewCount}</p>
                 <p><strong>Connections:</strong> ${d.degree}</p>
                 <p><strong>PageRank:</strong> ${d.pageRank.toFixed(4)}</p>
                 <p><strong>Cluster:</strong> ${d.cluster}</p>
                 <p><strong>Tags:</strong><br>${tagsHtml}</p>
-                <p><strong>File:</strong> ${d.file}</p>
+                ${relationsHtml}
+                <div id="rem-content-container" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <p><strong>📝 Content:</strong></p>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
+                </div>
+                <div id="conversations-container" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <p><strong>💬 Conversations:</strong></p>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
+                </div>
+                <p style="margin-top: 15px; font-size: 11px; color: #999;"><code>${d.file}</code></p>
             `;
 
             panel.classList.add('open');
+
+            // Load Rem content asynchronously
+            loadRemContent(d);
+            // Load conversations asynchronously
+            loadConversations(d);
+        }
+
+        async function loadRemContent(node) {
+            const container = document.getElementById('rem-content-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch(node.file);
+                if (!response.ok) throw new Error('File not found');
+
+                const text = await response.text();
+
+                // Extract Core Memory Points section
+                const coreMatch = text.match(/## Core Memory Points\n\n([\s\S]*?)(?=\n##|$)/);
+                const usageMatch = text.match(/## Usage Scenario\n\n([\s\S]*?)(?=\n##|$)/);
+
+                let contentHtml = '';
+                if (coreMatch) {
+                    const corePoints = coreMatch[1].trim();
+                    contentHtml += `<div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 12px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                        <strong>Core Points:</strong><br>
+                        ${corePoints.replace(/\n/g, '<br>')}
+                    </div>`;
+                }
+
+                if (usageMatch) {
+                    const usage = usageMatch[1].trim();
+                    contentHtml += `<div style="background: #f9f9f9; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 12px; line-height: 1.6;">
+                        <strong>Usage:</strong><br>
+                        ${usage.replace(/\n/g, '<br>')}
+                    </div>`;
+                }
+
+                if (!contentHtml) {
+                    contentHtml = '<div style="font-size: 12px; color: #999; margin-top: 5px;">No content preview available</div>';
+                }
+
+                container.innerHTML = `<p><strong>📝 Content:</strong></p>${contentHtml}`;
+
+            } catch (error) {
+                container.innerHTML = `<p><strong>📝 Content:</strong></p><div style="font-size: 12px; color: #e74c3c; margin-top: 5px;">Failed to load content</div>`;
+            }
+        }
+
+        async function loadConversations(node) {
+            const container = document.getElementById('conversations-container');
+            if (!container) return;
+
+            try {
+                const response = await fetch('chats/index.json');
+                if (!response.ok) throw new Error('Index not found');
+
+                const index = await response.json();
+                const entries = index.entries || [];
+
+                // Find conversations that mention this rem
+                const related = entries.filter(entry => {
+                    const concepts = entry.metadata?.extracted_concepts || [];
+                    return concepts.includes(node.id);
+                });
+
+                if (related.length === 0) {
+                    container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No related conversations</div>`;
+                    return;
+                }
+
+                const conversationsHtml = related.map(conv => `
+                    <div style="margin: 8px 0; padding: 8px; background: #f9f9f9; border-radius: 4px;">
+                        <a href="${conv.path}" target="_blank" style="color: #3498db; text-decoration: none; font-size: 12px; font-weight: 500;">
+                            ${conv.title || 'Untitled'}
+                        </a>
+                        <div style="font-size: 11px; color: #999; margin-top: 3px;">${conv.date || 'No date'}</div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `<p><strong>💬 Conversations (${related.length}):</strong></p>${conversationsHtml}`;
+
+            } catch (error) {
+                container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">Index unavailable</div>`;
+            }
+        }
+
+        // Helper to focus on a specific node
+        function focusNode(nodeId) {
+            const node = graphData.nodes.find(n => n.id === nodeId);
+            if (node) {
+                showDetails(node);
+                // Optional: zoom and center on the node
+                // TODO: implement smooth zoom to node
+            }
         }
 
         // Close details panel

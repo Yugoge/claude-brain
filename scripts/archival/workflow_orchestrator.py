@@ -24,9 +24,35 @@ sys.path.append(str(ROOT / "scripts"))
 from archival.get_domain_concepts import extract_domain_concepts, load_backlinks
 
 
+def validate_rem_id(rem_id):
+    """
+    Validate rem_id format (kebab-case, lowercase, no spaces).
+
+    Returns: (is_valid, error_message)
+    """
+    import re
+
+    if not rem_id:
+        return (False, "rem_id is empty")
+
+    if ' ' in rem_id:
+        return (False, f"contains spaces (use hyphens)")
+
+    if rem_id != rem_id.lower():
+        return (False, f"contains uppercase (use lowercase)")
+
+    if not re.match(r'^[a-z0-9]+(-[a-z0-9]+)*$', rem_id):
+        return (False, f"invalid format (use kebab-case: a-z, 0-9, hyphens only)")
+
+    if len(rem_id) > 100:
+        return (False, f"too long (max 100 chars, got {len(rem_id)})")
+
+    return (True, None)
+
+
 def load_candidate_rems(file_path=None, json_string=None):
     """
-    Load candidate Rems from JSON file or inline JSON string.
+    Load and validate candidate Rems from JSON file or inline JSON string.
 
     Args:
         file_path: Path to JSON file (legacy)
@@ -35,12 +61,25 @@ def load_candidate_rems(file_path=None, json_string=None):
     Returns: List of candidate Rems
     """
     if json_string:
-        return json.loads(json_string)
+        rems = json.loads(json_string)
     elif file_path:
         with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            rems = json.load(f)
     else:
         raise ValueError("Must provide either file_path or json_string")
+
+    # Validate rem_id format for all candidate Rems
+    errors = []
+    for i, rem in enumerate(rems):
+        rem_id = rem.get("rem_id", "")
+        is_valid, error_msg = validate_rem_id(rem_id)
+        if not is_valid:
+            errors.append(f"Rem #{i+1} '{rem_id}': {error_msg}")
+
+    if errors:
+        raise ValueError(f"Invalid candidate Rems:\n" + "\n".join(f"  - {e}" for e in errors))
+
+    return rems
 
 
 def build_tutor_prompt(domain, existing_concepts, candidate_rems):

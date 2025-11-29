@@ -28,6 +28,88 @@ def load_backlinks(path: str) -> dict:
     return data
 
 
+def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
+    """
+    Extract domain from ISCED path in file path or frontmatter
+
+    Priority:
+    1. ISCED path from frontmatter (04-business-... -> business-law)
+    2. File path pattern (knowledge-base/04-... -> business-law)
+    3. Subdomain mapping (equity-derivatives -> business-law)
+
+    Args:
+        file_path: Relative file path
+        frontmatter_data: Parsed frontmatter dict with 'isced' and 'subdomain'
+
+    Returns:
+        Domain name (business-law, ict, language, etc.)
+    """
+    import re
+
+    # ISCED to Domain mapping
+    ISCED_TO_DOMAIN = {
+        '01': 'education',
+        '02': 'humanities',
+        '03': 'social-sciences',
+        '04': 'business-law',
+        '05': 'natural-sciences',
+        '06': 'ict',
+        '07': 'engineering',
+        '08': 'agriculture',
+        '09': 'health',
+        '10': 'services'
+    }
+
+    # Priority 1: Check frontmatter ISCED field
+    isced = frontmatter_data.get('isced', '')
+    if isced:
+        # Extract first 2 digits (04-business-... -> 04)
+        match = re.match(r'(\d{2})', isced)
+        if match:
+            code = match.group(1)
+            domain = ISCED_TO_DOMAIN.get(code)
+            if domain:
+                return domain
+
+    # Priority 2: Extract from file path
+    match = re.search(r'knowledge-base/(\d{2})-', file_path)
+    if match:
+        code = match.group(1)
+        domain = ISCED_TO_DOMAIN.get(code)
+        if domain:
+            return domain
+
+    # Priority 3: Subdomain mapping (fallback)
+    subdomain = frontmatter_data.get('subdomain', '').lower()
+    subdomain_mapping = {
+        'equity': 'business-law',
+        'fixed-income': 'business-law',
+        'derivatives': 'business-law',
+        'fx': 'business-law',
+        'commodities': 'business-law',
+        'credit': 'business-law',
+        'rates': 'business-law',
+        'finance': 'business-law',
+        'banking': 'business-law',
+        'economics': 'social-sciences',
+        'python': 'ict',
+        'csharp': 'ict',
+        'javascript': 'ict',
+        'programming': 'ict',
+        'software': 'ict',
+        'french': 'language',
+        'english': 'language',
+        'chinese': 'language',
+        'spanish': 'language'
+    }
+
+    for keyword, domain in subdomain_mapping.items():
+        if keyword in subdomain:
+            return domain
+
+    return 'generic'
+
+
 def load_concept_metadata(knowledge_base_path: Path) -> dict:
     """Load metadata from concept files"""
     metadata = {}
@@ -49,30 +131,44 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
 
                     # Simple YAML parsing for needed fields
                     rem_id = None
-                    domain = 'generic'
+                    isced = ''
+                    subdomain = ''
                     tags = []
 
                     for line in frontmatter.split('\n'):
                         line = line.strip()
                         if line.startswith('rem_id:'):
                             rem_id = line.split(':', 1)[1].strip()
-                        elif line.startswith('domain:'):
-                            domain = line.split(':', 1)[1].strip()
+                        elif line.startswith('isced:'):
+                            isced = line.split(':', 1)[1].strip()
+                        elif line.startswith('subdomain:'):
+                            subdomain = line.split(':', 1)[1].strip()
                         elif line.startswith('tags:'):
                             # Parse tags array
                             tags_str = line.split(':', 1)[1].strip()
                             if tags_str.startswith('[') and tags_str.endswith(']'):
                                 tags_str = tags_str[1:-1]
-                                tags = [t.strip().strip('"\'') for t in tags_str.split(',')]
+                                tags = [t.strip().strip('"\'') for t in tags_str.split(',') if t.strip()]
 
                     if rem_id:
+                        file_path = str(concept_file.relative_to(knowledge_base_path.parent))
+
+                        # Extract domain using new function
+                        frontmatter_data = {
+                            'isced': isced,
+                            'subdomain': subdomain
+                        }
+                        domain = extract_isced_domain(file_path, frontmatter_data)
+
                         metadata[rem_id] = {
                             'domain': domain,
+                            'isced': isced,
+                            'subdomain': subdomain,
                             'tags': tags,
-                            'file': str(concept_file.relative_to(knowledge_base_path.parent))
+                            'file': file_path
                         }
         except Exception as e:
-            print(f"⚠ Warning: Could not parse {concept_file}: {e}")
+            print(f"⚠ Warning: Could not parse {concept_file}: {e}", file=sys.stderr)
             continue
 
     return metadata
@@ -158,14 +254,18 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
 
     # Domain color mapping (UNESCO ISCED categories)
     domain_colors = {
-        'finance': '#3498db',      # Blue
-        'programming': '#2ecc71',   # Green
-        'language': '#e74c3c',      # Red
-        'science': '#9b59b6',       # Purple
-        'arts': '#f39c12',          # Orange
-        'mathematics': '#1abc9c',   # Teal
-        'social': '#34495e',        # Dark Gray
-        'generic': '#95a5a6'        # Light Gray
+        'business-law': '#3498db',      # Blue (04 - Business, Law, Finance)
+        'ict': '#2ecc71',               # Green (06 - Programming, Software)
+        'language': '#e74c3c',          # Red (09 - Languages, Humanities)
+        'health': '#9b59b6',            # Purple (09 - Health, Medicine)
+        'humanities': '#f39c12',        # Orange (02 - Arts, History)
+        'natural-sciences': '#1abc9c',  # Teal (05 - Physics, Chemistry, Math)
+        'social-sciences': '#34495e',   # Dark Gray (03 - Economics, Politics)
+        'education': '#e67e22',         # Dark Orange (01 - Education, Pedagogy)
+        'engineering': '#16a085',       # Dark Teal (07 - Engineering)
+        'agriculture': '#27ae60',       # Forest Green (08 - Agriculture)
+        'services': '#95a5a6',          # Light Gray (10 - Services)
+        'generic': '#bdc3c7'            # Very Light Gray (Uncategorized)
     }
 
     # Transform nodes
@@ -194,34 +294,101 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'file': metadata.get('file', '')
         })
 
-    # Transform edges
+    # Transform edges (typed + regular + inferred links)
     edges = []
-    edge_set = set()  # Avoid duplicates
+    edge_id_set = set()  # Avoid duplicates (source, target, type)
+
+    def get_link_type_color(link_type: str) -> str:
+        """Map link type to color"""
+        colors = {
+            'prerequisite_of': '#e74c3c',  # Red (strong dependency)
+            'uses': '#3498db',             # Blue (utility)
+            'example_of': '#2ecc71',       # Green (instance)
+            'contrasts_with': '#f39c12',   # Orange (comparison)
+            'synonym': '#9b59b6',          # Purple (equivalence)
+            'component_of': '#1abc9c',     # Teal (composition)
+            'analogous_to': '#e67e22',     # Dark Orange (analogy)
+            'linked-from-example_of': '#2ecc71',  # Green (reversed)
+            'linked-from-used_in': '#3498db',     # Blue (reversed)
+            'reference': '#95a5a6',        # Gray (generic)
+            'inferred': '#d0d0d0'          # Very light gray (inferred)
+        }
+        return colors.get(link_type, '#999')
 
     for source_id, link_info in links_data.items():
         if source_id not in concept_metadata:
             continue
 
+        # 1. Typed links (PRIORITY - Most important relationships)
+        typed_links = link_info.get('typed_links_to', [])
+        for typed_link in typed_links:
+            if isinstance(typed_link, dict):
+                target = typed_link.get('to')
+                link_type = typed_link.get('type', 'reference')
+            else:
+                # Fallback for old format
+                target = typed_link
+                link_type = 'reference'
+
+            if target and target in concept_metadata:
+                edge_key = (source_id, target, link_type)
+                if edge_key not in edge_id_set:
+                    edges.append({
+                        'source': source_id,
+                        'target': target,
+                        'type': link_type,
+                        'weight': 2.5,  # Thicker line for typed relations
+                        'color': get_link_type_color(link_type),
+                        'dashed': False,
+                        'bidirectional': False
+                    })
+                    edge_id_set.add(edge_key)
+
+        # 2. Regular wikilinks (medium priority)
         links_to = link_info.get('links_to', [])
         for target in links_to:
-            if target not in concept_metadata:
-                continue
+            if target and target in concept_metadata:
+                edge_key = (source_id, target, 'reference')
+                if edge_key not in edge_id_set:
+                    # Check if bidirectional
+                    is_bidirectional = False
+                    if target in links_data:
+                        target_links = links_data[target].get('links_to', [])
+                        is_bidirectional = source_id in target_links
 
-            # Create sorted edge key to avoid duplicates
-            edge_key = tuple(sorted([source_id, target]))
-            if edge_key not in edge_set:
-                # Check if bidirectional
-                is_bidirectional = False
-                if target in links_data:
-                    target_links = links_data[target].get('links_to', [])
-                    is_bidirectional = source_id in target_links
+                    edges.append({
+                        'source': source_id,
+                        'target': target,
+                        'type': 'reference',
+                        'weight': 1.0,
+                        'color': get_link_type_color('reference'),
+                        'dashed': False,
+                        'bidirectional': is_bidirectional
+                    })
+                    edge_id_set.add(edge_key)
 
-                edges.append({
-                    'source': source_id,
-                    'target': target,
-                    'bidirectional': is_bidirectional
-                })
-                edge_set.add(edge_key)
+        # 3. Inferred links (lowest priority, shown as dashed lines)
+        inferred_links = link_info.get('inferred_links_to', [])
+        for inferred_item in inferred_links:
+            # Handle both dict format {"to": "target"} and string format
+            if isinstance(inferred_item, dict):
+                target = inferred_item.get('to')
+            else:
+                target = inferred_item
+
+            if target and target in concept_metadata:
+                edge_key = (source_id, target, 'inferred')
+                if edge_key not in edge_id_set:
+                    edges.append({
+                        'source': source_id,
+                        'target': target,
+                        'type': 'inferred',
+                        'weight': 0.5,  # Thinner line
+                        'color': get_link_type_color('inferred'),
+                        'dashed': True,
+                        'bidirectional': False
+                    })
+                    edge_id_set.add(edge_key)
 
     return {
         'nodes': nodes,

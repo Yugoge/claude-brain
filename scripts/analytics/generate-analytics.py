@@ -643,19 +643,52 @@ class AnalyticsEngine:
             period_days: Analysis period in days
 
         Returns:
-            Complete analytics report
+            Complete analytics report (dashboard-compatible format)
         """
+        # Calculate all metrics
+        retention = self.calculate_retention_curves(domain)
+        velocity = self.calculate_learning_velocity(period_days, domain)
+        mastery = self.generate_mastery_heatmap(domain)
+        adherence = self.calculate_review_adherence(period_days)
+        streak = self.calculate_streak()
+        time_inv = self.analyze_time_investment(domain)
+        predictions = self.predict_mastery_timeline()
+
+        # Generate summary stats for dashboard
+        summary = {
+            'current_streak': streak.get('currentStreak', 0),
+            'total_concepts': mastery.get('totalConcepts', 0),
+            'review_adherence': adherence.get('adherence', 0),
+            'avg_velocity': velocity.get('velocity', 0) * 7  # Convert to weekly
+        }
+
         return {
-            'generated': datetime.now().isoformat(),
-            'period': period_days,
-            'domain': domain,
-            'retention': self.calculate_retention_curves(domain),
-            'velocity': self.calculate_learning_velocity(period_days, domain),
-            'mastery': self.generate_mastery_heatmap(domain),
-            'adherence': self.calculate_review_adherence(period_days),
-            'streak': self.calculate_streak(),
-            'timeInvestment': self.analyze_time_investment(domain),
-            'predictions': self.predict_mastery_timeline()
+            # Metadata
+            'metadata': {
+                'generated_at': datetime.now().isoformat(),
+                'period_days': period_days,
+                'domain_filter': domain
+            },
+
+            # Summary cards
+            'summary': summary,
+
+            # Detailed metrics (dashboard-compatible keys)
+            'retention_curves': retention,
+            'learning_velocity': velocity,
+            'mastery_heatmap': mastery,
+            'review_adherence': adherence,
+            'streak_tracking': streak,
+            'time_distribution': time_inv,
+            'predictions': predictions,
+
+            # Legacy keys (for compatibility)
+            'retention': retention,
+            'velocity': velocity,
+            'mastery': mastery,
+            'adherence': adherence,
+            'streak': streak,
+            'timeInvestment': time_inv
         }
 
 

@@ -432,6 +432,24 @@ def generate_analytics():
     else:
         print(f"  ✓ Analytics dashboard → analytics-dashboard.html", file=sys.stderr)
 
+    # Sub-step 5: Deploy to Netlify
+    netlify_token = os.getenv('NETLIFY_AUTH_TOKEN')
+    if netlify_token:
+        print("  Deploying to Netlify...", file=sys.stderr)
+        result = subprocess.run(
+            ['bash', 'scripts/deploy-to-netlify.sh'],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            env={**os.environ, 'NETLIFY_AUTH_TOKEN': netlify_token}
+        )
+        if result.returncode != 0:
+            print(f"  ⚠️  Netlify deployment failed: {result.stderr}", file=sys.stderr)
+        else:
+            print(f"  ✓ Deployed to Netlify → https://knowledge-analytics.netlify.app/", file=sys.stderr)
+    else:
+        print("  ⏭️  Netlify deployment skipped (NETLIFY_AUTH_TOKEN not set)", file=sys.stderr)
+
 
 def display_completion_report(
     metadata: Dict,
@@ -473,6 +491,12 @@ def display_completion_report(
     print(f"   • 30-day statistics updated", file=sys.stderr)
     print(f"   • knowledge-graph.html (graph visualization)", file=sys.stderr)
     print(f"   • analytics-dashboard.html (dashboard)", file=sys.stderr)
+
+    # Show Netlify deployment status if token is set
+    if os.getenv('NETLIFY_AUTH_TOKEN'):
+        print(f"\n🌐 Netlify Deployment:", file=sys.stderr)
+        print(f"   • Dashboard: https://knowledge-analytics.netlify.app/", file=sys.stderr)
+        print(f"   • Graph: https://knowledge-analytics.netlify.app/graph.html", file=sys.stderr)
 
     print(f"\n⏱️  Performance:", file=sys.stderr)
     print(f"   • Total time: {elapsed:.1f}s", file=sys.stderr)
