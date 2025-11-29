@@ -432,84 +432,59 @@
             loadConversations(d);
         }
 
-        async function loadRemContent(node) {
+        function loadRemContent(node) {
             const container = document.getElementById('rem-content-container');
             if (!container) return;
 
-            try {
-                const response = await fetch(node.file);
-                if (!response.ok) throw new Error('File not found');
+            // Use embedded content directly from node
+            const content = node.content || '';
 
-                const text = await response.text();
-
-                // Remove frontmatter
-                let content = text;
-                if (text.startsWith('---')) {
-                    const parts = text.split('---', 3);
-                    if (parts.length >= 3) {
-                        content = parts[2].trim();
-                    }
-                }
-
-                // Convert markdown to simple HTML (basic formatting)
-                let html = content
-                    .replace(/### (.*)/g, '<h4 style="margin-top:12px;margin-bottom:6px;font-size:14px;">$1</h4>')
-                    .replace(/## (.*)/g, '<h3 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:600;">$1</h3>')
-                    .replace(/# (.*)/g, '<h2 style="margin-top:18px;margin-bottom:10px;font-size:16px;font-weight:700;">$1</h2>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:11px;">$1</code>')
-                    .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
-                    .replace(/\n/g, '<br>');
-
-                const contentHtml = `<div style="background: #fafafa; padding: 12px; border-radius: 4px; margin-top: 8px; font-size: 12px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
-                    <p style="margin:8px 0;">${html}</p>
-                </div>`;
-
-                container.innerHTML = `<p><strong>📝 Content:</strong></p>${contentHtml}`;
-
-            } catch (error) {
-                console.error('Failed to load content:', error);
-                container.innerHTML = `<p><strong>📝 Content:</strong></p><div style="font-size: 12px; color: #e74c3c; margin-top: 5px;">Failed to load content (${error.message})</div>`;
+            if (!content) {
+                container.innerHTML = `<p><strong>📝 Content:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No content available</div>`;
+                return;
             }
+
+            // Convert markdown to simple HTML (basic formatting)
+            let html = content
+                .replace(/### (.*)/g, '<h4 style="margin-top:12px;margin-bottom:6px;font-size:14px;">$1</h4>')
+                .replace(/## (.*)/g, '<h3 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:600;">$1</h3>')
+                .replace(/# (.*)/g, '<h2 style="margin-top:18px;margin-bottom:10px;font-size:16px;font-weight:700;">$1</h2>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:11px;">$1</code>')
+                .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
+                .replace(/\n/g, '<br>');
+
+            const contentHtml = `<div style="background: #fafafa; padding: 12px; border-radius: 4px; margin-top: 8px; font-size: 12px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
+                <p style="margin:8px 0;">${html}</p>
+            </div>`;
+
+            container.innerHTML = `<p><strong>📝 Content:</strong></p>${contentHtml}`;
         }
 
-        async function loadConversations(node) {
+        function loadConversations(node) {
             const container = document.getElementById('conversations-container');
             if (!container) return;
 
-            try {
-                const response = await fetch('chats/index.json');
-                if (!response.ok) throw new Error('Index not found');
+            // Use embedded conversations directly from node
+            const conversations = node.conversations || [];
 
-                const index = await response.json();
-                const entries = index.entries || [];
-
-                // Find conversations that mention this rem
-                const related = entries.filter(entry => {
-                    const concepts = entry.metadata?.extracted_concepts || [];
-                    return concepts.includes(node.id);
-                });
-
-                if (related.length === 0) {
-                    container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No related conversations</div>`;
-                    return;
-                }
-
-                const conversationsHtml = related.map(conv => `
-                    <div style="margin: 8px 0; padding: 8px; background: #f9f9f9; border-radius: 4px;">
-                        <a href="${conv.path}" target="_blank" style="color: #3498db; text-decoration: none; font-size: 12px; font-weight: 500;">
-                            ${conv.title || 'Untitled'}
-                        </a>
-                        <div style="font-size: 11px; color: #999; margin-top: 3px;">${conv.date || 'No date'}</div>
-                    </div>
-                `).join('');
-
-                container.innerHTML = `<p><strong>💬 Conversations (${related.length}):</strong></p>${conversationsHtml}`;
-
-            } catch (error) {
-                container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">Index unavailable</div>`;
+            if (conversations.length === 0) {
+                container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No related conversations</div>`;
+                return;
             }
+
+            const conversationsHtml = conversations.map(conv => `
+                <div style="margin: 8px 0; padding: 8px; background: #f9f9f9; border-radius: 4px;">
+                    <span style="color: #3498db; font-size: 12px; font-weight: 500;">
+                        ${conv.title || 'Untitled'}
+                    </span>
+                    <div style="font-size: 11px; color: #999; margin-top: 3px;">${conv.date || 'No date'}</div>
+                    <div style="font-size: 10px; color: #666; margin-top: 2px; font-family: monospace;">${conv.path}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<p><strong>💬 Conversations (${conversations.length}):</strong></p>${conversationsHtml}`;
         }
 
         // Helper to focus on a specific node

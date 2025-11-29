@@ -245,24 +245,29 @@
             document.getElementById('conceptsValue').textContent = summary.total_concepts || 0;
             document.getElementById('adherenceValue').textContent =
                 summary.review_adherence ? `${Math.round(summary.review_adherence)}%` : '0%';
+            const velocity = summary.avg_velocity || 0;
             document.getElementById('velocityValue').textContent =
-                summary.avg_velocity ? summary.avg_velocity.toFixed(1) : '0';
+                velocity === 0 ? 'Building...' : velocity.toFixed(1);
         }
 
         function createRetentionChart() {
             const ctx = document.getElementById('retentionChart');
             const retention = analyticsData.retention_curves || {};
 
+            // Try both old format (concepts) and direct format
+            let retentionData = retention.concepts || retention || {};
+
             // Sample top 5 concepts by retention
-            const concepts = Object.entries(retention.concepts || {})
+            const concepts = Object.entries(retentionData)
+                .filter(([key]) => key !== 'error' && key !== 'metadata')
                 .slice(0, 5)
                 .map(([id, data]) => ({
-                    label: id.split('/').pop().replace('.md', ''),
-                    data: data.curve || []
+                    label: id.split('-').slice(-3).join('-').replace('.md', ''),
+                    data: data.curve ? data.curve.map(d => d.retention) : []
                 }));
 
             if (concepts.length === 0) {
-                ctx.parentElement.innerHTML = '<div class="no-data">No retention data</div>';
+                ctx.parentElement.innerHTML = '<div class="no-data">No retention data available yet. Review some concepts to see retention curves.</div>';
                 return;
             }
 

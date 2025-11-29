@@ -111,7 +111,7 @@ def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
 
 
 def load_concept_metadata(knowledge_base_path: Path) -> dict:
-    """Load metadata from concept files"""
+    """Load metadata and content from concept files"""
     metadata = {}
 
     # Search for all concept markdown files
@@ -123,11 +123,12 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
             with open(concept_file, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Extract frontmatter
+            # Extract frontmatter and body
             if content.startswith('---'):
                 parts = content.split('---', 2)
                 if len(parts) >= 3:
                     frontmatter = parts[1]
+                    body = parts[2].strip()  # Get the actual content
 
                     # Simple YAML parsing for needed fields
                     rem_id = None
@@ -165,7 +166,8 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                             'isced': isced,
                             'subdomain': subdomain,
                             'tags': tags,
-                            'file': file_path
+                            'file': file_path,
+                            'content': body  # EMBED THE ACTUAL CONTENT
                         }
         except Exception as e:
             print(f"⚠ Warning: Could not parse {concept_file}: {e}", file=sys.stderr)
@@ -196,6 +198,33 @@ def load_review_stats() -> dict:
     return review_stats
 
 
+def load_conversation_index() -> dict:
+    """Load conversation index for linking"""
+    conversations_by_rem = {}
+
+    chats_index_path = Path('chats/index.json')
+    if chats_index_path.exists():
+        with open(chats_index_path, 'r', encoding='utf-8') as f:
+            index = json.load(f)
+            entries = index.get('entries', [])
+
+            for entry in entries:
+                # Extract concepts from metadata
+                extracted_concepts = entry.get('metadata', {}).get('extracted_concepts', [])
+
+                for concept_id in extracted_concepts:
+                    if concept_id not in conversations_by_rem:
+                        conversations_by_rem[concept_id] = []
+
+                    conversations_by_rem[concept_id].append({
+                        'title': entry.get('title', 'Untitled'),
+                        'date': entry.get('date', 'No date'),
+                        'path': entry.get('path', '')
+                    })
+
+    return conversations_by_rem
+
+
 def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, domain_filter: str = None) -> dict:
     """Transform backlinks to graph visualization format"""
 
@@ -204,6 +233,9 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
 
     # Load review statistics
     review_stats = load_review_stats()
+
+    # Load conversation index
+    conversations_index = load_conversation_index()
 
     # Filter by domain if specified
     if domain_filter:
@@ -300,7 +332,9 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'lastReviewed': last_reviewed,
             'connections': degree.get(concept_id, 0),
             'tags': tags,
-            'file': metadata.get('file', '')
+            'file': metadata.get('file', ''),
+            'content': metadata.get('content', ''),  # EMBED CONTENT HERE
+            'conversations': conversations_index.get(concept_id, [])  # EMBED CONVERSATIONS
         })
 
     # Transform edges (typed + regular + inferred links)
