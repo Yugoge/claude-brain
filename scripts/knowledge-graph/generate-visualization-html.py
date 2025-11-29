@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description='Generate knowledge graph visualization HTML')
     parser.add_argument('--input', type=str, default='knowledge-base/_index/graph-data.json',
                        help='Input graph data JSON file')
-    parser.add_argument('--template', type=str, default='scripts/knowledge-graph/graph-visualization-template.html',
+    parser.add_argument('--template', type=str, default='scripts/knowledge-graph/graph-visualization-fixed.html',
                        help='HTML template file')
     parser.add_argument('--output', type=str, default='knowledge-graph.html',
                        help='Output HTML file')

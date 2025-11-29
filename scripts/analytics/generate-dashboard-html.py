@@ -15,7 +15,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(description='Generate analytics dashboard HTML')
-    parser.add_argument('--input', type=str, default='.review/analytics-cache.json',
+    parser.add_argument('--input', type=str, default='.review/analytics-isced.json',
                        help='Input analytics cache JSON file')
     parser.add_argument('--template', type=str, default='scripts/analytics/analytics-dashboard-template.html',
                        help='HTML template file')

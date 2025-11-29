@@ -119,6 +119,108 @@ def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
     return 'generic'
 
 
+def extract_conversation_content(conversation_path: str) -> dict:
+    """
+    Extract full content from conversation file
+
+    Returns dict with:
+    - summary: Brief summary from frontmatter
+    - tags: Tags from frontmatter
+    - excerpt: First 5 user-assistant exchanges
+    - content: Full conversation markdown content
+    """
+    from pathlib import Path
+
+    try:
+        # Normalize path
+        conv_file = Path(conversation_path)
+        if not conv_file.exists():
+            return {}
+
+        with open(conv_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Extract frontmatter
+        summary = ""
+        tags = []
+        date = ""
+
+        if content.startswith('---'):
+            parts = content.split('---', 2)
+            if len(parts) >= 3:
+                frontmatter = parts[1]
+                body = parts[2].strip()
+
+                for line in frontmatter.split('\n'):
+                    line = line.strip()
+                    if line.startswith('tags:'):
+                        tags_str = line.split(':', 1)[1].strip()
+                        if tags_str.startswith('[') and tags_str.endswith(']'):
+                            tags_str = tags_str[1:-1]
+                            tags = [t.strip().strip('"\'') for t in tags_str.split(',') if t.strip()]
+                    elif line.startswith('date:'):
+                        date = line.split(':', 1)[1].strip()
+            else:
+                body = content
+        else:
+            body = content
+
+        # Extract summary section
+        lines = body.split('\n')
+        in_summary = False
+        summary_lines = []
+
+        for line in lines:
+            if line.strip() == '## Summary':
+                in_summary = True
+                continue
+            elif line.startswith('## ') and in_summary:
+                break
+            elif in_summary and line.strip():
+                summary_lines.append(line.strip())
+
+        summary = ' '.join(summary_lines)
+
+        # Extract first 5 exchanges (up to 2000 chars for excerpt)
+        excerpt_lines = []
+        turn_count = 0
+        in_conversation = False
+        char_count = 0
+        max_chars = 2000
+
+        for line in lines:
+            if line.strip() == '## Full Conversation':
+                in_conversation = True
+                continue
+
+            if in_conversation:
+                if line.startswith('###'):
+                    turn_count += 1
+                    if turn_count > 10:  # First 10 turns (5 exchanges)
+                        break
+
+                excerpt_lines.append(line)
+                char_count += len(line)
+
+                if char_count > max_chars:
+                    excerpt_lines.append('\n\n*(Conversation continues...)*')
+                    break
+
+        excerpt = '\n'.join(excerpt_lines).strip()
+
+        return {
+            'summary': summary,
+            'tags': tags,
+            'date': date,
+            'excerpt': excerpt,
+            'content': body  # Full conversation content
+        }
+
+    except Exception as e:
+        print(f"⚠ Warning: Could not extract conversation content from {conversation_path}: {e}", file=sys.stderr)
+        return {}
+
+
 def load_concept_metadata(knowledge_base_path: Path) -> dict:
     """Load metadata and content from concept files"""
     metadata = {}
@@ -194,18 +296,29 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                         }
                         domain = extract_isced_domain(file_path, frontmatter_data)
 
-                        # Create conversation link from frontmatter source
+                        # Create conversation link from frontmatter source with FULL CONTENT
                         conversation_link = None
                         if source and source.startswith('chats/'):
-                            # Extract title from source filename
+                            # Extract full conversation content
+                            conv_content = extract_conversation_content(source)
+
+                            # Extract title from source filename as fallback
                             source_name = Path(source).stem
-                            # Convert filename to title (e.g., "understanding-vix-delta..." -> "Understanding VIX Delta...")
                             conv_title = source_name.replace('-conversation-', ' - ').replace('-', ' ').title()
+
                             conversation_link = {
                                 'title': conv_title,
                                 'path': source,
-                                'date': ''  # Could extract from filename if needed
+                                'date': conv_content.get('date', ''),
+                                'summary': conv_content.get('summary', ''),
+                                'tags': conv_content.get('tags', []),
+                                'excerpt': conv_content.get('excerpt', ''),
+                                'content': conv_content.get('content', '')  # FULL CONVERSATION CONTENT
                             }
+
+                            # If Rem has no tags, inherit from conversation
+                            if not tags and conv_content.get('tags'):
+                                tags = conv_content['tags']
 
                         # Also check body for additional conversation source (legacy format)
                         body_conversation_link = None
@@ -234,10 +347,18 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                                     conv_path = match.group(2)
                                     # Normalize path (remove ../../.. prefix)
                                     conv_path = conv_path.replace('../', '')
+
+                                    # Extract full conversation content
+                                    conv_content = extract_conversation_content(conv_path)
+
                                     body_conversation_link = {
                                         'title': conv_title,
                                         'path': conv_path,
-                                        'date': ''  # Can extract from filename if needed
+                                        'date': conv_content.get('date', ''),
+                                        'summary': conv_content.get('summary', ''),
+                                        'tags': conv_content.get('tags', []),
+                                        'excerpt': conv_content.get('excerpt', ''),
+                                        'content': conv_content.get('content', '')
                                     }
 
                             if not skip_section:
@@ -336,40 +457,42 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
                 filtered_links[concept_id] = links_data[concept_id]
         links_data = filtered_links
 
-    # Build edge counts for each node (total edges, not unique neighbors)
-    # This counts all typed, regular, and inferred links (both incoming and outgoing)
-    edge_counts = {concept_id: 0 for concept_id in concept_metadata.keys()}
+    # Build connection counts for each node (count unique related Rems, not total edges)
+    # This counts unique neighbors connected via typed, regular, and inferred links
+    connection_counts = {}
 
-    # First pass: count outgoing edges
-    for node_id, link_info in links_data.items():
-        if node_id not in concept_metadata:
-            continue
+    for concept_id in concept_metadata.keys():
+        unique_neighbors = set()
 
-        typed_count = len(link_info.get('typed_links_to', []))
-        regular_count = len(link_info.get('links_to', []))
-        inferred_count = len(link_info.get('inferred_links_to', []))
+        # Get link info for this concept
+        link_info = links_data.get(concept_id, {})
 
-        edge_counts[node_id] += typed_count + regular_count + inferred_count
-
-    # Second pass: count incoming edges (edges pointing to this node)
-    for node_id, link_info in links_data.items():
-        if node_id not in concept_metadata:
-            continue
-
-        # For each outgoing edge, increment the target's incoming count
-        for target_link in link_info.get('typed_links_to', []):
-            target = target_link.get('to') if isinstance(target_link, dict) else target_link
-            if target in edge_counts:
-                edge_counts[target] += 1
+        # Collect outgoing neighbors
+        for typed_link in link_info.get('typed_links_to', []):
+            target = typed_link.get('to') if isinstance(typed_link, dict) else typed_link
+            if target and target in concept_metadata:
+                unique_neighbors.add(target)
 
         for target in link_info.get('links_to', []):
-            if target in edge_counts:
-                edge_counts[target] += 1
+            if target and target in concept_metadata:
+                unique_neighbors.add(target)
 
         for inferred_item in link_info.get('inferred_links_to', []):
             target = inferred_item.get('to') if isinstance(inferred_item, dict) else inferred_item
-            if target in edge_counts:
-                edge_counts[target] += 1
+            if target and target in concept_metadata:
+                unique_neighbors.add(target)
+
+        # Collect incoming neighbors
+        for source in link_info.get('linked_from', []):
+            if source and source in concept_metadata:
+                unique_neighbors.add(source)
+
+        for typed_link_from in link_info.get('typed_linked_from', []):
+            source = typed_link_from.get('from') if isinstance(typed_link_from, dict) else typed_link_from
+            if source and source in concept_metadata:
+                unique_neighbors.add(source)
+
+        connection_counts[concept_id] = len(unique_neighbors)
 
     # Domain color mapping (UNESCO ISCED categories)
     domain_colors = {
@@ -417,7 +540,7 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'stability': stability,
             'difficulty': difficulty,
             'lastReviewed': last_reviewed,
-            'connections': edge_counts.get(concept_id, 0),
+            'connections': connection_counts.get(concept_id, 0),
             'tags': tags,
             'file': metadata.get('file', ''),
             'content': metadata.get('content', ''),  # EMBED CONTENT HERE

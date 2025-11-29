@@ -81,10 +81,11 @@
             overflow-y: auto;
             transition: width 0.3s;
             padding: 0;
+            position: relative;
         }
 
         #details-panel.open {
-            width: 320px;
+            width: 380px;
             padding: 20px;
         }
 
@@ -92,6 +93,7 @@
             margin-bottom: 15px;
             color: #333;
             font-size: 18px;
+            padding-right: 35px;
         }
 
         #details-panel p {
@@ -106,21 +108,26 @@
         }
 
         #close-details {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ddd;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
             line-height: 1;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #close-details:hover {
-            background: #ccc;
+            background: #c0392b;
         }
 
         .tag {
@@ -192,6 +199,30 @@
             margin-right: 8px;
         }
 
+        /* Conversation section auto-height */
+        #conversations-container > div {
+            max-height: none !important;
+            height: auto;
+        }
+
+        .conversation-box {
+            margin: 12px 0;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .conversation-summary {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f8ff;
+            border-left: 3px solid #3498db;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
         /* Mobile-responsive styles */
         @media (max-width: 768px) {
             #app {
@@ -211,7 +242,7 @@
                 flex: 1;
                 width: auto;
                 min-width: 0;
-                font-size: 16px; /* Prevent zoom on iOS */
+                font-size: 16px;
             }
 
             #clear-search {
@@ -259,13 +290,15 @@
             #details-panel.open {
                 transform: translateY(0);
                 padding: 15px;
+                padding-top: 50px;
                 width: 100% !important;
+                overflow-y: auto;
             }
 
             #details-panel h3 {
                 font-size: 16px;
                 margin-bottom: 10px;
-                padding-right: 40px; /* Space for close button */
+                padding-right: 0;
             }
 
             #details-panel p {
@@ -273,14 +306,12 @@
             }
 
             #close-details {
-                top: 15px;
-                right: 15px;
-                width: 36px;
-                height: 36px;
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
                 font-size: 24px;
-                background: #e74c3c;
-                color: white;
-                z-index: 1001;
             }
 
             .tag {
@@ -296,15 +327,8 @@
                 font-size: 8px;
             }
 
-            /* Make scrollable content areas smaller on mobile */
-            #rem-content-container > div,
-            #conversations-container > div {
-                max-height: 250px !important;
-            }
-
-            /* Improve button visibility on mobile */
             button {
-                min-height: 44px; /* iOS touch target */
+                min-height: 44px;
                 touch-action: manipulation;
             }
 
@@ -316,7 +340,7 @@
         /* Tablet landscape */
         @media (min-width: 769px) and (max-width: 1024px) {
             #details-panel.open {
-                width: 400px;
+                width: 450px;
             }
 
             #controls {
@@ -326,20 +350,25 @@
             #search-input {
                 width: 200px;
             }
+
+            #close-details {
+                top: 15px;
+                right: 15px;
+            }
         }
 
         /* Touch device optimizations */
         @media (hover: none) and (pointer: coarse) {
             .node {
-                r: 12; /* Larger touch targets */
+                r: 12;
             }
 
             .node:hover {
-                stroke-width: 2px; /* Less dramatic hover on touch */
+                stroke-width: 2px;
             }
 
             button, input {
-                font-size: 16px; /* Prevent zoom on iOS */
+                font-size: 16px;
             }
         }
     </style>
@@ -383,6 +412,46 @@
             throw new Error('No graph data');
         }
 
+        // Relation type translations
+        const RELATION_TRANSLATIONS = {
+            'uses': '使用',
+            'used_by': '被...使用',
+            'implements': '实现',
+            'implemented_by': '被...实现',
+            'extends': '扩展',
+            'extended_by': '被...扩展',
+            'related_to': '相关',
+            'related': '相关',
+            'contains': '包含',
+            'contained_by': '被...包含',
+            'prerequisite_of': '是...的前提',
+            'has_prerequisite': '需要前提',
+            'example_of': '是...的例子',
+            'has_example': '示例',
+            'part_of': '属于',
+            'has_part': '包含部分',
+            'compares_to': '对比',
+            'contrasts_with': '对照',
+            'causes': '导致',
+            'caused_by': '由...导致',
+            'enables': '使能',
+            'enabled_by': '被...使能',
+            'prevents': '阻止',
+            'prevented_by': '被...阻止',
+            'similar_to': '类似',
+            'different_from': '不同于',
+            'before': '之前',
+            'after': '之后',
+            'during': '期间',
+            'linked-from': '链接自'
+        };
+
+        function translateRelation(type) {
+            // Remove 'linked-from-' prefix if exists
+            const cleanType = type.replace('linked-from-', '');
+            return RELATION_TRANSLATIONS[cleanType] || cleanType;
+        }
+
         // Initialize
         const width = document.getElementById('graph-container').clientWidth;
         const height = document.getElementById('graph-container').clientHeight;
@@ -415,7 +484,7 @@
             .force('center', d3.forceCenter(width / 2, height / 2))
             .force('collision', d3.forceCollide().radius(d => d.size + 5));
 
-        // Draw links with colors and styles
+        // Draw links
         const link = g.append('g')
             .selectAll('line')
             .data(graphData.edges)
@@ -513,7 +582,19 @@
             label.attr('opacity', 1);
         }
 
-        // Show details panel with enhanced content
+        // Extract conversation content after "## Full Conversation"
+        function extractFullConversation(content) {
+            if (!content) return '';
+
+            const lines = content.split('\n');
+            const fullConvIndex = lines.findIndex(line => line.trim() === '## Full Conversation');
+
+            if (fullConvIndex === -1) return content; // Return all if marker not found
+
+            return lines.slice(fullConvIndex + 1).join('\n').trim();
+        }
+
+        // Show details panel
         async function showDetails(d) {
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
@@ -523,13 +604,14 @@
                 ? tags.map(tag => `<span class="tag">${tag}</span>`).join('')
                 : '<span style="color: #999; font-size: 12px;">No tags</span>';
 
-            // Find typed relations (only outgoing to avoid confusion)
+            // Find typed relations (translated)
             const typedRelations = graphData.edges
                 .filter(e => e.source.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
                 .map(e => {
                     const targetNode = graphData.nodes.find(n => n.id === e.target.id);
                     const label = targetNode ? targetNode.label : e.target.id;
-                    return `<li><strong>${e.type}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
+                    const translatedType = translateRelation(e.type);
+                    return `<li><strong>${translatedType}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
                 })
                 .join('');
 
@@ -560,25 +642,23 @@
                     <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
                 </div>
                 <div id="conversations-container" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <p><strong>💬 Conversations:</strong></p>
+                    <p><strong>💬 Conversation:</strong></p>
                     <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
                 </div>
-                <p style="margin-top: 15px; font-size: 11px; color: #999;"><code>${d.file}</code></p>
             `;
 
             panel.classList.add('open');
 
             // Load Rem content asynchronously
             loadRemContent(d);
-            // Load conversations asynchronously
-            loadConversations(d);
+            // Load conversation asynchronously
+            loadConversation(d);
         }
 
         function loadRemContent(node) {
             const container = document.getElementById('rem-content-container');
             if (!container) return;
 
-            // Use embedded content directly from node
             const content = node.content || '';
 
             if (!content) {
@@ -586,7 +666,7 @@
                 return;
             }
 
-            // Convert markdown to simple HTML (basic formatting)
+            // Convert markdown to simple HTML
             let html = content
                 .replace(/### (.*)/g, '<h4 style="margin-top:12px;margin-bottom:6px;font-size:14px;">$1</h4>')
                 .replace(/## (.*)/g, '<h3 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:600;">$1</h3>')
@@ -604,95 +684,95 @@
             container.innerHTML = `<p><strong>📝 Content:</strong></p>${contentHtml}`;
         }
 
-        function loadConversations(node) {
+        function loadConversation(node) {
             const container = document.getElementById('conversations-container');
             if (!container) return;
 
-            // Use embedded conversations directly from node
+            // Use embedded conversation (should be only one)
             const conversations = node.conversations || [];
 
             if (conversations.length === 0) {
-                container.innerHTML = `<p><strong>💬 Conversations:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No related conversations</div>`;
+                container.innerHTML = `<p><strong>💬 Conversation:</strong></p><div style="font-size: 12px; color: #999; margin-top: 5px;">No related conversation</div>`;
                 return;
             }
 
-            const conversationsHtml = conversations.map((conv, index) => {
-                const convId = `conv-${index}`;
-                const excerptId = `excerpt-${index}`;
-                const fullId = `full-${index}`;
+            const conv = conversations[0]; // Only use first conversation
 
-                // Format conversation tags
-                const convTags = conv.tags || [];
-                const tagsHtml = convTags.length > 0
-                    ? convTags.map(tag => `<span class="tag">${tag}</span>`).join('')
-                    : '';
+            // Format conversation tags
+            const convTags = conv.tags || [];
+            const tagsHtml = convTags.length > 0
+                ? convTags.map(tag => `<span class="tag">${tag}</span>`).join('')
+                : '';
 
-                // Convert markdown content to HTML
-                const formatMarkdown = (text) => {
-                    if (!text) return '';
-                    return text
-                        .replace(/### (.*)/g, '<h4 style="margin-top:10px;margin-bottom:5px;font-size:13px;font-weight:600;">$1</h4>')
-                        .replace(/## (.*)/g, '<h3 style="margin-top:12px;margin-bottom:6px;font-size:14px;font-weight:700;">$1</h3>')
-                        .replace(/# (.*)/g, '<h2 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:700;">$1</h2>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:10px;">$1</code>')
-                        .replace(/\n\n/g, '</p><p style="margin:6px 0;font-size:11px;line-height:1.5;">')
-                        .replace(/\n/g, '<br>');
-                };
+            // Convert markdown content to HTML
+            const formatMarkdown = (text) => {
+                if (!text) return '';
+                return text
+                    .replace(/### (.*)/g, '<h4 style="margin-top:10px;margin-bottom:5px;font-size:13px;font-weight:600;">$1</h4>')
+                    .replace(/## (.*)/g, '<h3 style="margin-top:12px;margin-bottom:6px;font-size:14px;font-weight:700;">$1</h3>')
+                    .replace(/# (.*)/g, '<h2 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:700;">$1</h2>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:10px;">$1</code>')
+                    .replace(/\n\n/g, '</p><p style="margin:6px 0;font-size:11px;line-height:1.5;">')
+                    .replace(/\n/g, '<br>');
+            };
 
-                const summaryHtml = conv.summary ? `
-                    <div style="margin-top: 8px; padding: 8px; background: #f0f8ff; border-left: 3px solid #3498db; font-size: 11px; line-height: 1.5;">
-                        <strong>Summary:</strong> ${conv.summary}
+            // Format summary with proper line breaks
+            const summaryHtml = conv.summary ? `
+                <div class="conversation-summary">
+                    <strong>Summary:</strong><br>
+                    ${conv.summary}
+                </div>
+            ` : '';
+
+            // Extract only content after "## Full Conversation"
+            const fullConversationContent = extractFullConversation(conv.content);
+
+            const excerptHtml = conv.excerpt ? `
+                <div id="excerpt" style="margin-top: 8px; padding: 8px; background: #fafafa; border-radius: 3px; font-size: 11px; line-height: 1.5; max-height: 200px; overflow-y: auto;">
+                    <p style="margin:6px 0;font-size:11px;line-height:1.5;">${formatMarkdown(conv.excerpt)}</p>
+                </div>
+            ` : '';
+
+            const fullContentHtml = fullConversationContent ? `
+                <div id="fullContent" style="display:none; margin-top: 8px; padding: 8px; background: #fafafa; border-radius: 3px; font-size: 11px; line-height: 1.5; max-height: 400px; overflow-y: auto;">
+                    <p style="margin:6px 0;font-size:11px;line-height:1.5;">${formatMarkdown(fullConversationContent)}</p>
+                </div>
+            ` : '';
+
+            const toggleButton = fullConversationContent ? `
+                <button onclick="toggleConversation(); return false;"
+                        id="convToggleBtn"
+                        style="margin-top: 6px; padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                    Show Full Conversation
+                </button>
+            ` : '';
+
+            const conversationHtml = `
+                <div class="conversation-box">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <span style="color: #3498db; font-size: 13px; font-weight: 600;">
+                            ${conv.title || 'Untitled'}
+                        </span>
                     </div>
-                ` : '';
+                    <div style="font-size: 10px; color: #999; margin-top: 3px;">${conv.date || 'No date'}</div>
+                    ${tagsHtml ? `<div style="margin-top: 5px;">${tagsHtml}</div>` : ''}
+                    ${summaryHtml}
+                    ${excerptHtml}
+                    ${fullContentHtml}
+                    ${toggleButton}
+                </div>
+            `;
 
-                const excerptHtml = conv.excerpt ? `
-                    <div id="${excerptId}" style="margin-top: 8px; padding: 8px; background: #fafafa; border-radius: 3px; font-size: 11px; line-height: 1.5; max-height: 200px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:11px;line-height:1.5;">${formatMarkdown(conv.excerpt)}</p>
-                    </div>
-                ` : '';
-
-                const fullContentHtml = conv.content ? `
-                    <div id="${fullId}" style="display:none; margin-top: 8px; padding: 8px; background: #fafafa; border-radius: 3px; font-size: 11px; line-height: 1.5; max-height: 400px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:11px;line-height:1.5;">${formatMarkdown(conv.content)}</p>
-                    </div>
-                ` : '';
-
-                const toggleButton = conv.content ? `
-                    <button onclick="toggleConversation('${excerptId}', '${fullId}', '${convId}-btn'); return false;"
-                            id="${convId}-btn"
-                            style="margin-top: 6px; padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
-                        Show Full Conversation
-                    </button>
-                ` : '';
-
-                return `
-                    <div id="${convId}" style="margin: 12px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0;">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <span style="color: #3498db; font-size: 13px; font-weight: 600;">
-                                ${conv.title || 'Untitled'}
-                            </span>
-                        </div>
-                        <div style="font-size: 10px; color: #999; margin-top: 3px;">${conv.date || 'No date'}</div>
-                        ${tagsHtml ? `<div style="margin-top: 5px;">${tagsHtml}</div>` : ''}
-                        ${summaryHtml}
-                        ${excerptHtml}
-                        ${fullContentHtml}
-                        ${toggleButton}
-                        <div style="font-size: 9px; color: #999; margin-top: 6px; font-family: monospace;">${conv.path}</div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = `<p><strong>💬 Conversations (${conversations.length}):</strong></p>${conversationsHtml}`;
+            container.innerHTML = `<p><strong>💬 Conversation:</strong></p>${conversationHtml}`;
         }
 
         // Toggle conversation display
-        function toggleConversation(excerptId, fullId, btnId) {
-            const excerpt = document.getElementById(excerptId);
-            const full = document.getElementById(fullId);
-            const btn = document.getElementById(btnId);
+        window.toggleConversation = function() {
+            const excerpt = document.getElementById('excerpt');
+            const full = document.getElementById('fullContent');
+            const btn = document.getElementById('convToggleBtn');
 
             if (full.style.display === 'none') {
                 excerpt.style.display = 'none';
@@ -705,17 +785,15 @@
                 btn.textContent = 'Show Full Conversation';
                 btn.style.background = '#3498db';
             }
-        }
+        };
 
         // Helper to focus on a specific node
-        function focusNode(nodeId) {
+        window.focusNode = function(nodeId) {
             const node = graphData.nodes.find(n => n.id === nodeId);
             if (node) {
                 showDetails(node);
-                // Optional: zoom and center on the node
-                // TODO: implement smooth zoom to node
             }
-        }
+        };
 
         // Close details panel
         document.getElementById('close-details').addEventListener('click', () => {
@@ -781,12 +859,6 @@
                 document.getElementById('search-input').value = '';
                 resetFilter();
                 document.getElementById('details-panel').classList.remove('open');
-            } else if (e.key === ' ' && e.target.tagName !== 'INPUT') {
-                e.preventDefault();
-                svg.transition().duration(750).call(
-                    zoom.transform,
-                    d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
-                );
             }
         });
 
