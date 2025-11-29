@@ -96,6 +96,24 @@ def archive_conversation(include_subagents=True):
         raise RuntimeError(f"Chat archiver failed: {result.stderr}")
 
     archived_file = result.stdout.strip()
+
+    # Validate archived file path
+    if not archived_file:
+        # Check stderr for hints about what happened
+        stderr_msg = result.stderr.strip() if result.stderr else "No error details available"
+        raise RuntimeError(
+            f"Chat archiver returned empty file path. No conversation found to archive.\n"
+            f"Details: {stderr_msg}"
+        )
+
+    # Validate file exists
+    archived_path = Path(archived_file)
+    if not archived_path.exists():
+        raise RuntimeError(
+            f"Chat archiver returned non-existent file: {archived_file}\n"
+            f"This may indicate a race condition or filesystem issue."
+        )
+
     print(f"✓ Archived to: {archived_file}", file=sys.stderr)
 
     return archived_file

@@ -72,12 +72,21 @@ def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
                 return domain
 
     # Priority 2: Extract from file path
-    match = re.search(r'knowledge-base/(\d{2})-', file_path)
-    if match:
-        code = match.group(1)
-        domain = ISCED_TO_DOMAIN.get(code)
-        if domain:
-            return domain
+    # Try multiple patterns for different path structures
+    patterns = [
+        r'knowledge-base/(\d{2})-',  # Direct under knowledge-base
+        r'/(\d{2})-[^/]+/',  # Any folder with 02-name pattern
+        r'/(\d{3})-',  # 3-digit codes like 023
+        r'/(\d{4})-',  # 4-digit codes like 0231
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, file_path)
+        if match:
+            code = match.group(1)[:2]  # Take first 2 digits
+            domain = ISCED_TO_DOMAIN.get(code)
+            if domain:
+                return domain
 
     # Priority 3: Subdomain mapping (fallback)
     subdomain = frontmatter_data.get('subdomain', '').lower()
@@ -154,6 +163,19 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                     if rem_id:
                         file_path = str(concept_file.relative_to(knowledge_base_path.parent))
 
+                        # Extract ISCED from path if not in frontmatter
+                        if not isced:
+                            # Try to extract from file path (e.g., 0231-language-acquisition)
+                            import re
+                            path_match = re.search(r'/(\d{4})-([^/]+)/', file_path)
+                            if path_match:
+                                isced = path_match.group(0).strip('/')  # Just use the full match
+                            else:
+                                # Try broader pattern for shorter codes
+                                path_match = re.search(r'/(\d{2,3})-([^/]+)/', file_path)
+                                if path_match:
+                                    isced = path_match.group(0).strip('/')
+
                         # Extract domain using new function
                         frontmatter_data = {
                             'isced': isced,
@@ -161,16 +183,38 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                         }
                         domain = extract_isced_domain(file_path, frontmatter_data)
 
-                        # Filter out Related Rems and Conversation Source sections
+                        # Extract conversation source and filter content
+                        conversation_link = None
                         content_lines = []
                         skip_section = False
+                        in_conv_source = False
+
+                        import re
                         for line in body.split('\n'):
-                            if line.startswith('## Related Rems'):
+                            if line.startswith('## Conversation Source'):
                                 skip_section = True
-                            elif line.startswith('## Conversation Source'):
+                                in_conv_source = True
+                            elif line.startswith('## Related Rems'):
                                 skip_section = True
+                                in_conv_source = False
                             elif line.startswith('## ') and skip_section:
                                 skip_section = False
+                                in_conv_source = False
+
+                            # Extract conversation link from source section
+                            if in_conv_source and '> See:' in line:
+                                # Extract title and path from markdown link
+                                match = re.search(r'\[([^\]]+)\]\(([^\)]+)\)', line)
+                                if match:
+                                    conv_title = match.group(1)
+                                    conv_path = match.group(2)
+                                    # Normalize path (remove ../../.. prefix)
+                                    conv_path = conv_path.replace('../', '')
+                                    conversation_link = {
+                                        'title': conv_title,
+                                        'path': conv_path,
+                                        'date': ''  # Can extract from filename if needed
+                                    }
 
                             if not skip_section:
                                 content_lines.append(line)
@@ -183,7 +227,8 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                             'subdomain': subdomain,
                             'tags': tags,
                             'file': file_path,
-                            'content': filtered_content  # EMBED FILTERED CONTENT
+                            'content': filtered_content,  # EMBED FILTERED CONTENT
+                            'conversation': conversation_link  # ADD CONVERSATION LINK
                         }
         except Exception as e:
             print(f"⚠ Warning: Could not parse {concept_file}: {e}", file=sys.stderr)
@@ -345,7 +390,7 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
             'tags': tags,
             'file': metadata.get('file', ''),
             'content': metadata.get('content', ''),  # EMBED CONTENT HERE
-            'conversations': conversations_index.get(concept_id, [])  # EMBED CONVERSATIONS
+            'conversations': [metadata.get('conversation')] if metadata.get('conversation') else []  # EMBED CONVERSATION FROM SOURCE
         })
 
     # Transform edges (typed + regular + inferred links)
