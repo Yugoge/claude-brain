@@ -95,26 +95,33 @@ class AnalyticsEngine:
 
         for concept_id, data in concepts.items():
             # Filter by domain if specified
-            if domain and not concept_id.startswith(f"concepts/{domain}/"):
+            if domain and data.get('domain', '').startswith(domain):
+                pass
+            elif domain:
                 continue
 
-            # Extract SM-2 parameters
-            ef = data.get('easinessFactor', 2.5)
-            repetitions = data.get('repetitions', 0)
-            interval = data.get('interval', 1)
-            last_review_str = data.get('lastReview')
+            # Extract FSRS parameters
+            fsrs_state = data.get('fsrs_state', {})
+            stability = fsrs_state.get('stability', 1.0)
+            difficulty = fsrs_state.get('difficulty', 5.0)
+            review_count = fsrs_state.get('review_count', 0)
+            last_review_str = fsrs_state.get('last_review') or data.get('last_reviewed')
 
             # Handle missing lastReview
             if not last_review_str:
                 last_review = datetime.now() - timedelta(days=1)
             else:
                 try:
-                    last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
-                except (ValueError, AttributeError):
+                    if 'T' in last_review_str:
+                        last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
+                    else:
+                        last_review = datetime.fromisoformat(last_review_str + 'T00:00:00')
+                except (ValueError, AttributeError, TypeError):
                     last_review = datetime.now() - timedelta(days=1)
 
-            # Calculate retention strength (higher EF and reps = stronger memory)
-            strength = ef * (1 + repetitions * 0.2)
+            # Calculate retention strength (FSRS: higher stability = stronger memory)
+            # Normalize difficulty (FSRS uses 1-10 scale, lower is easier)
+            strength = stability * (11 - difficulty) / 10  # Easier concepts retain better
 
             # Generate retention curve for next 30 days
             days_since_review = (datetime.now() - last_review).days
@@ -133,8 +140,10 @@ class AnalyticsEngine:
             retention_data[concept_id] = {
                 'curve': retention_curve,
                 'currentRetention': retention_curve[0]['retention'],
-                'nextReviewDue': data.get('nextReview'),
-                'strength': strength
+                'nextReviewDue': fsrs_state.get('next_review'),
+                'strength': strength,
+                'stability': stability,
+                'difficulty': difficulty
             }
 
         return retention_data
@@ -160,25 +169,29 @@ class AnalyticsEngine:
 
         concepts = self.schedule.get('concepts', {})
 
-        # Get mastered concepts (EF > 2.5 or 5+ reps)
+        # Get mastered concepts (FSRS: stability > 30 or 5+ reviews)
         mastered_concepts = []
         for concept_id, data in concepts.items():
-            if domain and not concept_id.startswith(f"concepts/{domain}/"):
+            if domain and not data.get('domain', '').startswith(domain):
                 continue
 
-            ef = data.get('easinessFactor', 2.5)
-            reps = data.get('repetitions', 0)
-            last_review_str = data.get('lastReview')
+            fsrs_state = data.get('fsrs_state', {})
+            stability = fsrs_state.get('stability', 0)
+            review_count = fsrs_state.get('review_count', 0)
+            last_review_str = fsrs_state.get('last_review') or data.get('last_reviewed')
 
             if not last_review_str:
                 continue
 
             try:
-                last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
-            except (ValueError, AttributeError):
+                if 'T' in last_review_str:
+                    last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
+                else:
+                    last_review = datetime.fromisoformat(last_review_str + 'T00:00:00')
+            except (ValueError, AttributeError, TypeError):
                 continue
 
-            if (ef > 2.5 or reps >= 5) and last_review > cutoff_date:
+            if (stability > 30 or review_count >= 5) and last_review > cutoff_date:
                 mastered_concepts.append(concept_id)
 
         # Calculate total time invested from history and chats
@@ -313,21 +326,28 @@ class AnalyticsEngine:
         start_date: datetime,
         end_date: datetime
     ) -> bool:
-        """Check if concept was mastered in the given period"""
+        """Check if concept was mastered in the given period (FSRS)"""
+        fsrs_state = concept_data.get('fsrs_state', {})
+        last_review_str = fsrs_state.get('last_review') or concept_data.get('last_reviewed')
+
+        if not last_review_str:
+            return False
+
         try:
-            last_review = datetime.fromisoformat(
-                concept_data.get('lastReview', '').replace('Z', '+00:00')
-            )
-        except (ValueError, AttributeError):
+            if 'T' in last_review_str:
+                last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
+            else:
+                last_review = datetime.fromisoformat(last_review_str + 'T00:00:00')
+        except (ValueError, AttributeError, TypeError):
             return False
 
         if not (start_date < last_review <= end_date):
             return False
 
-        ef = concept_data.get('easinessFactor', 2.5)
-        reps = concept_data.get('repetitions', 0)
+        stability = fsrs_state.get('stability', 0)
+        review_count = fsrs_state.get('review_count', 0)
 
-        return ef > 2.5 or reps >= 5
+        return stability > 30 or review_count >= 5
 
     def _classify_velocity(self, velocity: float) -> str:
         """Classify velocity as slow/medium/fast"""
@@ -357,17 +377,26 @@ class AnalyticsEngine:
         concepts = self.schedule.get('concepts', {})
 
         for concept_id, data in concepts.items():
-            if domain and not concept_id.startswith(f"concepts/{domain}/"):
+            if domain and not data.get('domain', '').startswith(domain):
                 continue
 
-            # Calculate mastery score (0-100)
-            ef = data.get('easinessFactor', 2.5)
-            reps = data.get('repetitions', 0)
+            # Calculate mastery score using FSRS parameters
+            fsrs_state = data.get('fsrs_state', {})
+            stability = fsrs_state.get('stability', 1.0)
+            difficulty = fsrs_state.get('difficulty', 5.0)
+            review_count = fsrs_state.get('review_count', 0)
 
-            # Formula: EF contributes 50%, repetitions contribute 50%
-            ef_score = max(0, ((ef - 1.3) / 1.2) * 50)  # EF 1.3-2.5 maps to 0-50
-            reps_score = min(reps * 10, 50)  # Each rep adds 10%, max 50
-            mastery = min(ef_score + reps_score, 100)  # Cap at 100
+            # Formula: Stability contributes 60%, review count 30%, difficulty 10%
+            # Stability: 0-100 (direct mapping, capped at 100)
+            stability_score = min(stability, 100) * 0.6
+
+            # Review count: Each review adds value (diminishing returns)
+            review_score = min(review_count * 5, 30)  # Max 30 from reviews
+
+            # Difficulty: Lower difficulty = higher score (inverted)
+            difficulty_score = (10 - min(difficulty, 10)) * 1.0  # 0-10 scale
+
+            mastery = min(stability_score + review_score + difficulty_score, 100)
 
             # Classify mastery level
             if mastery < 25:
@@ -382,8 +411,9 @@ class AnalyticsEngine:
             mastery_scores[concept_id] = {
                 'score': round(mastery, 1),
                 'level': level,
-                'easinessFactor': ef,
-                'repetitions': reps
+                'stability': stability,
+                'difficulty': difficulty,
+                'review_count': review_count
             }
 
         # Calculate domain averages
@@ -425,30 +455,54 @@ class AnalyticsEngine:
         concepts = self.schedule.get('concepts', {})
 
         for concept_id, data in concepts.items():
-            next_review_str = data.get('nextReview')
-            last_review_str = data.get('lastReview')
+            # FSRS format: fsrs_state.next_review, fsrs_state.last_review
+            fsrs_state = data.get('fsrs_state', {})
+            next_review_str = fsrs_state.get('next_review')
+            last_review_str = fsrs_state.get('last_review') or data.get('last_reviewed')
 
-            if not next_review_str or not last_review_str:
+            if not next_review_str:
                 continue
 
             try:
-                next_review = datetime.fromisoformat(next_review_str.replace('Z', '+00:00'))
-                last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00'))
-            except (ValueError, AttributeError):
+                next_review = datetime.fromisoformat(next_review_str.replace('Z', '+00:00') if isinstance(next_review_str, str) and 'T' in next_review_str else next_review_str + 'T00:00:00')
+            except (ValueError, AttributeError, TypeError):
                 continue
 
-            # Check if review was due in period
-            if cutoff_date < next_review < datetime.now():
-                total_due += 1
+            # Only process if review was due in analysis period
+            if not (cutoff_date < next_review < datetime.now()):
+                continue
 
-                # Check if completed on time (within 24 hours)
-                days_late = (last_review - next_review).days
-                if days_late <= 1:
-                    on_time_reviews += 1
-                else:
-                    late_reviews += 1
+            total_due += 1
 
-        adherence = (on_time_reviews / total_due * 100) if total_due > 0 else 100
+            # If no last_review, it's late
+            if not last_review_str:
+                late_reviews += 1
+                continue
+
+            try:
+                last_review = datetime.fromisoformat(last_review_str.replace('Z', '+00:00') if isinstance(last_review_str, str) and 'T' in last_review_str else last_review_str + 'T00:00:00')
+            except (ValueError, AttributeError, TypeError):
+                late_reviews += 1
+                continue
+
+            # Check if completed on time (within 24 hours)
+            days_late = (last_review - next_review).days
+            if days_late <= 1:
+                on_time_reviews += 1
+            else:
+                late_reviews += 1
+
+        # If no reviews due, return N/A instead of misleading 100%
+        if total_due == 0:
+            return {
+                'adherence': 0,
+                'onTimeReviews': 0,
+                'lateReviews': 0,
+                'totalDue': 0,
+                'classification': 'no_data'
+            }
+
+        adherence = (on_time_reviews / total_due * 100)
 
         return {
             'adherence': round(adherence, 1),
