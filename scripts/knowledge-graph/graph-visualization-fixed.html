@@ -516,6 +516,11 @@
             label
                 .attr('x', d => d.x)
                 .attr('y', d => d.y);
+
+            // Stop simulation when stable to prevent drift
+            if (simulation.alpha() < 0.01) {
+                simulation.stop();
+            }
         });
 
         // Drag functions
@@ -591,21 +596,17 @@
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
 
-            // Mark node as opened (Issue #1)
+            // CRITICAL FIX #1: Clear previous highlighting, only highlight current node
+            openedNodes.clear();
             openedNodes.add(d.id);
 
             // Apply opened styling
             node.classed('opened', n => openedNodes.has(n.id));
             label.classed('opened', n => openedNodes.has(n.id));
 
-            // Clear fixed positions to prevent dispersion (Issue #5)
-            graphData.nodes.forEach(n => {
-                n.fx = null;
-                n.fy = null;
-            });
-
-            // Restart simulation gently
-            simulation.alpha(0.1).restart();
+            // CRITICAL FIX #2: DO NOT clear fx/fy or restart simulation
+            // The previous code was CAUSING dispersion, not preventing it!
+            // Drag functions already handle position management correctly.
 
             const tags = d.tags || [];
             const tagsHtml = tags.length > 0
