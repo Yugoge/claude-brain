@@ -310,9 +310,6 @@
             #close-details {
                 width: 36px;
                 height: 36px;
-                background: #1a1a1a;
-                border-color: #1a1a1a;
-                color: white;
             }
 
             .tag {
@@ -377,14 +374,15 @@
             </div>
             <div class="legend">
                 <strong>ISCED Domains</strong>
-                <div class="legend-item"><div class="legend-color" style="background: #1a1a1a;"></div> 04 Business/Law</div>
-                <div class="legend-item"><div class="legend-color" style="background: #374151;"></div> 06 ICT</div>
-                <div class="legend-item"><div class="legend-color" style="background: #4b5563;"></div> 02 Humanities</div>
-                <div class="legend-item"><div class="legend-color" style="background: #6b7280;"></div> 03 Social Sci.</div>
-                <div class="legend-item"><div class="legend-color" style="background: #9ca3af;"></div> 09 Health</div>
-                <div class="legend-item"><div class="legend-color" style="background: #475569;"></div> 05 Natural Sci.</div>
-                <div class="legend-item"><div class="legend-color" style="background: #334155;"></div> 01 Education</div>
-                <div class="legend-item"><div class="legend-color" style="background: #cbd5e1;"></div> Other</div>
+                <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div> Business & Law</div>
+                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div> ICT</div>
+                <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div> Language</div>
+                <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div> Health</div>
+                <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div> Humanities</div>
+                <div class="legend-item"><div class="legend-color" style="background: #1abc9c;"></div> Natural Sci.</div>
+                <div class="legend-item"><div class="legend-color" style="background: #34495e;"></div> Social Sci.</div>
+                <div class="legend-item"><div class="legend-color" style="background: #e67e22;"></div> Education</div>
+                <div class="legend-item"><div class="legend-color" style="background: #bdc3c7;"></div> Generic</div>
             </div>
             <div id="stats">
                 Nodes: <span id="node-count">0</span> | Edges: <span id="edge-count">0</span> | Clusters: <span id="cluster-count">0</span>
@@ -392,7 +390,6 @@
             <svg id="svg"></svg>
         </div>
         <div id="details-panel">
-            <button id="close-details">×</button>
             <div id="details-content"></div>
         </div>
     </div>
@@ -536,6 +533,25 @@
             link.attr('opacity', 0.6);
             label.attr('opacity', 1);
         }
+        // Human-readable relation type labels
+        function getRelationLabel(relationType) {
+            const labels = {
+                'prerequisite_of': 'Prerequisite for',
+                'uses': 'Uses',
+                'example_of': 'Example of',
+                'contrasts_with': 'Contrasts with',
+                'synonym': 'Synonym of',
+                'component_of': 'Component of',
+                'analogous_to': 'Analogous to',
+                'linked-from-example_of': 'Is example for',
+                'linked-from-used_in': 'Used in',
+                'linked-from-prerequisite_of': 'Required by',
+                'reference': 'References'
+            };
+            return labels[relationType] || relationType.replace(/_/g, ' ').replace(/-/g, ' ');
+        }
+
+
 
         // Show details panel with enhanced content
         async function showDetails(d) {
@@ -553,7 +569,7 @@
                 .map(e => {
                     const targetNode = graphData.nodes.find(n => n.id === e.target.id);
                     const label = targetNode ? targetNode.label : e.target.id;
-                    return `<li><strong>${e.type}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
+                    return `<li><strong>${getRelationLabel(e.type)}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
                 })
                 .join('');
 
@@ -587,8 +603,19 @@
                     <p><strong>💬 Conversations:</strong></p>
                     <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
                 </div>
-                <p style="margin-top: 15px; font-size: 11px; color: #999;"><code>${d.file}</code></p>
+                
             `;
+
+            // Add close button dynamically if not exists
+            if (!document.getElementById('close-details')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.id = 'close-details';
+                closeBtn.innerHTML = '×';
+                closeBtn.addEventListener('click', () => {
+                    panel.classList.remove('open');
+                });
+                panel.insertBefore(closeBtn, panel.firstChild);
+            }
 
             panel.classList.add('open');
 
@@ -667,7 +694,7 @@
 
                 const summaryHtml = conv.summary ? `
                     <div style="margin-top: 10px; padding: 10px; background: #fafbfc; border-left: 2px solid #1a1a1a; font-size: 11px; line-height: 1.6; color: #4b5563;">
-                        <strong style="color: #1a1a1a;">Summary:</strong> ${conv.summary}
+                        <strong style="color: #1a1a1a;">Summary:</strong> ${formatMarkdown(conv.summary)}
                     </div>
                 ` : '';
 
@@ -704,12 +731,12 @@
                         ${excerptHtml}
                         ${fullContentHtml}
                         ${toggleButton}
-                        <div style="font-size: 10px; color: #9ca3af; margin-top: 8px; font-family: monospace;">${conv.path}</div>
+                        
                     </div>
                 `;
             }).join('');
 
-            container.innerHTML = `<p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Conversations (${conversations.length}):</strong></p>${conversationsHtml}`;
+            container.innerHTML = `<p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Source Conversation:</strong></p>${conversationsHtml}`;
         }
 
         // Toggle conversation display

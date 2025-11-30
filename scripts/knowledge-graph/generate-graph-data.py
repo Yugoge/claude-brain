@@ -127,7 +127,7 @@ def extract_conversation_content(conversation_path: str) -> dict:
     - summary: Brief summary from frontmatter
     - tags: Tags from frontmatter
     - excerpt: First 5 user-assistant exchanges
-    - content: Full conversation markdown content
+    - content: ONLY "## Full Conversation" section (no frontmatter, no summary)
     """
     from pathlib import Path
 
@@ -208,12 +208,26 @@ def extract_conversation_content(conversation_path: str) -> dict:
 
         excerpt = '\n'.join(excerpt_lines).strip()
 
+        # Extract ONLY Full Conversation section (exclude frontmatter and summary)
+        full_conversation_lines = []
+        in_full_conversation = False
+
+        for line in lines:
+            if line.strip() == '## Full Conversation':
+                in_full_conversation = True
+                continue  # Don't include the heading itself
+
+            if in_full_conversation:
+                full_conversation_lines.append(line)
+
+        full_conversation_content = '\n'.join(full_conversation_lines).strip()
+
         return {
             'summary': summary,
             'tags': tags,
             'date': date,
             'excerpt': excerpt,
-            'content': body  # Full conversation content
+            'content': full_conversation_content  # ONLY Full Conversation section
         }
 
     except Exception as e:
@@ -361,6 +375,7 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
                                         'content': conv_content.get('content', '')
                                     }
 
+                            # Don't include Related Rems section in content
                             if not skip_section:
                                 content_lines.append(line)
 

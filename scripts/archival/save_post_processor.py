@@ -372,13 +372,13 @@ def generate_analytics():
     period = os.getenv('ANALYTICS_PERIOD', '30')
     domain = os.getenv('ANALYTICS_DOMAIN', None)
 
-    # Sub-step 1: Analytics
-    analytics_cmd = ['python3', 'scripts/analytics/generate-analytics.py', '--period', period]
+    # Sub-step 1: Analytics (ISCED format for dashboard)
+    analytics_cmd = ['python3', 'scripts/analytics/generate-analytics-isced.py', '--period', period]
     if domain:
         analytics_cmd.extend(['--domain', domain])
-        print(f"  Generating analytics (domain={domain}, period={period} days)...", file=sys.stderr)
+        print(f"  Generating ISCED analytics (domain={domain}, period={period} days)...", file=sys.stderr)
     else:
-        print(f"  Generating analytics (period={period} days, all domains)...", file=sys.stderr)
+        print(f"  Generating ISCED analytics (period={period} days, all domains)...", file=sys.stderr)
 
     result = subprocess.run(
         analytics_cmd,
@@ -391,7 +391,7 @@ def generate_analytics():
     else:
         period_desc = f"{period}-day period" if period != '30' else "30-day period"
         domain_desc = f" (domain: {domain})" if domain else ""
-        print(f"  ✓ Analytics generated ({period_desc}{domain_desc})", file=sys.stderr)
+        print(f"  ✓ ISCED analytics generated ({period_desc}{domain_desc})", file=sys.stderr)
 
     # Sub-step 2: Graph data
     print("  Generating graph data...", file=sys.stderr)
@@ -432,10 +432,14 @@ def generate_analytics():
     else:
         print(f"  ✓ Analytics dashboard → analytics-dashboard.html", file=sys.stderr)
 
-    # Sub-step 5: Deploy to Netlify
+    # Sub-step 5: Deploy to GitHub Pages (default) or Netlify (legacy)
+    github_token = os.getenv('GITHUB_TOKEN')
     netlify_token = os.getenv('NETLIFY_AUTH_TOKEN')
-    if netlify_token:
-        print("  Deploying to Netlify...", file=sys.stderr)
+    use_netlify = os.getenv('USE_NETLIFY', 'false').lower() == 'true'
+
+    if use_netlify and netlify_token:
+        # Legacy: Netlify deployment
+        print("  Deploying to Netlify (legacy)...", file=sys.stderr)
         result = subprocess.run(
             ['bash', 'scripts/deploy-to-netlify.sh'],
             cwd=ROOT,
@@ -447,8 +451,42 @@ def generate_analytics():
             print(f"  ⚠️  Netlify deployment failed: {result.stderr}", file=sys.stderr)
         else:
             print(f"  ✓ Deployed to Netlify → https://knowledge-analytics.netlify.app/", file=sys.stderr)
+    elif github_token or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
+        # Default: GitHub Pages deployment
+        print("  Deploying to GitHub Pages...", file=sys.stderr)
+        result = subprocess.run(
+            ['bash', 'scripts/deploy-to-github.sh'],
+            cwd=ROOT,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            print(f"  ⚠️  GitHub Pages deployment failed: {result.stderr}", file=sys.stderr)
+        else:
+            # Extract username from git config for URL
+            try:
+                git_user_result = subprocess.run(
+                    ['git', 'config', '--get', 'user.name'],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True
+                )
+                username = git_user_result.stdout.strip() if git_user_result.returncode == 0 else 'your-username'
+                # Get current repo name dynamically
+                repo_name_cmd = subprocess.run(
+                    ['basename', subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                                              cwd=ROOT, capture_output=True, text=True).stdout.strip()],
+                    capture_output=True,
+                    text=True
+                )
+                current_repo = repo_name_cmd.stdout.strip() if repo_name_cmd.returncode == 0 else 'knowledge-system'
+                graph_repo = f"{current_repo}-graph"
+                print(f"  ✓ Deployed to GitHub Pages → https://{username}.github.io/{graph_repo}/", file=sys.stderr)
+            except:
+                print(f"  ✓ Deployed to GitHub Pages", file=sys.stderr)
     else:
-        print("  ⏭️  Netlify deployment skipped (NETLIFY_AUTH_TOKEN not set)", file=sys.stderr)
+        print("  ⏭️  Deployment skipped (no GITHUB_TOKEN or SSH keys found)", file=sys.stderr)
+        print("     Set GITHUB_TOKEN or configure SSH keys to enable auto-deployment", file=sys.stderr)
 
 
 def display_completion_report(
@@ -492,11 +530,38 @@ def display_completion_report(
     print(f"   • knowledge-graph.html (graph visualization)", file=sys.stderr)
     print(f"   • analytics-dashboard.html (dashboard)", file=sys.stderr)
 
-    # Show Netlify deployment status if token is set
-    if os.getenv('NETLIFY_AUTH_TOKEN'):
-        print(f"\n🌐 Netlify Deployment:", file=sys.stderr)
+    # Show deployment status
+    use_netlify = os.getenv('USE_NETLIFY', 'false').lower() == 'true'
+    if use_netlify and os.getenv('NETLIFY_AUTH_TOKEN'):
+        print(f"\n🌐 Netlify Deployment (legacy):", file=sys.stderr)
         print(f"   • Dashboard: https://knowledge-analytics.netlify.app/", file=sys.stderr)
         print(f"   • Graph: https://knowledge-analytics.netlify.app/graph.html", file=sys.stderr)
+    elif os.getenv('GITHUB_TOKEN') or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
+        # Extract username from git config
+        try:
+            git_user_result = subprocess.run(
+                ['git', 'config', '--get', 'user.name'],
+                cwd=Path(__file__).parent.parent.parent,
+                capture_output=True,
+                text=True
+            )
+            username = git_user_result.stdout.strip() if git_user_result.returncode == 0 else 'your-username'
+            # Get current repo name dynamically
+            repo_name_cmd = subprocess.run(
+                ['basename', subprocess.run(['git', 'rev-parse', '--show-toplevel'],
+                                          cwd=Path(__file__).parent.parent.parent, capture_output=True, text=True).stdout.strip()],
+                capture_output=True,
+                text=True
+            )
+            current_repo = repo_name_cmd.stdout.strip() if repo_name_cmd.returncode == 0 else 'knowledge-system'
+            graph_repo = f"{current_repo}-graph"
+            print(f"\n🌐 GitHub Pages Deployment:", file=sys.stderr)
+            print(f"   • Dashboard: https://{username}.github.io/{graph_repo}/", file=sys.stderr)
+            print(f"   • Graph: https://{username}.github.io/{graph_repo}/graph.html", file=sys.stderr)
+            print(f"   • Repository: https://github.com/{username}/{graph_repo}", file=sys.stderr)
+        except:
+            print(f"\n🌐 GitHub Pages Deployment:", file=sys.stderr)
+            print(f"   • Deployed to GitHub Pages", file=sys.stderr)
 
     print(f"\n⏱️  Performance:", file=sys.stderr)
     print(f"   • Total time: {elapsed:.1f}s", file=sys.stderr)

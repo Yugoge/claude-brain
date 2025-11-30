@@ -1,22 +1,23 @@
 ---
-description: "Generate and deploy knowledge graph visualization and analytics dashboard to Netlify"
+description: "Generate and deploy knowledge graph visualization and analytics dashboard to GitHub Pages"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, TodoWrite
-argument-hint: "[--period <days>] [--domain <domain>] [--deploy]"
+argument-hint: "[--period <days>] [--domain <domain>] [--deploy] [--netlify]"
 model: inherit
 ---
 
 # Graph Command
 
-Generate knowledge graph visualization and analytics dashboard, optionally deploy to Netlify.
+Generate knowledge graph visualization and analytics dashboard, optionally deploy to GitHub Pages (default) or Netlify (legacy).
 
 ## Usage
 
 ```
 /graph                          # Generate visualizations (default: 30 days, all domains)
-/graph --deploy                 # Generate and deploy to Netlify
+/graph --deploy                 # Generate and deploy to GitHub Pages
 /graph --period 7               # Generate for last 7 days
 /graph --domain finance         # Generate for finance domain only
-/graph --period 90 --deploy     # Generate 90-day view and deploy
+/graph --period 90 --deploy     # Generate 90-day view and deploy to GitHub Pages
+/graph --deploy --netlify       # Deploy to Netlify (legacy option)
 ```
 
 ## What This Command Does
@@ -24,7 +25,8 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 1. **Generate Analytics**: Create 30-day (or custom period) analytics from review data
 2. **Build Knowledge Graph**: Generate interactive D3.js graph visualization
 3. **Create HTML Files**: Produce standalone HTML files with embedded data
-4. **Deploy to Netlify** (optional): Publish to https://knowledge-analytics.netlify.app/
+4. **Deploy to GitHub Pages** (default): Publish to https://{username}.github.io/{current-repo}-graph/
+5. **Deploy to Netlify** (legacy): Publish to https://knowledge-analytics.netlify.app/
 
 ## Implementation
 
@@ -33,12 +35,13 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 Extract parameters from command arguments:
 - `--period <N>`: Time period in days (default: 30)
 - `--domain <name>`: Filter by specific domain (default: all)
-- `--deploy`: Deploy to Netlify after generation
+- `--deploy`: Deploy after generation (default: GitHub Pages)
+- `--netlify`: Use Netlify instead of GitHub Pages (legacy option)
 
 ### Step 2: Generate Analytics Data
 
 ```bash
-source venv/bin/activate && python scripts/analytics/generate-analytics.py \
+source venv/bin/activate && python scripts/analytics/generate-analytics-isced.py \
   --period ${PERIOD:-30} \
   ${DOMAIN:+--domain "$DOMAIN"}
 ```
@@ -108,42 +111,62 @@ Show generation summary:
    • file:///root/knowledge-system/knowledge-graph.html
 ```
 
-### Step 6: Deploy to Netlify (if --deploy flag)
+### Step 6: Deploy (if --deploy flag)
 
-**Check prerequisites**:
-1. Verify Netlify CLI installed: `command -v netlify`
-2. Check auth token: `$NETLIFY_AUTH_TOKEN`
-3. If missing, provide instructions
+**Default: GitHub Pages**
 
-**Deploy**:
+Run deployment script:
 ```bash
-# Create deployment directory
-rm -rf /tmp/analytics-deploy
-mkdir -p /tmp/analytics-deploy
-
-# Copy files
-cp analytics-dashboard.html /tmp/analytics-deploy/index.html
-cp knowledge-graph.html /tmp/analytics-deploy/graph.html
-
-# Deploy to fixed site (knowledge-analytics.netlify.app)
-cd /tmp/analytics-deploy
-http_proxy="" https_proxy="" HTTP_PROXY="" HTTPS_PROXY="" \
-  netlify deploy --prod --dir . --site "521fdc68-d271-408b-af64-b62c1342c4f2"
-
-# Cleanup
-rm -rf /tmp/analytics-deploy
+bash scripts/deploy-to-github.sh
 ```
+
+The script automatically:
+1. Detects GitHub username from git config
+2. Determines repository name: `{current-repo}-graph`
+3. Checks if repository exists
+4. Creates repository if needed (using GITHUB_TOKEN)
+5. Pushes HTML files to gh-pages branch
+6. Enables GitHub Pages automatically
+7. Returns live URLs
+
+**Authentication options**:
+- **Option 1 (Recommended)**: Personal Access Token
+  ```bash
+  export GITHUB_TOKEN='your_token_here'
+  ```
+  Get token from: https://github.com/settings/tokens/new
+  Required scopes: `repo`, `workflow`
+
+- **Option 2**: SSH Keys
+  - Must be configured: `~/.ssh/id_rsa` or `~/.ssh/id_ed25519`
+  - Add to GitHub: https://github.com/settings/keys
 
 **Show deployment result**:
 ```
-🌐 Deployed to Netlify Successfully!
+🌐 Deployed to GitHub Pages Successfully!
 
 Live URLs:
-• Dashboard: https://knowledge-analytics.netlify.app/
-• Graph: https://knowledge-analytics.netlify.app/graph.html
+• Dashboard: https://{username}.github.io/{current-repo}-graph/
+• Graph: https://{username}.github.io/{current-repo}-graph/graph.html
+
+⏱️ Note: GitHub Pages may take 1-2 minutes to build
+📁 Repository: https://github.com/{username}/{current-repo}-graph
 
 Share these links to view your knowledge system analytics from anywhere!
 ```
+
+**Legacy: Netlify (if --netlify flag)**
+
+Only use if `--netlify` flag is specified:
+```bash
+bash scripts/deploy-to-netlify.sh
+```
+
+Requires:
+- Netlify CLI: `npm install -g netlify-cli`
+- Auth token: `export NETLIFY_AUTH_TOKEN='your_token_here'`
+
+**Note**: Netlify has rate limits and may require payment. GitHub Pages is recommended.
 
 ## Error Handling
 
@@ -153,9 +176,13 @@ Share these links to view your knowledge system analytics from anywhere!
 - If no Rems exist → Show "No data" message in HTML
 
 **Deployment errors**:
-- Netlify CLI not installed → Provide installation command
-- No auth token → Show token setup instructions
-- Network error → Retry with instructions
+- Git not configured → Provide git config commands
+- No GitHub token/SSH keys → Show authentication setup instructions
+- Repository creation fails → Check token permissions or create manually
+- Push fails → Check network/authentication
+- GitHub Pages not enabled → Provide manual setup instructions
+- (Legacy) Netlify CLI not installed → Provide installation command
+- (Legacy) Netlify rate limit → Suggest GitHub Pages instead
 
 **Generation errors**:
 - Script failures → Show error, suggest manual run
@@ -167,7 +194,8 @@ Share these links to view your knowledge system analytics from anywhere!
 After generation, present options:
 ```xml
 <options>
-    <option>Deploy to Netlify</option>
+    <option>Deploy to GitHub Pages</option>
+    <option>Deploy to Netlify (legacy)</option>
     <option>Generate different period</option>
     <option>Filter by domain</option>
     <option>View local files</option>
@@ -180,6 +208,7 @@ After generation, present options:
 - ✅ HTML files created with embedded data
 - ✅ Premium design (no emojis, minimalist aesthetic)
 - ✅ Local files viewable in browser
-- ✅ (Optional) Deployed to Netlify with live URLs
+- ✅ (Optional) Deployed to GitHub Pages with live URLs
+- ✅ Repository auto-created if needed
 - ✅ Clear summary with metrics shown
 - ✅ Error messages helpful with recovery steps
