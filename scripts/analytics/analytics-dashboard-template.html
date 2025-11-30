@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Analytics Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,101 +14,125 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafbfc;
+            color: #1a1a1a;
+            padding: 0;
             min-height: 100vh;
+            line-height: 1.5;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 48px 32px;
         }
 
         .header {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #ffffff;
+            padding: 48px 56px;
+            border-radius: 2px;
+            margin-bottom: 32px;
+            border: 1px solid #e8e9ea;
         }
 
         .header h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2.5em;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
         }
 
         .header .subtitle {
-            color: #666;
-            font-size: 1.1em;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 400;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
         }
 
         .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            transition: all 0.2s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+            border-color: #d1d5db;
         }
 
         .stat-card h3 {
-            color: #666;
-            font-size: 0.9em;
+            color: #6b7280;
+            font-size: 11px;
             font-weight: 500;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-card h3 i {
+            font-size: 14px;
+            opacity: 0.7;
         }
 
         .stat-card .value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
+            font-size: 40px;
+            font-weight: 300;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
         }
 
         .stat-card .label {
-            color: #999;
-            font-size: 0.9em;
+            color: #9ca3af;
+            font-size: 13px;
+            font-weight: 400;
         }
 
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
         }
 
         .chart-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
         }
 
         .chart-card h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.3em;
+            color: #1a1a1a;
+            margin-bottom: 32px;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-card h2 i {
+            font-size: 16px;
+            color: #6b7280;
         }
 
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 320px;
         }
 
         .chart-container.large {
@@ -115,28 +140,71 @@
         }
 
         .footer {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
+            background: transparent;
+            padding: 32px;
             text-align: center;
-            color: #666;
-            font-size: 0.9em;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #9ca3af;
+            font-size: 12px;
         }
 
         .no-data {
             text-align: center;
-            padding: 40px;
-            color: #999;
+            padding: 80px 40px;
+            color: #9ca3af;
+            background: #ffffff;
+            border: 1px solid #e8e9ea;
+            border-radius: 2px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
             .charts-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .header {
+                padding: 32px 24px;
+                margin-bottom: 24px;
+            }
 
             .header h1 {
-                font-size: 1.8em;
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .stat-card {
+                padding: 24px;
+            }
+
+            .stat-card .value {
+                font-size: 32px;
+            }
+
+            .chart-card {
+                padding: 24px;
+            }
+
+            .chart-card h2 {
+                margin-bottom: 24px;
+                font-size: 14px;
+            }
+
+            .chart-container {
+                height: 280px;
+            }
+
+            .chart-container.large {
+                height: 320px;
             }
         }
     </style>
@@ -144,28 +212,28 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Learning Analytics Dashboard</h1>
+            <h1>Learning Analytics</h1>
             <p class="subtitle" id="lastUpdated">Last updated: Loading...</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Current Streak</h3>
+                <h3><i class="fa-solid fa-fire"></i>Current Streak</h3>
                 <div class="value" id="streakValue">-</div>
                 <div class="label">consecutive days</div>
             </div>
             <div class="stat-card">
-                <h3>Total Concepts</h3>
+                <h3><i class="fa-solid fa-brain"></i>Total Concepts</h3>
                 <div class="value" id="conceptsValue">-</div>
                 <div class="label">tracked concepts</div>
             </div>
             <div class="stat-card">
-                <h3>Review Adherence</h3>
+                <h3><i class="fa-solid fa-check-circle"></i>Review Adherence</h3>
                 <div class="value" id="adherenceValue">-</div>
                 <div class="label">on-time reviews</div>
             </div>
             <div class="stat-card">
-                <h3>Avg Velocity</h3>
+                <h3><i class="fa-solid fa-gauge-high"></i>Avg Velocity</h3>
                 <div class="value" id="velocityValue">-</div>
                 <div class="label">concepts/week</div>
             </div>
@@ -173,43 +241,43 @@
 
         <div class="charts-grid">
             <div class="chart-card">
-                <h2>📈 Retention Curves</h2>
+                <h2><i class="fa-solid fa-chart-line"></i>Retention Curves</h2>
                 <div class="chart-container">
                     <canvas id="retentionChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>⚡ Learning Velocity</h2>
+                <h2><i class="fa-solid fa-rocket"></i>Learning Velocity</h2>
                 <div class="chart-container">
                     <canvas id="velocityChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>🎯 Review Adherence</h2>
+                <h2><i class="fa-solid fa-bullseye"></i>Review Adherence</h2>
                 <div class="chart-container">
                     <canvas id="adherenceChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
-                <h2>⏰ Time Distribution</h2>
+                <h2><i class="fa-solid fa-clock"></i>Time Distribution</h2>
                 <div class="chart-container">
                     <canvas id="timeChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="chart-card" style="margin-bottom: 30px;">
-            <h2>🔥 Activity Heatmap (30 days)</h2>
+        <div class="chart-card" style="margin-bottom: 32px;">
+            <h2><i class="fa-solid fa-calendar-days"></i>Activity Heatmap (30 days)</h2>
             <div class="chart-container large">
                 <canvas id="heatmapChart"></canvas>
             </div>
         </div>
 
         <div class="footer">
-            <p>Generated by Knowledge System • Data source: .review/analytics-cache.json</p>
+            <p>Generated by Knowledge System</p>
         </div>
     </div>
 
@@ -267,6 +335,7 @@
                 return;
             }
 
+            const colors = ['#1a1a1a', '#4b5563', '#6b7280', '#9ca3af', '#374151', '#111827'];
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -274,22 +343,39 @@
                     datasets: domains.map((domain, idx) => ({
                         label: `${domain.label} (${domain.conceptCount} concepts)`,
                         data: domain.data,
-                        borderColor: `hsl(${idx * 70}, 70%, 50%)`,
-                        backgroundColor: `hsla(${idx * 70}, 70%, 50%, 0.1)`,
-                        tension: 0.4
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
                     }))
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16,
+                                font: { size: 11, family: 'Inter' },
+                                color: '#6b7280'
+                            }
+                        }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            title: { display: true, text: 'Retention %' }
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Retention %', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
                         }
                     }
                 }
@@ -321,9 +407,10 @@
                     datasets: [{
                         label: 'Reviews/Hour',
                         data: domains.map(d => d.velocity),
-                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 2
+                        backgroundColor: '#1a1a1a',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -332,6 +419,9 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' },
                             callbacks: {
                                 label: function(context) {
                                     const idx = context.dataIndex;
@@ -348,7 +438,13 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Reviews per Hour' }
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Reviews per Hour', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
                         }
                     }
                 }
@@ -380,9 +476,10 @@
                     datasets: [{
                         label: 'Adherence Rate (%)',
                         data: domains.map(d => d.rate),
-                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        borderWidth: 2
+                        backgroundColor: '#4b5563',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -391,6 +488,9 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' },
                             callbacks: {
                                 label: function(context) {
                                     const idx = context.dataIndex;
@@ -408,7 +508,13 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            title: { display: true, text: 'Adherence %' }
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Adherence %', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
                         }
                     }
                 }
@@ -426,25 +532,42 @@
                 return;
             }
 
+            const pieColors = ['#1a1a1a', '#374151', '#4b5563', '#6b7280', '#9ca3af', '#d1d5db'];
             new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
                     labels: entries.map(([domain]) => domain),
                     datasets: [{
                         data: entries.map(([, hours]) => hours),
-                        backgroundColor: entries.map((_, idx) =>
-                            `hsla(${idx * 360 / entries.length}, 70%, 60%, 0.8)`
-                        )
+                        backgroundColor: entries.map((_, idx) => pieColors[idx % pieColors.length]),
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '65%',
                     plugins: {
-                        legend: { position: 'bottom' },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16,
+                                font: { size: 11, family: 'Inter' },
+                                color: '#6b7280'
+                            }
+                        },
                         title: {
                             display: true,
-                            text: `Total: ${time.totalHours || 0} hours`
+                            text: `Total: ${time.totalHours || 0} hours`,
+                            font: { size: 12, family: 'Inter', weight: 400 },
+                            color: '#6b7280',
+                            padding: { bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' }
                         }
                     }
                 }
@@ -474,17 +597,10 @@
                     datasets: [{
                         label: 'Days',
                         data: [currentStreak, longestStreak, totalActiveDays],
-                        backgroundColor: [
-                            'rgba(102, 126, 234, 0.6)',
-                            'rgba(46, 204, 113, 0.6)',
-                            'rgba(241, 196, 15, 0.6)'
-                        ],
-                        borderColor: [
-                            'rgba(102, 126, 234, 1)',
-                            'rgba(46, 204, 113, 1)',
-                            'rgba(241, 196, 15, 1)'
-                        ],
-                        borderWidth: 2
+                        backgroundColor: ['#1a1a1a', '#4b5563', '#6b7280'],
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -494,13 +610,27 @@
                         legend: { display: false },
                         title: {
                             display: true,
-                            text: `Last Activity: ${lastActivity}`
+                            text: `Last Activity: ${lastActivity}`,
+                            font: { size: 12, family: 'Inter', weight: 400 },
+                            color: '#6b7280',
+                            padding: { bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Days' }
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Days', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
                         }
                     }
                 }

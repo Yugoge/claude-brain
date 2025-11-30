@@ -1,0 +1,2 @@
+# GitHub Pages deployment dependencies
+requests>=2.31.0
