@@ -79,6 +79,22 @@ if [ -n "$GITHUB_TOKEN" ]; then
     REPO_URL="https://${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${REPO_NAME}.git"
 elif [ -f ~/.ssh/id_rsa ] || [ -f ~/.ssh/id_ed25519 ]; then
     echo "✓ Using SSH keys for authentication"
+
+    # Verify SSH key is accessible to GitHub
+    if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+        echo "✓ SSH connection to GitHub verified"
+    else
+        echo "⚠️  Warning: SSH key might not be added to GitHub"
+        echo "  If deployment fails, add your public key to:"
+        echo "  https://github.com/settings/keys"
+        echo ""
+        if [ -f ~/.ssh/id_ed25519.pub ]; then
+            echo "  Your public key (~/.ssh/id_ed25519.pub):"
+            cat ~/.ssh/id_ed25519.pub
+            echo ""
+        fi
+    fi
+
     USE_SSH=true
     REPO_URL="git@github.com:${GITHUB_USER}/${REPO_NAME}.git"
 else

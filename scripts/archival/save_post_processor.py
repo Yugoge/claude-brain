@@ -453,7 +453,7 @@ def generate_analytics():
             print(f"  ✓ Deployed to Netlify → https://knowledge-analytics.netlify.app/", file=sys.stderr)
     elif github_token or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
         # Default: GitHub Pages deployment
-        print("  Deploying to GitHub Pages...", file=sys.stderr)
+        print("\n  🚀 Deploying to GitHub Pages...", file=sys.stderr)
         result = subprocess.run(
             ['bash', 'scripts/deploy-to-github.sh'],
             cwd=ROOT,
@@ -461,7 +461,14 @@ def generate_analytics():
             text=True
         )
         if result.returncode != 0:
-            print(f"  ⚠️  GitHub Pages deployment failed: {result.stderr}", file=sys.stderr)
+            print(f"\n  ❌ GitHub Pages deployment failed", file=sys.stderr)
+            print(f"     Error: {result.stderr.strip()}", file=sys.stderr)
+            if result.stdout:
+                print(f"     Output: {result.stdout.strip()}", file=sys.stderr)
+            print(f"\n     Troubleshooting:", file=sys.stderr)
+            print(f"     1. Ensure SSH key is added to GitHub: https://github.com/settings/keys", file=sys.stderr)
+            print(f"     2. Your public key: ~/.ssh/id_ed25519.pub", file=sys.stderr)
+            print(f"     3. Try manual deployment: bash scripts/deploy-to-github.sh", file=sys.stderr)
         else:
             # Extract username from git config for URL
             try:
@@ -481,12 +488,23 @@ def generate_analytics():
                 )
                 current_repo = repo_name_cmd.stdout.strip() if repo_name_cmd.returncode == 0 else 'knowledge-system'
                 graph_repo = f"{current_repo}-graph"
-                print(f"  ✓ Deployed to GitHub Pages → https://{username}.github.io/{graph_repo}/", file=sys.stderr)
-            except:
-                print(f"  ✓ Deployed to GitHub Pages", file=sys.stderr)
+
+                print(f"\n  ✅ Deployed to GitHub Pages successfully!", file=sys.stderr)
+                print(f"\n  🌐 Live URLs:", file=sys.stderr)
+                print(f"     • Dashboard: https://{username}.github.io/{graph_repo}/", file=sys.stderr)
+                print(f"     • Graph: https://{username}.github.io/{graph_repo}/graph.html", file=sys.stderr)
+                print(f"\n     ⏱️  Note: GitHub Pages may take 1-2 minutes to build", file=sys.stderr)
+                print(f"     📁 Repository: https://github.com/{username}/{graph_repo}", file=sys.stderr)
+            except Exception as e:
+                print(f"  ✓ Deployed to GitHub Pages (URL extraction failed: {e})", file=sys.stderr)
     else:
-        print("  ⏭️  Deployment skipped (no GITHUB_TOKEN or SSH keys found)", file=sys.stderr)
-        print("     Set GITHUB_TOKEN or configure SSH keys to enable auto-deployment", file=sys.stderr)
+        print("\n  ⏭️  Deployment skipped (no credentials found)", file=sys.stderr)
+        print(f"\n     To enable auto-deployment, configure one of:", file=sys.stderr)
+        print(f"     • Option 1: export GITHUB_TOKEN='your_token_here'", file=sys.stderr)
+        print(f"       Get token: https://github.com/settings/tokens/new (scopes: repo, workflow)", file=sys.stderr)
+        print(f"     • Option 2: Add SSH key to GitHub", file=sys.stderr)
+        print(f"       Setup: https://github.com/settings/keys", file=sys.stderr)
+        print(f"\n     Manual deployment: bash scripts/deploy-to-github.sh", file=sys.stderr)
 
 
 def display_completion_report(

@@ -12,12 +12,12 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 ## Usage
 
 ```
-/graph                          # Generate visualizations (default: 30 days, all domains)
-/graph --deploy                 # Generate and deploy to GitHub Pages
+/graph                          # Generate and auto-deploy (if credentials available)
 /graph --period 7               # Generate for last 7 days
 /graph --domain finance         # Generate for finance domain only
-/graph --period 90 --deploy     # Generate 90-day view and deploy to GitHub Pages
-/graph --deploy --netlify       # Deploy to Netlify (legacy option)
+/graph --no-deploy              # Skip deployment (local files only)
+/graph --period 90              # Generate 90-day view with auto-deployment
+/graph --netlify                # Use Netlify instead of GitHub Pages (legacy)
 ```
 
 ## What This Command Does
@@ -25,8 +25,11 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 1. **Generate Analytics**: Create 30-day (or custom period) analytics from review data
 2. **Build Knowledge Graph**: Generate interactive D3.js graph visualization
 3. **Create HTML Files**: Produce standalone HTML files with embedded data
-4. **Deploy to GitHub Pages** (default): Publish to https://{username}.github.io/{current-repo}-graph/
-5. **Deploy to Netlify** (legacy): Publish to https://knowledge-analytics.netlify.app/
+4. **Auto-Deploy** (if credentials exist): Automatically publish to GitHub Pages
+   - Checks for GITHUB_TOKEN or SSH keys (~/.ssh/id_ed25519)
+   - If found → deploys to https://{username}.github.io/{current-repo}-graph/
+   - If not found → shows local files only with setup instructions
+5. **Deploy to Netlify** (legacy): Use --netlify flag for Netlify deployment
 
 ## Implementation
 
@@ -35,8 +38,10 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 Extract parameters from command arguments:
 - `--period <N>`: Time period in days (default: 30)
 - `--domain <name>`: Filter by specific domain (default: all)
-- `--deploy`: Deploy after generation (default: GitHub Pages)
+- `--no-deploy`: Skip deployment (local files only)
 - `--netlify`: Use Netlify instead of GitHub Pages (legacy option)
+
+**Default behavior**: Auto-deploy if credentials available (GITHUB_TOKEN or SSH keys)
 
 ### Step 2: Generate Analytics Data
 
@@ -111,55 +116,71 @@ Show generation summary:
    • file:///root/knowledge-system/knowledge-graph.html
 ```
 
-### Step 6: Deploy (if --deploy flag)
+### Step 6: Auto-Deploy (Default Behavior)
 
-**Default: GitHub Pages**
+**Automatic deployment** runs unless `--no-deploy` flag is specified.
 
-Run deployment script:
+**Check for credentials**:
 ```bash
-bash scripts/deploy-to-github.sh
+# Check if deployment should run
+if [ "$NO_DEPLOY" != "true" ]; then
+  # Check for credentials
+  if [ -n "$GITHUB_TOKEN" ] || [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
+    echo "🚀 Auto-deploying to GitHub Pages (credentials detected)..."
+    bash scripts/deploy-to-github.sh
+  else
+    echo "⏭️  Deployment skipped (no credentials found)"
+    echo ""
+    echo "To enable auto-deployment, configure one of:"
+    echo "  • Option 1: export GITHUB_TOKEN='your_token_here'"
+    echo "    Get token: https://github.com/settings/tokens/new (scopes: repo, workflow)"
+    echo "  • Option 2: Add SSH key to GitHub"
+    echo "    Setup: https://github.com/settings/keys"
+    echo ""
+    echo "Manual deployment: bash scripts/deploy-to-github.sh"
+  fi
+fi
 ```
 
-The script automatically:
+**Deployment script** (`scripts/deploy-to-github.sh`) automatically:
 1. Detects GitHub username from git config
 2. Determines repository name: `{current-repo}-graph`
 3. Checks if repository exists
-4. Creates repository if needed (using GITHUB_TOKEN)
+4. Creates repository if needed (using GITHUB_TOKEN or SSH)
 5. Pushes HTML files to gh-pages branch
 6. Enables GitHub Pages automatically
 7. Returns live URLs
 
-**Authentication options**:
-- **Option 1 (Recommended)**: Personal Access Token
-  ```bash
-  export GITHUB_TOKEN='your_token_here'
-  ```
-  Get token from: https://github.com/settings/tokens/new
-  Required scopes: `repo`, `workflow`
-
-- **Option 2**: SSH Keys
-  - Must be configured: `~/.ssh/id_rsa` or `~/.ssh/id_ed25519`
-  - Add to GitHub: https://github.com/settings/keys
-
-**Show deployment result**:
+**Success output**:
 ```
-🌐 Deployed to GitHub Pages Successfully!
+✅ Deployed to GitHub Pages successfully!
 
-Live URLs:
-• Dashboard: https://{username}.github.io/{current-repo}-graph/
-• Graph: https://{username}.github.io/{current-repo}-graph/graph.html
+🌐 Live URLs:
+   • Dashboard: https://Yugoge.github.io/knowledge-system-graph/
+   • Graph: https://Yugoge.github.io/knowledge-system-graph/graph.html
 
-⏱️ Note: GitHub Pages may take 1-2 minutes to build
-📁 Repository: https://github.com/{username}/{current-repo}-graph
+⏱️  Note: GitHub Pages may take 1-2 minutes to build
+📁 Repository: https://github.com/Yugoge/knowledge-system-graph
+```
 
-Share these links to view your knowledge system analytics from anywhere!
+**Failure output** (with troubleshooting):
+```
+❌ GitHub Pages deployment failed
+   Error: Permission denied (publickey)
+
+   Troubleshooting:
+   1. Ensure SSH key is added to GitHub: https://github.com/settings/keys
+   2. Your public key: ~/.ssh/id_ed25519.pub
+   3. Try manual deployment: bash scripts/deploy-to-github.sh
 ```
 
 **Legacy: Netlify (if --netlify flag)**
 
 Only use if `--netlify` flag is specified:
 ```bash
-bash scripts/deploy-to-netlify.sh
+if [ "$USE_NETLIFY" = "true" ]; then
+  bash scripts/deploy-to-netlify.sh
+fi
 ```
 
 Requires:
