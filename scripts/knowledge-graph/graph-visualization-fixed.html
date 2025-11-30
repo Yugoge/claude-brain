@@ -453,6 +453,14 @@
 
         svg.call(zoom);
 
+        // Initialize node positions to prevent edge/node misalignment
+        graphData.nodes.forEach((d, i) => {
+            if (!d.x) d.x = width / 2 + (Math.random() - 0.5) * 100;
+            if (!d.y) d.y = height / 2 + (Math.random() - 0.5) * 100;
+            d.vx = 0;  // Initial velocity
+            d.vy = 0;
+        });
+
         // Force simulation
         const simulation = d3.forceSimulation(graphData.nodes)
             .force('link', d3.forceLink(graphData.edges)
@@ -517,10 +525,9 @@
                 .attr('x', d => d.x)
                 .attr('y', d => d.y);
 
-            // Stop simulation when stable to prevent drift
-            if (simulation.alpha() < 0.01) {
-                simulation.stop();
-            }
+            // DO NOT stop simulation manually!
+            // Let D3 naturally decay alpha to 0
+            // Stopping causes entire graph to restart on any interaction
         });
 
         // Drag functions
@@ -537,8 +544,9 @@
 
         function dragended(event) {
             if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
+            // CRITICAL FIX: Keep user-dragged positions fixed
+            // This prevents nodes from drifting back and maintains user's layout adjustments
+            // DO NOT clear fx/fy here - user expects dragged nodes to stay put
         }
 
         // Highlight connections
