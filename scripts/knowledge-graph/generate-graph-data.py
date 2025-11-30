@@ -91,6 +91,7 @@ def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
     # Priority 3: Subdomain mapping (fallback)
     subdomain = frontmatter_data.get('subdomain', '').lower()
     subdomain_mapping = {
+        # 04 - Business & Law
         'equity': 'business-law',
         'fixed-income': 'business-law',
         'derivatives': 'business-law',
@@ -100,16 +101,52 @@ def extract_isced_domain(file_path: str, frontmatter_data: dict) -> str:
         'rates': 'business-law',
         'finance': 'business-law',
         'banking': 'business-law',
+        'law': 'business-law',
+        'legal': 'business-law',
+        # 03 - Social Sciences
         'economics': 'social-sciences',
+        'sociology': 'social-sciences',
+        'politics': 'social-sciences',
+        # 06 - ICT
         'python': 'ict',
         'csharp': 'ict',
         'javascript': 'ict',
         'programming': 'ict',
         'software': 'ict',
-        'french': 'language',
-        'english': 'language',
-        'chinese': 'language',
-        'spanish': 'language'
+        'computer': 'ict',
+        # 02 - Humanities (Languages are part of humanities in ISCED)
+        'french': 'humanities',
+        'english': 'humanities',
+        'chinese': 'humanities',
+        'spanish': 'humanities',
+        'language': 'humanities',
+        'linguistics': 'humanities',
+        'literature': 'humanities',
+        'history': 'humanities',
+        'philosophy': 'humanities',
+        # 01 - Education
+        'pedagogy': 'education',
+        'teaching': 'education',
+        # 05 - Natural Sciences
+        'physics': 'natural-sciences',
+        'chemistry': 'natural-sciences',
+        'mathematics': 'natural-sciences',
+        'biology': 'natural-sciences',
+        # 07 - Engineering
+        'engineering': 'engineering',
+        'mechanical': 'engineering',
+        'electrical': 'engineering',
+        # 08 - Agriculture
+        'agriculture': 'agriculture',
+        'farming': 'agriculture',
+        # 09 - Health
+        'medicine': 'health',
+        'nursing': 'health',
+        'healthcare': 'health',
+        # 10 - Services
+        'hospitality': 'services',
+        'tourism': 'services',
+        'transport': 'services'
     }
 
     for keyword, domain in subdomain_mapping.items():
@@ -510,20 +547,20 @@ def transform_to_graph_format(backlinks_data: dict, concept_metadata: dict, doma
 
         connection_counts[concept_id] = len(unique_neighbors)
 
-    # Domain color mapping (UNESCO ISCED categories)
+    # Domain color mapping (UNESCO ISCED-F 2013 Broad Fields)
+    # Complete mapping for all 10 broad field categories
     domain_colors = {
-        'business-law': '#3498db',      # Blue (04 - Business, Law, Finance)
-        'ict': '#2ecc71',               # Green (06 - Programming, Software)
-        'language': '#e74c3c',          # Red (09 - Languages, Humanities)
-        'health': '#9b59b6',            # Purple (09 - Health, Medicine)
-        'humanities': '#f39c12',        # Orange (02 - Arts, History)
-        'natural-sciences': '#1abc9c',  # Teal (05 - Physics, Chemistry, Math)
-        'social-sciences': '#34495e',   # Dark Gray (03 - Economics, Politics)
-        'education': '#e67e22',         # Dark Orange (01 - Education, Pedagogy)
-        'engineering': '#16a085',       # Dark Teal (07 - Engineering)
-        'agriculture': '#27ae60',       # Forest Green (08 - Agriculture)
+        'education': '#e67e22',         # Dark Orange (01 - Education & Pedagogy)
+        'humanities': '#f39c12',        # Orange (02 - Arts, Humanities, Languages)
+        'social-sciences': '#34495e',   # Dark Gray (03 - Social Sciences, Journalism, Information)
+        'business-law': '#3498db',      # Blue (04 - Business, Administration & Law)
+        'natural-sciences': '#1abc9c',  # Teal (05 - Natural Sciences, Mathematics & Statistics)
+        'ict': '#2ecc71',               # Green (06 - Information & Communication Technologies)
+        'engineering': '#16a085',       # Dark Teal (07 - Engineering, Manufacturing & Construction)
+        'agriculture': '#27ae60',       # Forest Green (08 - Agriculture, Forestry, Fisheries & Veterinary)
+        'health': '#9b59b6',            # Purple (09 - Health & Welfare)
         'services': '#95a5a6',          # Light Gray (10 - Services)
-        'generic': '#bdc3c7'            # Very Light Gray (Uncategorized)
+        'generic': '#bdc3c7'            # Very Light Gray (Uncategorized/Generic)
     }
 
     # Transform nodes
