@@ -325,9 +325,18 @@
                 font-size: 9px;
             }
 
-            #rem-content-container > div,
-            #conversations-container > div {
-                max-height: 250px !important;
+            #rem-content-container > div {
+                max-height: 300px !important;
+            }
+
+            /* Full conversation containers need more space on mobile */
+            #conversations-container [id^="full-"] {
+                max-height: 60vh !important;
+            }
+
+            /* Excerpt containers stay compact */
+            #conversations-container [id^="excerpt-"] {
+                max-height: 200px !important;
             }
 
             button {
