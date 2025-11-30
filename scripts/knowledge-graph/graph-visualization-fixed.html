@@ -102,14 +102,14 @@
         }
 
         #details-panel.open {
-            width: 400px;
+            width: 480px;
             padding: 32px;
         }
 
         #details-panel h3 {
             margin-bottom: 20px;
             color: #1a1a1a;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 400;
             letter-spacing: -0.3px;
         }
@@ -117,7 +117,7 @@
         #details-panel p {
             margin-bottom: 12px;
             color: #6b7280;
-            font-size: 13px;
+            font-size: 14px;
             line-height: 1.6;
         }
 
@@ -372,6 +372,17 @@
                 font-size: 16px;
             }
         }
+
+        .node.opened {
+            stroke: #1a1a1a !important;
+            stroke-width: 4px !important;
+            filter: brightness(1.1);
+        }
+
+        .label.opened {
+            font-weight: 700;
+            fill: #1a1a1a;
+        }
     </style>
 </head>
 <body>
@@ -409,6 +420,10 @@
     <script>
         // GRAPH_DATA_PLACEHOLDER
         const graphData = null;  // Will be replaced by actual data
+
+
+        // Track opened nodes
+        const openedNodes = new Set();
 
         if (!graphData) {
             document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h2>No graph data available</h2></div>';
@@ -559,7 +574,14 @@
                 'linked-from-prerequisite_of': 'Required by',
                 'reference': 'References'
             };
-            return labels[relationType] || relationType.replace(/_/g, ' ').replace(/-/g, ' ');
+
+            // Fallback: capitalize first letter consistently (Issue #2)
+            if (!labels[relationType]) {
+                const formatted = relationType.replace(/_/g, ' ').replace(/-/g, ' ');
+                return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+            }
+
+            return labels[relationType];
         }
 
 
@@ -568,6 +590,22 @@
         async function showDetails(d) {
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
+
+            // Mark node as opened (Issue #1)
+            openedNodes.add(d.id);
+
+            // Apply opened styling
+            node.classed('opened', n => openedNodes.has(n.id));
+            label.classed('opened', n => openedNodes.has(n.id));
+
+            // Clear fixed positions to prevent dispersion (Issue #5)
+            graphData.nodes.forEach(n => {
+                n.fx = null;
+                n.fy = null;
+            });
+
+            // Restart simulation gently
+            simulation.alpha(0.1).restart();
 
             const tags = d.tags || [];
             const tagsHtml = tags.length > 0
@@ -659,7 +697,7 @@
                 .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
                 .replace(/\n/g, '<br>');
 
-            const contentHtml = `<div style="background: #fafbfc; padding: 16px; border-radius: 2px; border: 1px solid #e8e9ea; margin-top: 12px; font-size: 12px; line-height: 1.6; max-height: 400px; overflow-y: auto; color: #4b5563;">
+            const contentHtml = `<div style="background: #fafbfc; padding: 16px; border-radius: 2px; border: 1px solid #e8e9ea; margin-top: 12px; font-size: 14px; line-height: 1.6; max-height: 400px; overflow-y: auto; color: #4b5563;">
                 <p style="margin:8px 0;">${html}</p>
             </div>`;
 
@@ -699,25 +737,26 @@
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                         .replace(/\*(.*?)\*/g, '<em>$1</em>')
                         .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:10px;">$1</code>')
-                        .replace(/\n\n/g, '</p><p style="margin:6px 0;font-size:11px;line-height:1.5;">')
+                        .replace(/\n\n/g, '</p><p style="margin:6px 0;font-size:13px;line-height:1.5;">')
                         .replace(/\n/g, '<br>');
                 };
 
                 const summaryHtml = conv.summary ? `
                     <div style="margin-top: 10px; padding: 10px; background: #fafbfc; border-left: 2px solid #1a1a1a; font-size: 11px; line-height: 1.6; color: #4b5563;">
-                        <strong style="color: #1a1a1a;">Summary:</strong> ${formatMarkdown(conv.summary)}
+                        <strong style="color: #1a1a1a;">Summary:</strong>
+                        <p style="margin:6px 0 0 0;font-size:11px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.summary)}</p>
                     </div>
                 ` : '';
 
                 const excerptHtml = conv.excerpt ? `
-                    <div id="${excerptId}" style="margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 11px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:11px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.excerpt)}</p>
+                    <div id="${excerptId}" style="margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 13px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                        <p style="margin:6px 0;font-size:13px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.excerpt)}</p>
                     </div>
                 ` : '';
 
                 const fullContentHtml = conv.content ? `
-                    <div id="${fullId}" style="display:none; margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 11px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:11px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.content)}</p>
+                    <div id="${fullId}" style="display:none; margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 13px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
+                        <p style="margin:6px 0;font-size:13px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.content)}</p>
                     </div>
                 ` : '';
 
