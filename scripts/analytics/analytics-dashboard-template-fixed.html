@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Analytics Dashboard - Accessible Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Skip to main content link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #1a1a1a;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafbfc;
+            color: #1a1a1a;
+            padding: 0;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            z-index: 1000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+
+        .loading.active {
+            transform: translateY(0);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Search functionality */
+        .search-container {
+            background: #ffffff;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid #e8e9ea;
+            border-radius: 2px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: 2px solid #1a1a1a;
+            outline-offset: 2px;
+            border-color: #1a1a1a;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e8e9ea;
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover,
+        .search-result-item:focus {
+            background: #f3f4f6;
+            outline: none;
+        }
+
+        .search-result-item:focus {
+            outline: 2px solid #1a1a1a;
+            outline-offset: -2px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 48px 56px;
+            border-radius: 2px;
+            margin-bottom: 32px;
+            border: 1px solid #e8e9ea;
+        }
+
+        .header h1 {
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+
+        .header .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .stat-card:hover {
+            border-color: #d1d5db;
+        }
+
+        /* Focus indicator for keyboard navigation */
+        .stat-card:focus,
+        .chart-card:focus {
+            outline: 3px solid #1a1a1a;
+            outline-offset: 4px;
+        }
+
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-card h3 i {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .stat-card .value {
+            font-size: 40px;
+            font-weight: 300;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .stat-card .label {
+            color: #9ca3af;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            position: relative;
+        }
+
+        .chart-card h2 {
+            color: #1a1a1a;
+            margin-bottom: 32px;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-card h2 i {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        .chart-container.large {
+            height: 400px;
+        }
+
+        /* Zoom controls for mobile */
+        .zoom-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: none;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e8e9ea;
+            background: white;
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .zoom-btn:focus {
+            outline: 2px solid #1a1a1a;
+            outline-offset: 2px;
+        }
+
+        .footer {
+            background: transparent;
+            padding: 32px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 40px;
+            color: #9ca3af;
+            background: #ffffff;
+            border: 1px solid #e8e9ea;
+            border-radius: 2px;
+        }
+
+        /* ARIA Live Regions */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Safari-specific fixes */
+        @supports (-webkit-appearance: none) {
+            .chart-container {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .header {
+                padding: 32px 24px;
+                margin-bottom: 24px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .stat-card {
+                padding: 24px;
+            }
+
+            .stat-card .value {
+                font-size: 32px;
+            }
+
+            .chart-card {
+                padding: 24px;
+                overflow-x: auto;
+            }
+
+            .chart-card h2 {
+                margin-bottom: 24px;
+                font-size: 14px;
+            }
+
+            .chart-container {
+                height: 280px;
+                min-width: 320px;
+            }
+
+            .chart-container.large {
+                height: 320px;
+            }
+
+            .zoom-controls {
+                display: flex;
+            }
+
+            .search-container {
+                padding: 16px;
+            }
+        }
+
+        /* Small mobile fixes (320px) */
+        @media (max-width: 360px) {
+            .container {
+                padding: 16px 8px;
+            }
+
+            .chart-container {
+                min-width: 300px;
+            }
+
+            .stat-card .value {
+                font-size: 28px;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .stat-card,
+            .chart-card {
+                border: 2px solid #1a1a1a;
+            }
+
+            .search-input:focus {
+                outline-width: 3px;
+            }
+        }
+
+        /* Animation performance optimization */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Performance monitor */
+        .performance-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            font-size: 11px;
+            color: #6b7280;
+            display: none;
+        }
+
+        .performance-indicator.warning {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .performance-indicator.error {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <!-- Loading indicator -->
+    <div class="loading" id="loadingIndicator" role="status" aria-live="polite">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <span id="loadingText">Loading analytics data...</span>
+    </div>
+
+    <div class="container" id="main" role="main">
+        <div class="header">
+            <h1>Learning Analytics Dashboard</h1>
+            <p class="subtitle" id="lastUpdated">Last updated: Loading...</p>
+        </div>
+
+        <!-- Search functionality -->
+        <div class="search-container" role="search">
+            <label for="searchInput" class="sr-only">Search analytics data</label>
+            <div class="search-wrapper">
+                <i class="fa-solid fa-search search-icon" aria-hidden="true"></i>
+                <input
+                    type="search"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Search for domains, metrics, or concepts..."
+                    aria-label="Search analytics data"
+                    aria-describedby="searchHelp"
+                    aria-autocomplete="list"
+                    aria-controls="searchResults"
+                >
+                <span id="searchHelp" class="sr-only">Type to search through analytics data. Use arrow keys to navigate results.</span>
+                <div id="searchResults" class="search-results" role="listbox" aria-label="Search results"></div>
+            </div>
+        </div>
+
+        <!-- ARIA live region for announcements -->
+        <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" id="announcements"></div>
+
+        <div class="stats-grid" role="region" aria-label="Summary Statistics">
+            <div class="stat-card" tabindex="0" role="article" aria-label="Current Streak Statistics">
+                <h3><i class="fa-solid fa-fire" aria-hidden="true"></i>Current Streak</h3>
+                <div class="value" id="streakValue" aria-live="polite">-</div>
+                <div class="label">consecutive days</div>
+            </div>
+            <div class="stat-card" tabindex="0" role="article" aria-label="Total Concepts Statistics">
+                <h3><i class="fa-solid fa-brain" aria-hidden="true"></i>Total Concepts</h3>
+                <div class="value" id="conceptsValue" aria-live="polite">-</div>
+                <div class="label">tracked concepts</div>
+            </div>
+            <div class="stat-card" tabindex="0" role="article" aria-label="Review Adherence Statistics">
+                <h3><i class="fa-solid fa-check-circle" aria-hidden="true"></i>Review Adherence</h3>
+                <div class="value" id="adherenceValue" aria-live="polite">-</div>
+                <div class="label">on-time reviews</div>
+            </div>
+            <div class="stat-card" tabindex="0" role="article" aria-label="Average Velocity Statistics">
+                <h3><i class="fa-solid fa-gauge-high" aria-hidden="true"></i>Avg Velocity</h3>
+                <div class="value" id="velocityValue" aria-live="polite">-</div>
+                <div class="label">concepts/week</div>
+            </div>
+        </div>
+
+        <div class="charts-grid" role="region" aria-label="Analytics Charts">
+            <div class="chart-card" tabindex="0" role="article" aria-label="Retention Curves Chart">
+                <h2><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Retention Curves</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomChart('retentionChart', 1.2)" aria-label="Zoom in retention chart">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="zoomChart('retentionChart', 0.8)" aria-label="Zoom out retention chart">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="retentionChart" role="img" aria-label="Retention curves by domain"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" tabindex="0" role="article" aria-label="Learning Velocity Chart">
+                <h2><i class="fa-solid fa-rocket" aria-hidden="true"></i>Learning Velocity</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomChart('velocityChart', 1.2)" aria-label="Zoom in velocity chart">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="zoomChart('velocityChart', 0.8)" aria-label="Zoom out velocity chart">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="velocityChart" role="img" aria-label="Learning velocity by domain"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" tabindex="0" role="article" aria-label="Review Adherence Chart">
+                <h2><i class="fa-solid fa-bullseye" aria-hidden="true"></i>Review Adherence</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomChart('adherenceChart', 1.2)" aria-label="Zoom in adherence chart">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="zoomChart('adherenceChart', 0.8)" aria-label="Zoom out adherence chart">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="adherenceChart" role="img" aria-label="Review adherence by domain"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" tabindex="0" role="article" aria-label="Time Distribution Chart">
+                <h2><i class="fa-solid fa-clock" aria-hidden="true"></i>Time Distribution</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="zoomChart('timeChart', 1.2)" aria-label="Zoom in time chart">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="zoom-btn" onclick="zoomChart('timeChart', 0.8)" aria-label="Zoom out time chart">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timeChart" role="img" aria-label="Time distribution by domain"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom: 32px;" tabindex="0" role="article" aria-label="Activity Heatmap">
+            <h2><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Activity Heatmap (30 days)</h2>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomChart('heatmapChart', 1.2)" aria-label="Zoom in heatmap">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <button class="zoom-btn" onclick="zoomChart('heatmapChart', 0.8)" aria-label="Zoom out heatmap">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+            </div>
+            <div class="chart-container large">
+                <canvas id="heatmapChart" role="img" aria-label="30-day activity heatmap"></canvas>
+            </div>
+        </div>
+
+        <div class="footer" role="contentinfo">
+            <p>Generated by Knowledge System - Analytics Dashboard v2.0 (Accessible Edition)</p>
+        </div>
+    </div>
+
+    <!-- Performance indicator -->
+    <div class="performance-indicator" id="performanceIndicator" role="status" aria-live="polite">
+        <span id="performanceText">FPS: 60 | Memory: 0MB</span>
+    </div>
+
+    <script>
+        'use strict';
+
+        // ANALYTICS_DATA_PLACEHOLDER
+        const analyticsData = null;  // Will be replaced by actual data
+
+        // Global chart instances for memory management
+        const chartInstances = {};
+        let searchData = [];
+        let memoryCheckInterval;
+        let initialMemory = 0;
+
+        // Performance monitoring
+        class PerformanceMonitor {
+            constructor() {
+                this.fps = 60;
+                this.memoryUsage = 0;
+                this.lastTime = performance.now();
+                this.frames = 0;
+                this.indicator = document.getElementById('performanceIndicator');
+                this.text = document.getElementById('performanceText');
+
+                if (performance.memory) {
+                    initialMemory = performance.memory.usedJSHeapSize / 1048576;
+                    this.startMonitoring();
+                }
+            }
+
+            startMonitoring() {
+                // Monitor FPS
+                const measureFPS = () => {
+                    this.frames++;
+                    const currentTime = performance.now();
+
+                    if (currentTime >= this.lastTime + 1000) {
+                        this.fps = Math.round((this.frames * 1000) / (currentTime - this.lastTime));
+                        this.frames = 0;
+                        this.lastTime = currentTime;
+
+                        // Check memory
+                        if (performance.memory) {
+                            const currentMemory = performance.memory.usedJSHeapSize / 1048576;
+                            this.memoryUsage = Math.round(currentMemory - initialMemory);
+                        }
+
+                        this.updateIndicator();
+                    }
+
+                    requestAnimationFrame(measureFPS);
+                };
+
+                requestAnimationFrame(measureFPS);
+
+                // Memory leak detection
+                memoryCheckInterval = setInterval(() => {
+                    if (performance.memory) {
+                        const currentMemory = performance.memory.usedJSHeapSize / 1048576;
+                        const memoryGrowth = currentMemory - initialMemory;
+
+                        if (memoryGrowth > 50) {
+                            console.warn('Memory leak detected:', memoryGrowth + 'MB growth');
+                            this.indicator.classList.add('warning');
+                        }
+
+                        if (memoryGrowth > 100) {
+                            console.error('Critical memory leak:', memoryGrowth + 'MB growth');
+                            this.indicator.classList.add('error');
+                            this.cleanupMemory();
+                        }
+                    }
+                }, 10000);
+            }
+
+            updateIndicator() {
+                if (this.fps < 30) {
+                    this.indicator.classList.add('warning');
+                    this.indicator.style.display = 'block';
+                    this.text.textContent = `FPS: ${this.fps} | Memory: ${this.memoryUsage}MB`;
+                }
+
+                // Hide if performance is good
+                if (this.fps >= 50 && this.memoryUsage < 20) {
+                    this.indicator.style.display = 'none';
+                }
+            }
+
+            cleanupMemory() {
+                // Destroy unused chart instances
+                Object.keys(chartInstances).forEach(key => {
+                    if (chartInstances[key] && !document.getElementById(key)) {
+                        chartInstances[key].destroy();
+                        delete chartInstances[key];
+                    }
+                });
+
+                // Clear search data if too large
+                if (searchData.length > 1000) {
+                    searchData = searchData.slice(0, 500);
+                }
+
+                // Force garbage collection if available
+                if (window.gc) {
+                    window.gc();
+                }
+            }
+
+            destroy() {
+                clearInterval(memoryCheckInterval);
+            }
+        }
+
+        // Loading indicator management
+        function showLoading(message = 'Loading...') {
+            const indicator = document.getElementById('loadingIndicator');
+            const text = document.getElementById('loadingText');
+            text.textContent = message;
+            indicator.classList.add('active');
+        }
+
+        function hideLoading() {
+            const indicator = document.getElementById('loadingIndicator');
+            indicator.classList.remove('active');
+        }
+
+        // Accessibility announcements
+        function announce(message) {
+            const announcer = document.getElementById('announcements');
+            announcer.textContent = message;
+            setTimeout(() => announcer.textContent = '', 1000);
+        }
+
+        // Search functionality
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+
+            if (!analyticsData) return;
+
+            // Build searchable data index
+            searchData = [];
+
+            // Add domains
+            Object.keys(analyticsData.retention_by_domain || {}).forEach(domain => {
+                searchData.push({
+                    type: 'domain',
+                    label: domain,
+                    value: domain,
+                    description: `Domain: ${domain}`
+                });
+            });
+
+            // Add metrics
+            const summary = analyticsData.summary || {};
+            searchData.push(
+                { type: 'metric', label: 'Current Streak', value: summary.current_streak, description: `${summary.current_streak} consecutive days` },
+                { type: 'metric', label: 'Total Concepts', value: summary.total_concepts, description: `${summary.total_concepts} concepts tracked` },
+                { type: 'metric', label: 'Review Adherence', value: summary.review_adherence, description: `${Math.round(summary.review_adherence)}% adherence rate` },
+                { type: 'metric', label: 'Average Velocity', value: summary.avg_velocity, description: `${summary.avg_velocity?.toFixed(1)} concepts/week` }
+            );
+
+            // Search event handlers
+            let selectedIndex = -1;
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+
+                if (query.length < 2) {
+                    searchResults.classList.remove('active');
+                    searchResults.innerHTML = '';
+                    return;
+                }
+
+                const matches = searchData.filter(item =>
+                    item.label.toLowerCase().includes(query) ||
+                    item.description.toLowerCase().includes(query)
+                );
+
+                if (matches.length === 0) {
+                    searchResults.innerHTML = '<div class="search-result-item">No results found</div>';
+                    searchResults.classList.add('active');
+                    return;
+                }
+
+                searchResults.innerHTML = matches.map((item, index) =>
+                    `<div class="search-result-item"
+                          role="option"
+                          aria-selected="false"
+                          data-index="${index}"
+                          data-type="${item.type}"
+                          data-value="${item.value}"
+                          tabindex="-1">
+                        <strong>${item.label}</strong><br>
+                        <small>${item.description}</small>
+                    </div>`
+                ).join('');
+
+                searchResults.classList.add('active');
+                selectedIndex = -1;
+
+                // Click handlers
+                searchResults.querySelectorAll('.search-result-item').forEach((item, idx) => {
+                    item.addEventListener('click', () => selectSearchResult(item));
+                    item.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') selectSearchResult(item);
+                    });
+                });
+            });
+
+            // Keyboard navigation
+            searchInput.addEventListener('keydown', (e) => {
+                const items = searchResults.querySelectorAll('.search-result-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelectedItem(items, selectedIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelectedItem(items, selectedIndex);
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectSearchResult(items[selectedIndex]);
+                } else if (e.key === 'Escape') {
+                    searchResults.classList.remove('active');
+                    searchInput.value = '';
+                }
+            });
+
+            // Click outside to close
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-wrapper')) {
+                    searchResults.classList.remove('active');
+                }
+            });
+        }
+
+        function updateSelectedItem(items, index) {
+            items.forEach((item, idx) => {
+                item.setAttribute('aria-selected', idx === index ? 'true' : 'false');
+                item.style.background = idx === index ? '#f3f4f6' : '';
+                if (idx === index) {
+                    item.focus();
+                    announce(`${item.querySelector('strong').textContent} selected`);
+                }
+            });
+        }
+
+        function selectSearchResult(item) {
+            const type = item.dataset.type;
+            const value = item.dataset.value;
+
+            // Navigate to relevant section or chart
+            if (type === 'domain') {
+                // Find and highlight domain in charts
+                highlightDomain(value);
+            } else if (type === 'metric') {
+                // Scroll to metric
+                const statCards = document.querySelectorAll('.stat-card');
+                statCards.forEach(card => {
+                    if (card.textContent.includes(item.querySelector('strong').textContent)) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.focus();
+                        announce(`Navigated to ${item.querySelector('strong').textContent}`);
+                    }
+                });
+            }
+
+            // Close search
+            document.getElementById('searchResults').classList.remove('active');
+            document.getElementById('searchInput').value = '';
+        }
+
+        function highlightDomain(domain) {
+            // Highlight domain in all charts
+            Object.keys(chartInstances).forEach(chartId => {
+                const chart = chartInstances[chartId];
+                if (chart && chart.data && chart.data.datasets) {
+                    chart.data.datasets.forEach(dataset => {
+                        if (dataset.label && dataset.label.toLowerCase().includes(domain.toLowerCase())) {
+                            dataset.borderWidth = 4;
+                            dataset.borderColor = '#1a1a1a';
+                        } else {
+                            dataset.borderWidth = 2;
+                        }
+                    });
+                    chart.update();
+                }
+            });
+
+            announce(`Highlighted ${domain} in all charts`);
+        }
+
+        // Chart zoom functionality
+        function zoomChart(chartId, factor) {
+            const chart = chartInstances[chartId];
+            if (!chart) return;
+
+            const currentMax = chart.options.scales.y.max || 100;
+            const currentMin = chart.options.scales.y.min || 0;
+
+            chart.options.scales.y.max = currentMax * factor;
+            chart.options.scales.y.min = currentMin * factor;
+
+            chart.update();
+            announce(`Chart ${factor > 1 ? 'zoomed in' : 'zoomed out'}`);
+        }
+
+        // Initialize dashboard with performance optimizations
+        function initDashboard() {
+            showLoading('Initializing dashboard...');
+
+            // Start performance monitoring
+            const perfMonitor = new PerformanceMonitor();
+
+            if (!analyticsData) {
+                hideLoading();
+                document.body.innerHTML = '<div class="no-data"><h2>No analytics data available</h2><p>Run /save or /stats to generate analytics data</p></div>';
+                return;
+            }
+
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent =
+                `Last updated: ${new Date(analyticsData.metadata.generated_at).toLocaleString()}`;
+
+            // Update summary stats
+            updateSummaryStats();
+
+            // Initialize search
+            initSearch();
+
+            // Create charts with optimizations
+            setTimeout(() => {
+                showLoading('Creating retention chart...');
+                createRetentionChart();
+            }, 100);
+
+            setTimeout(() => {
+                showLoading('Creating velocity chart...');
+                createVelocityChart();
+            }, 200);
+
+            setTimeout(() => {
+                showLoading('Creating adherence chart...');
+                createAdherenceChart();
+            }, 300);
+
+            setTimeout(() => {
+                showLoading('Creating time distribution chart...');
+                createTimeDistributionChart();
+            }, 400);
+
+            setTimeout(() => {
+                showLoading('Creating activity heatmap...');
+                createActivityHeatmap();
+                hideLoading();
+                announce('Dashboard loaded successfully');
+            }, 500);
+
+            // Keyboard navigation
+            setupKeyboardNavigation();
+
+            // Cleanup on unload
+            window.addEventListener('beforeunload', () => {
+                perfMonitor.destroy();
+                Object.values(chartInstances).forEach(chart => chart.destroy());
+            });
+        }
+
+        function setupKeyboardNavigation() {
+            // Allow keyboard navigation between cards
+            const cards = document.querySelectorAll('.stat-card, .chart-card');
+            cards.forEach((card, index) => {
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight' && index < cards.length - 1) {
+                        cards[index + 1].focus();
+                    } else if (e.key === 'ArrowLeft' && index > 0) {
+                        cards[index - 1].focus();
+                    } else if (e.key === 'Enter' || e.key === ' ') {
+                        // Expand or interact with card
+                        card.click();
+                    }
+                });
+            });
+        }
+
+        function updateSummaryStats() {
+            const summary = analyticsData.summary || {};
+
+            const updateStat = (id, value, suffix = '') => {
+                const element = document.getElementById(id);
+                element.textContent = value + suffix;
+                announce(`${id.replace('Value', '')}: ${value}${suffix}`);
+            };
+
+            updateStat('streakValue', summary.current_streak || 0);
+            updateStat('conceptsValue', summary.total_concepts || 0);
+            updateStat('adherenceValue', summary.review_adherence ? Math.round(summary.review_adherence) : 0, '%');
+
+            const velocity = summary.avg_velocity;
+            updateStat('velocityValue', (velocity === undefined || velocity === null) ? 'Building' : velocity.toFixed(1));
+        }
+
+        function createRetentionChart() {
+            const ctx = document.getElementById('retentionChart');
+            if (!ctx) return;
+
+            // Destroy existing chart to prevent memory leak
+            if (chartInstances.retentionChart) {
+                chartInstances.retentionChart.destroy();
+            }
+
+            const retentionByDomain = analyticsData.retention_by_domain || {};
+
+            // Convert domain retention curves to chart data
+            const domains = Object.entries(retentionByDomain)
+                .map(([domain, data]) => ({
+                    label: domain,
+                    data: data.curve ? data.curve.map(d => d.retention) : [],
+                    conceptCount: data.conceptCount || 0
+                }));
+
+            if (domains.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No retention data available yet. Review some concepts to see retention curves.</div>';
+                return;
+            }
+
+            const colors = ['#1a1a1a', '#4b5563', '#6b7280', '#9ca3af', '#374151', '#111827'];
+            chartInstances.retentionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 31}, (_, i) => `Day ${i}`),
+                    datasets: domains.map((domain, idx) => ({
+                        label: `${domain.label} (${domain.conceptCount} concepts)`,
+                        data: domain.data,
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16,
+                                font: { size: 11, family: 'Inter' },
+                                color: '#6b7280'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Retention %', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
+                        }
+                    },
+                    animation: {
+                        onComplete: () => announce('Retention chart loaded')
+                    }
+                }
+            });
+        }
+
+        function createVelocityChart() {
+            const ctx = document.getElementById('velocityChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (chartInstances.velocityChart) {
+                chartInstances.velocityChart.destroy();
+            }
+
+            const velocityByDomain = analyticsData.velocity_by_domain || {};
+
+            const domains = Object.entries(velocityByDomain)
+                .map(([domain, data]) => ({
+                    domain: domain,
+                    velocity: data.velocity || 0,
+                    reviews: data.reviewsCompleted || 0,
+                    hours: data.hoursInvested || 0
+                }));
+
+            if (domains.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No velocity data yet. Complete learning sessions to track velocity.</div>';
+                return;
+            }
+
+            chartInstances.velocityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: domains.map(d => d.domain),
+                    datasets: [{
+                        label: 'Reviews/Hour',
+                        data: domains.map(d => d.velocity),
+                        backgroundColor: '#1a1a1a',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = domains[idx];
+                                    return [
+                                        `Velocity: ${d.velocity.toFixed(2)} reviews/hour`,
+                                        `Reviews: ${d.reviews}`,
+                                        `Hours: ${d.hours.toFixed(1)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Reviews per Hour', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
+                        }
+                    },
+                    animation: {
+                        onComplete: () => announce('Velocity chart loaded')
+                    }
+                }
+            });
+        }
+
+        function createAdherenceChart() {
+            const ctx = document.getElementById('adherenceChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (chartInstances.adherenceChart) {
+                chartInstances.adherenceChart.destroy();
+            }
+
+            const adherenceByDomain = analyticsData.adherence_by_domain || {};
+
+            const domains = Object.entries(adherenceByDomain)
+                .map(([domain, data]) => ({
+                    domain: domain,
+                    rate: data.rate || 0,
+                    dueReviews: data.dueReviews || 0,
+                    completedReviews: data.completedReviews || 0
+                }));
+
+            if (domains.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No review data yet. Reviews will appear here once scheduled.</div>';
+                return;
+            }
+
+            chartInstances.adherenceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: domains.map(d => d.domain),
+                    datasets: [{
+                        label: 'Adherence Rate (%)',
+                        data: domains.map(d => d.rate),
+                        backgroundColor: '#4b5563',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const d = domains[idx];
+                                    return [
+                                        `Adherence: ${d.rate.toFixed(1)}%`,
+                                        `Completed: ${d.completedReviews}`,
+                                        `Due: ${d.dueReviews}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Adherence %', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
+                        }
+                    },
+                    animation: {
+                        onComplete: () => announce('Adherence chart loaded')
+                    }
+                }
+            });
+        }
+
+        function createTimeDistributionChart() {
+            const ctx = document.getElementById('timeChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (chartInstances.timeChart) {
+                chartInstances.timeChart.destroy();
+            }
+
+            const time = analyticsData.time_distribution || {};
+            const domains = time.byDomain || {};
+
+            const entries = Object.entries(domains);
+            if (entries.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No time data yet. Learning sessions will appear here.</div>';
+                return;
+            }
+
+            const pieColors = ['#1a1a1a', '#374151', '#4b5563', '#6b7280', '#9ca3af', '#d1d5db'];
+            chartInstances.timeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: entries.map(([domain]) => domain),
+                    datasets: [{
+                        data: entries.map(([, hours]) => hours),
+                        backgroundColor: entries.map((_, idx) => pieColors[idx % pieColors.length]),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16,
+                                font: { size: 11, family: 'Inter' },
+                                color: '#6b7280'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Total: ${time.totalHours || 0} hours`,
+                            font: { size: 12, family: 'Inter', weight: 400 },
+                            color: '#6b7280',
+                            padding: { bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' }
+                        }
+                    },
+                    animation: {
+                        onComplete: () => announce('Time distribution chart loaded')
+                    }
+                }
+            });
+        }
+
+        function createActivityHeatmap() {
+            const ctx = document.getElementById('heatmapChart');
+            if (!ctx) return;
+
+            // Destroy existing chart
+            if (chartInstances.heatmapChart) {
+                chartInstances.heatmapChart.destroy();
+            }
+
+            const streak = analyticsData.streak_tracking || {};
+
+            const currentStreak = streak.currentStreak || 0;
+            const longestStreak = streak.longestStreak || 0;
+            const totalActiveDays = streak.totalActiveDays || 0;
+            const lastActivity = streak.lastActivity || 'Never';
+
+            if (totalActiveDays === 0) {
+                ctx.parentElement.innerHTML = '<div class="no-data">No activity tracked yet. Start learning to see your streak!</div>';
+                return;
+            }
+
+            chartInstances.heatmapChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Current Streak', 'Longest Streak', 'Total Active Days'],
+                    datasets: [{
+                        label: 'Days',
+                        data: [currentStreak, longestStreak, totalActiveDays],
+                        backgroundColor: ['#1a1a1a', '#4b5563', '#6b7280'],
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `Last Activity: ${lastActivity}`,
+                            font: { size: 12, family: 'Inter', weight: 400 },
+                            color: '#6b7280',
+                            padding: { bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1a1a',
+                            padding: 12,
+                            bodyFont: { size: 12, family: 'Inter' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6', drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' },
+                            title: { display: true, text: 'Days', font: { size: 11 }, color: '#6b7280' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 11 }, color: '#9ca3af' }
+                        }
+                    },
+                    animation: {
+                        onComplete: () => announce('Activity heatmap loaded')
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Handle visibility change for performance
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Pause animations when tab is hidden
+                Object.values(chartInstances).forEach(chart => {
+                    if (chart.options && chart.options.animation) {
+                        chart.options.animation.duration = 0;
+                    }
+                });
+            } else {
+                // Resume animations
+                Object.values(chartInstances).forEach(chart => {
+                    if (chart.options && chart.options.animation) {
+                        chart.options.animation.duration = 1000;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

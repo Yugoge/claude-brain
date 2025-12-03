@@ -53,6 +53,19 @@
             transition: border-color 0.2s;
         }
 
+        #search-results {
+            margin-left: 12px;
+            font-size: 12px;
+            color: #6b7280;
+            font-family: 'Inter', sans-serif;
+            min-width: 100px;
+        }
+
+        #search-results.active {
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
         #search-input:focus {
             outline: none;
             border-color: #1a1a1a;
@@ -389,8 +402,9 @@
     <div id="app">
         <div id="graph-container">
             <div id="controls">
-                <input type="text" id="search-input" placeholder="Search concepts...">
+                <input type="text" id="search-input" placeholder="Search nodes by title, content, tags, domain, or any keyword...">
                 <button id="clear-search">Clear</button>
+                <span id="search-results"></span>
             </div>
             <div class="legend">
                 <strong>ISCED Broad Fields</strong>
@@ -832,8 +846,10 @@
             document.getElementById('details-panel').classList.remove('open');
         });
 
-        // Search functionality
+        // Search functionality with comprehensive field matching
         let searchTimeout;
+        const searchResultsElement = document.getElementById('search-results');
+
         document.getElementById('search-input').addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
@@ -845,30 +861,118 @@
                 }
 
                 const matchingIds = new Set();
+                let matchedFields = {};
+
+                // Comprehensive search across ALL fields
                 graphData.nodes.forEach(n => {
-                    if (n.label.toLowerCase().includes(term) ||
+                    let matched = false;
+                    let fieldMatches = [];
+
+                    // Search in label
+                    if (n.label && n.label.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('label');
+                    }
+
+                    // Search in tags
+                    if (n.tags && Array.isArray(n.tags) &&
                         n.tags.some(t => t.toLowerCase().includes(term))) {
+                        matched = true;
+                        fieldMatches.push('tags');
+                    }
+
+                    // Search in content
+                    if (n.content && n.content.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('content');
+                    }
+
+                    // Search in domain
+                    if (n.domain && n.domain.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('domain');
+                    }
+
+                    // Search in subdomain
+                    if (n.subdomain && n.subdomain.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('subdomain');
+                    }
+
+                    // Search in ISCED classification
+                    if (n.isced && n.isced.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('isced');
+                    }
+
+                    // Search in numeric fields (reviewCount, stability, difficulty)
+                    if (n.reviewCount && n.reviewCount.toString().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('reviewCount');
+                    }
+
+                    if (n.stability && n.stability.toString().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('stability');
+                    }
+
+                    if (n.difficulty && n.difficulty.toString().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('difficulty');
+                    }
+
+                    // Search in ID (for direct node lookup)
+                    if (n.id && n.id.toLowerCase().includes(term)) {
+                        matched = true;
+                        fieldMatches.push('id');
+                    }
+
+                    // Search in conversations
+                    if (n.conversations && Array.isArray(n.conversations)) {
+                        for (let conv of n.conversations) {
+                            if ((conv.title && conv.title.toLowerCase().includes(term)) ||
+                                (conv.summary && conv.summary.toLowerCase().includes(term)) ||
+                                (conv.content && conv.content.toLowerCase().includes(term)) ||
+                                (conv.excerpt && conv.excerpt.toLowerCase().includes(term))) {
+                                matched = true;
+                                fieldMatches.push('conversations');
+                                break;
+                            }
+                        }
+                    }
+
+                    if (matched) {
                         matchingIds.add(n.id);
+                        matchedFields[n.id] = fieldMatches;
                     }
                 });
 
                 // Include 1-hop neighbors
+                const originalMatches = new Set(matchingIds);
                 graphData.edges.forEach(e => {
-                    if (matchingIds.has(e.source.id)) matchingIds.add(e.target.id);
-                    if (matchingIds.has(e.target.id)) matchingIds.add(e.source.id);
+                    if (originalMatches.has(e.source.id)) matchingIds.add(e.target.id);
+                    if (originalMatches.has(e.target.id)) matchingIds.add(e.source.id);
                 });
 
-                // Update visibility
-                node.style('display', d => matchingIds.has(d.id) ? 'block' : 'none');
-                link.style('display', e =>
-                    matchingIds.has(e.source.id) && matchingIds.has(e.target.id) ? 'block' : 'none'
+                // Update visibility using opacity instead of display
+                node.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
+                link.style('opacity', e =>
+                    matchingIds.has(e.source.id) && matchingIds.has(e.target.id) ? 0.6 : 0.05
                 );
-                label.style('display', d => matchingIds.has(d.id) ? 'block' : 'none');
+                label.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
 
-                // Restart simulation with filtered nodes
-                const filteredNodes = graphData.nodes.filter(n => matchingIds.has(n.id));
-                simulation.nodes(filteredNodes);
-                simulation.alpha(0.3).restart();
+                // Update search results counter
+                const directMatches = originalMatches.size;
+                const totalNodes = graphData.nodes.length;
+                searchResultsElement.textContent = `Showing ${directMatches} of ${totalNodes} nodes`;
+                searchResultsElement.classList.add('active');
+
+                // Log search stats for debugging
+                console.log(`Search "${term}" found: ${directMatches} direct matches, ${matchingIds.size} total with neighbors`);
+                console.log('Matched fields by node:', matchedFields);
+
+                // Don't restart simulation - just update opacity
+                // This keeps the graph structure stable
             }, 300);
         });
 
@@ -878,11 +982,15 @@
         });
 
         function resetFilter() {
-            node.style('display', 'block');
-            link.style('display', 'block');
-            label.style('display', 'block');
-            simulation.nodes(graphData.nodes);
-            simulation.alpha(0.3).restart();
+            node.style('opacity', 1);
+            link.style('opacity', 0.6);
+            label.style('opacity', 1);
+
+            // Clear search results counter
+            searchResultsElement.textContent = '';
+            searchResultsElement.classList.remove('active');
+
+            // Don't restart simulation - maintain current positions
         }
 
         // Keyboard shortcuts

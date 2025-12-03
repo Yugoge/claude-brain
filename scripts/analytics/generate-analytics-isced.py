@@ -209,6 +209,55 @@ class ISCEDAnalytics:
                     for domain in domains_in_session:
                         domain_stats[domain]['hours'] += hours_per_domain
 
+        # If no history data, estimate from chats and concepts
+        if not domain_stats:
+            # Estimate from chat conversations
+            for conv_id, conv_data in self.chats.get('conversations', {}).items():
+                try:
+                    conv_date = datetime.fromisoformat(conv_data.get('date', ''))
+                    if conv_date.date() > cutoff_date.date():
+                        domain = conv_data.get('domain', 'uncategorized')
+                        session_type = conv_data.get('session_type', '')
+                        turns = conv_data.get('turns', 0)
+
+                        # Map to ISCED domain
+                        if '/' in domain:
+                            domain = domain.split('/')[0]
+
+                        domain_mapping = {
+                            'programming': 'ict',
+                            'finance': 'business-law',
+                            'language': 'humanities',
+                            'economics': 'social-sciences',
+                            'english': 'humanities'
+                        }
+
+                        isced_domain = domain_mapping.get(domain, 'uncategorized')
+
+                        # Estimate reviews and hours
+                        if session_type == 'review':
+                            # Review sessions: estimate ~3 reviews per 10 turns
+                            domain_stats[isced_domain]['reviews'] += max(1, turns // 3)
+                            domain_stats[isced_domain]['hours'] += (turns * 1.5) / 60.0
+                        elif session_type == 'learn':
+                            # Learning sessions: estimate concept extraction rate
+                            domain_stats[isced_domain]['reviews'] += max(1, turns // 20)
+                            domain_stats[isced_domain]['hours'] += (turns * 2) / 60.0
+                        else:
+                            # Ask sessions: minimal review activity
+                            domain_stats[isced_domain]['reviews'] += max(1, turns // 30)
+                            domain_stats[isced_domain]['hours'] += (turns * 1) / 60.0
+                except:
+                    continue
+
+            # Add concept count as baseline reviews for domains with concepts
+            for concept_id, data in self.schedule.get('concepts', {}).items():
+                domain = self.concept_isced.get(concept_id, 'uncategorized')
+                if domain not in domain_stats:
+                    domain_stats[domain]['reviews'] = 0
+                    domain_stats[domain]['hours'] = 0.5  # Baseline time
+                domain_stats[domain]['reviews'] += 0.5  # Each concept counts as half a review
+
         # Calculate velocity for each domain
         velocities = {}
         for domain, stats in domain_stats.items():
@@ -219,7 +268,7 @@ class ISCEDAnalytics:
 
             velocities[domain] = {
                 'velocity': round(velocity, 2),
-                'reviewsCompleted': reviews,
+                'reviewsCompleted': int(reviews),
                 'hoursInvested': round(hours, 1),
                 'domainName': DOMAIN_NAMES.get(domain, domain.title()),
                 'benchmark': 'fast' if velocity > 10 else 'medium' if velocity > 5 else 'slow'
@@ -275,6 +324,134 @@ class ISCEDAnalytics:
                 }
 
         return heatmap
+
+    def calculate_time_distribution(self) -> Dict:
+        """Calculate time distribution across domains"""
+        domain_hours = defaultdict(float)
+
+        # Get time from chat sessions (turns * estimated minutes per turn)
+        for conv_id, conv_data in self.chats.get('conversations', {}).items():
+            domain = conv_data.get('domain', 'uncategorized')
+            turns = conv_data.get('turns', 0)
+            # Estimate ~2 minutes per turn for learning/review sessions
+            estimated_hours = (turns * 2) / 60.0
+
+            # Map to ISCED domain
+            if '/' in domain:
+                domain = domain.split('/')[0]  # Take primary domain
+
+            # Map common domains to ISCED
+            domain_mapping = {
+                'programming': 'ict',
+                'finance': 'business-law',
+                'language': 'humanities',
+                'economics': 'social-sciences',
+                'english': 'humanities',
+                'language/french': 'humanities'
+            }
+
+            isced_domain = domain_mapping.get(domain, 'uncategorized')
+            domain_hours[isced_domain] += estimated_hours
+
+        # Get time from review sessions (already calculated in velocity)
+        for session in self.history.get('sessions', []):
+            duration_hours = session.get('duration', 0) / 3600
+
+            # Distribute time across domains in session
+            domains_in_session = set()
+            for review in session.get('reviews', []):
+                concept_id = review.get('concept_id')
+                domain = self.concept_isced.get(concept_id, 'uncategorized')
+                domains_in_session.add(domain)
+
+            if domains_in_session:
+                hours_per_domain = duration_hours / len(domains_in_session)
+                for domain in domains_in_session:
+                    domain_hours[domain] += hours_per_domain
+
+        # Calculate totals
+        total_hours = sum(domain_hours.values())
+
+        # Format by domain with display names
+        by_domain = {}
+        for domain, hours in domain_hours.items():
+            if hours > 0:
+                by_domain[DOMAIN_NAMES.get(domain, domain.title())] = round(hours, 2)
+
+        return {
+            'totalHours': round(total_hours, 2),
+            'byDomain': by_domain
+        }
+
+    def calculate_streak_tracking(self) -> Dict:
+        """Calculate learning streaks and activity days"""
+        activity_dates = set()
+
+        # Collect all activity dates from chats
+        for conv_id, conv_data in self.chats.get('conversations', {}).items():
+            date_str = conv_data.get('date')
+            if date_str:
+                try:
+                    activity_dates.add(datetime.fromisoformat(date_str).date())
+                except:
+                    pass
+
+        # Collect from review sessions
+        for session in self.history.get('sessions', []):
+            timestamp = session.get('timestamp')
+            if timestamp:
+                try:
+                    session_date = datetime.fromisoformat(
+                        timestamp.replace('Z', '+00:00')
+                    ).date()
+                    activity_dates.add(session_date)
+                except:
+                    pass
+
+        if not activity_dates:
+            return {
+                'currentStreak': 0,
+                'longestStreak': 0,
+                'totalActiveDays': 0,
+                'lastActivity': None
+            }
+
+        # Sort dates
+        sorted_dates = sorted(activity_dates)
+
+        # Calculate streaks
+        current_streak = 0
+        longest_streak = 0
+        temp_streak = 1
+
+        for i in range(1, len(sorted_dates)):
+            if (sorted_dates[i] - sorted_dates[i-1]).days == 1:
+                temp_streak += 1
+            else:
+                longest_streak = max(longest_streak, temp_streak)
+                temp_streak = 1
+
+        longest_streak = max(longest_streak, temp_streak)
+
+        # Calculate current streak
+        today = datetime.now().date()
+        last_date = sorted_dates[-1]
+
+        if (today - last_date).days <= 1:
+            # Count backwards from last activity
+            current_streak = 1
+            for i in range(len(sorted_dates) - 2, -1, -1):
+                if (sorted_dates[i+1] - sorted_dates[i]).days == 1:
+                    current_streak += 1
+                else:
+                    break
+
+        return {
+            'currentStreak': current_streak,
+            'longestStreak': longest_streak,
+            'totalActiveDays': len(activity_dates),
+            'lastActivity': sorted_dates[-1].isoformat() if sorted_dates else None
+        }
 
     def calculate_review_adherence_by_domain(self, period_days: int = 30) -> Dict:
         """Calculate review adherence by ISCED domain"""
@@ -347,6 +524,8 @@ class ISCEDAnalytics:
         velocity = self.calculate_learning_velocity_by_domain(period_days)
         mastery = self.generate_domain_heatmap()
         adherence = self.calculate_review_adherence_by_domain(period_days)
+        time_dist = self.calculate_time_distribution()
+        streak = self.calculate_streak_tracking()
 
         # Calculate summary statistics
         total_concepts = len(self.schedule.get('concepts', {}))
@@ -377,7 +556,9 @@ class ISCEDAnalytics:
             'retention_by_domain': retention,
             'velocity_by_domain': velocity,
             'mastery_by_domain': mastery,
-            'adherence_by_domain': adherence
+            'adherence_by_domain': adherence,
+            'time_distribution': time_dist,
+            'streak_tracking': streak
         }
 
 

@@ -112,7 +112,8 @@
       "mcp__memory-server__delete_observations",
       "mcp__memory-server__delete_relations",
       "mcp__memory-server__open_nodes",
-      "mcp__happy__change_title"
+      "mcp__happy__change_title",
+      "mcp__playwright__*"
     ],
     "deny": [
       "Bash(rm -rf /:*)",
