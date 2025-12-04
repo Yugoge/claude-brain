@@ -963,15 +963,21 @@
                 // Include 1-hop neighbors
                 const originalMatches = new Set(matchingIds);
                 graphData.edges.forEach(e => {
-                    if (originalMatches.has(e.source.id)) matchingIds.add(e.target.id);
-                    if (originalMatches.has(e.target.id)) matchingIds.add(e.source.id);
+                    // After D3 processes edges, source and target are objects
+                    const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const targetId = typeof e.target === 'object' ? e.target.id : e.target;
+
+                    if (originalMatches.has(sourceId)) matchingIds.add(targetId);
+                    if (originalMatches.has(targetId)) matchingIds.add(sourceId);
                 });
 
                 // Update visibility using opacity instead of display
                 node.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
-                link.style('opacity', e =>
-                    matchingIds.has(e.source.id) && matchingIds.has(e.target.id) ? 0.6 : 0.05
-                );
+                link.style('opacity', e => {
+                    const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const targetId = typeof e.target === 'object' ? e.target.id : e.target;
+                    return (matchingIds.has(sourceId) && matchingIds.has(targetId)) ? 0.6 : 0.05;
+                });
                 label.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
 
                 // Update search results counter
