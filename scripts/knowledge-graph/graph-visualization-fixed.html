@@ -855,9 +855,12 @@
         }
 
         // Close details panel
-        document.getElementById('close-details').addEventListener('click', () => {
-            document.getElementById('details-panel').classList.remove('open');
-        });
+        const closeBtn = document.getElementById('close-details');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                document.getElementById('details-panel').classList.remove('open');
+            });
+        }
 
         // Search functionality with comprehensive field matching
         let searchTimeout;
@@ -972,13 +975,13 @@
                 });
 
                 // Update visibility using opacity instead of display
-                node.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
-                link.style('opacity', e => {
+                node.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
+                link.attr('opacity', e => {
                     const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
                     const targetId = typeof e.target === 'object' ? e.target.id : e.target;
                     return (matchingIds.has(sourceId) && matchingIds.has(targetId)) ? 0.6 : 0.05;
                 });
-                label.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
+                label.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
 
                 // Update search results counter
                 const directMatches = originalMatches.size;
@@ -1001,9 +1004,9 @@
         });
 
         function resetFilter() {
-            node.style('opacity', 1);
-            link.style('opacity', 0.6);
-            label.style('opacity', 1);
+            node.attr('opacity', 1);
+            link.attr('opacity', 0.6);
+            label.attr('opacity', 1);
 
             // Clear search results counter
             searchResultsElement.textContent = '';
