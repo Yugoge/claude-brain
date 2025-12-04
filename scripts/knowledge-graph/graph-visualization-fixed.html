@@ -475,14 +475,15 @@
             d.vy = 0;
         });
 
-        // Force simulation
+        // Force simulation with auto-stop after stabilization
         const simulation = d3.forceSimulation(graphData.nodes)
             .force('link', d3.forceLink(graphData.edges)
                 .id(d => d.id)
                 .distance(100))
             .force('charge', d3.forceManyBody().strength(-300))
             .force('center', d3.forceCenter(width / 2, height / 2))
-            .force('collision', d3.forceCollide().radius(d => d.size + 5));
+            .force('collision', d3.forceCollide().radius(d => d.size + 5))
+            .alphaDecay(0.02);  // Slightly slower decay for better initial layout
 
         // Draw links with colors and styles
         const link = g.append('g')
@@ -523,6 +524,9 @@
             .text(d => d.label)
             .attr('dy', d => d.size + 15);
 
+        // Track if simulation has stabilized
+        let isStabilized = false;
+
         // Update positions on tick
         simulation.on('tick', () => {
             link
@@ -539,14 +543,21 @@
                 .attr('x', d => d.x)
                 .attr('y', d => d.y);
 
-            // DO NOT stop simulation manually!
-            // Let D3 naturally decay alpha to 0
-            // Stopping causes entire graph to restart on any interaction
+            // Stop simulation when alpha drops below threshold
+            if (simulation.alpha() < 0.01 && !isStabilized) {
+                console.log('Graph stabilized - stopping simulation');
+                simulation.stop();
+                isStabilized = true;
+            }
         });
 
-        // Drag functions
+        // Drag functions - only reheat simulation if still stabilizing
         function dragstarted(event) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
+            // Only restart simulation if it was already running (not stabilized)
+            // This prevents reheating the entire graph after stabilization
+            if (!isStabilized && !event.active) {
+                simulation.alphaTarget(0.3).restart();
+            }
             event.subject.fx = event.subject.x;
             event.subject.fy = event.subject.y;
         }
@@ -557,10 +568,12 @@
         }
 
         function dragended(event) {
-            if (!event.active) simulation.alphaTarget(0);
-            // CRITICAL FIX: Keep user-dragged positions fixed
-            // This prevents nodes from drifting back and maintains user's layout adjustments
-            // DO NOT clear fx/fy here - user expects dragged nodes to stay put
+            // Only cool down if we reheated
+            if (!isStabilized && !event.active) {
+                simulation.alphaTarget(0);
+            }
+            // Keep dragged nodes fixed in position - user expects them to stay put
+            // fx/fy are already set, no need to clear them
         }
 
         // Highlight connections
