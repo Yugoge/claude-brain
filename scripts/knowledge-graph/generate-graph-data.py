@@ -451,7 +451,7 @@ def load_review_stats() -> dict:
             for rem_id, rem_data in concepts.items():
                 fsrs_state = rem_data.get('fsrs_state', {})
                 review_stats[rem_id] = {
-                    'review_count': fsrs_state.get('reviews', 0),
+                    'review_count': fsrs_state.get('review_count') or 0,
                     'stability': round(fsrs_state.get('stability', 0), 2),
                     'difficulty': round(fsrs_state.get('difficulty', 0), 2),
                     'last_reviewed': rem_data.get('last_reviewed', '')
