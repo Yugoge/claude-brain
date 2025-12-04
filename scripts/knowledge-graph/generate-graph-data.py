@@ -278,7 +278,9 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
 
     # Search for all concept markdown files
     for concept_file in knowledge_base_path.rglob('**/*.md'):
-        if concept_file.name.startswith('_') or 'index' in concept_file.name:
+        # Skip files starting with _ (internal files like _index/, _templates/)
+        # Do NOT skip files containing "index" in their name - many valid concepts have "index" in their name
+        if concept_file.name.startswith('_'):
             continue
 
         try:

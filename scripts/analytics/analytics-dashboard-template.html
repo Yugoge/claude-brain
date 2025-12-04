@@ -458,10 +458,11 @@
             // Convert domain adherence to chart data
             const domains = Object.entries(adherenceByDomain)
                 .map(([domain, data]) => ({
-                    domain: domain,
-                    rate: data.rate || 0,
-                    dueReviews: data.dueReviews || 0,
-                    completedReviews: data.completedReviews || 0
+                    domain: data.domainName || domain,
+                    rate: data.adherence || 0,
+                    totalDue: data.totalDue || 0,
+                    onTime: data.onTime || 0,
+                    late: data.late || 0
                 }));
 
             if (domains.length === 0) {
@@ -497,8 +498,9 @@
                                     const d = domains[idx];
                                     return [
                                         `Adherence: ${d.rate.toFixed(1)}%`,
-                                        `Completed: ${d.completedReviews}`,
-                                        `Due: ${d.dueReviews}`
+                                        `On Time: ${d.onTime}`,
+                                        `Late: ${d.late}`,
+                                        `Total Due: ${d.totalDue}`
                                     ];
                                 }
                             }

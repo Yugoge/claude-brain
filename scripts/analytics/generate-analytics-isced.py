@@ -18,35 +18,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
-# ISCED code to domain mapping
-ISCED_DOMAINS = {
-    '01': 'education',
-    '02': 'humanities',
-    '03': 'social-sciences',
-    '04': 'business-law',
-    '05': 'natural-sciences',
-    '06': 'ict',
-    '07': 'engineering',
-    '08': 'agriculture',
-    '09': 'health',
-    '10': 'services'
-}
-
-# Domain display names
-DOMAIN_NAMES = {
-    'education': 'Education',
-    'humanities': 'Arts & Humanities',
-    'social-sciences': 'Social Sciences',
-    'business-law': 'Business & Law',
-    'natural-sciences': 'Natural Sciences',
-    'ict': 'ICT',
-    'engineering': 'Engineering',
-    'agriculture': 'Agriculture',
-    'health': 'Health & Medicine',
-    'services': 'Services',
-    'uncategorized': 'Uncategorized'
-}
-
 
 class ISCEDAnalytics:
     """Analytics engine with ISCED domain classification"""
@@ -61,6 +32,26 @@ class ISCEDAnalytics:
 
         # Load all Rem files to get ISCED classification
         self.concept_isced = self.load_concept_isced()
+
+    def format_domain_name(self, domain_code: str) -> str:
+        """Format ISCED code for display
+
+        Converts codes like "0231-language-acquisition" to "Language Acquisition (0231)"
+        """
+        if domain_code == 'uncategorized':
+            return 'Uncategorized'
+
+        # Extract the text part and code
+        match = re.match(r'^(\d{4})-([\w-]+)$', domain_code)
+        if match:
+            code = match.group(1)
+            text = match.group(2)
+            # Convert kebab-case to Title Case
+            display_name = text.replace('-', ' ').title()
+            return f"{display_name} ({code})"
+
+        # Fallback: just title case the whole thing
+        return domain_code.replace('-', ' ').title()
 
     def load_json(self, path: str) -> Dict:
         """Load JSON file or return empty dict"""
@@ -111,16 +102,34 @@ class ISCEDAnalytics:
         return concept_isced
 
     def extract_domain_from_isced(self, isced: str) -> str:
-        """Extract ISCED domain from ISCED path"""
+        """Extract 4-digit ISCED code from ISCED path
+
+        Handles two formats:
+        - Full path: 02-arts-and-humanities/023-languages/0231-language-acquisition
+        - Short form: 0231-language-acquisition
+
+        Returns the 4-digit code (e.g., "0231-language-acquisition")
+        """
         if not isced:
             return 'uncategorized'
 
-        # Try to extract first 2 digits
-        match = re.match(r'^(\d{2})', isced)
-        if match:
-            code = match.group(1)
-            return ISCED_DOMAINS.get(code, 'uncategorized')
+        # Handle multiple ISCED codes (comma-separated)
+        # Take the first one as primary domain
+        if ',' in isced:
+            isced = isced.split(',')[0].strip()
 
+        # If it's a path format, extract the last component (most specific)
+        if '/' in isced:
+            parts = isced.split('/')
+            # Get the last part which should be the 4-digit code
+            isced = parts[-1]
+
+        # Extract 4-digit ISCED code (format: 0231-language-acquisition)
+        match = re.match(r'^(\d{4}[-\w]+)', isced)
+        if match:
+            return match.group(1)
+
+        # If no valid 4-digit code found, return uncategorized
         return 'uncategorized'
 
     def calculate_aggregated_retention_curves(self) -> Dict:
@@ -168,7 +177,7 @@ class ISCEDAnalytics:
                     'curve': avg_curve,
                     'conceptCount': len(curves),
                     'currentRetention': avg_curve[0]['retention'],
-                    'domainName': DOMAIN_NAMES.get(domain, domain.title())
+                    'domainName': self.format_domain_name(domain)
                 }
 
         return aggregated
@@ -220,16 +229,17 @@ class ISCEDAnalytics:
                         session_type = conv_data.get('session_type', '')
                         turns = conv_data.get('turns', 0)
 
-                        # Map to ISCED domain
+                        # Map to ISCED 4-digit codes
                         if '/' in domain:
                             domain = domain.split('/')[0]
 
                         domain_mapping = {
-                            'programming': 'ict',
-                            'finance': 'business-law',
-                            'language': 'humanities',
-                            'economics': 'social-sciences',
-                            'english': 'humanities'
+                            'programming': '0611-computer-use',
+                            'finance': '0412-finance-banking-insurance',
+                            'language': '0231-language-acquisition',
+                            'french': '0231-language-acquisition',
+                            'economics': '0311-economics',
+                            'english': '0231-language-acquisition'
                         }
 
                         isced_domain = domain_mapping.get(domain, 'uncategorized')
@@ -270,7 +280,7 @@ class ISCEDAnalytics:
                 'velocity': round(velocity, 2),
                 'reviewsCompleted': int(reviews),
                 'hoursInvested': round(hours, 1),
-                'domainName': DOMAIN_NAMES.get(domain, domain.title()),
+                'domainName': self.format_domain_name(domain),
                 'benchmark': 'fast' if velocity > 10 else 'medium' if velocity > 5 else 'slow'
             }
 
@@ -320,7 +330,7 @@ class ISCEDAnalytics:
                         'competent': competent,
                         'expert': expert
                     },
-                    'domainName': DOMAIN_NAMES.get(domain, domain.title())
+                    'domainName': self.format_domain_name(domain)
                 }
 
         return heatmap
@@ -336,18 +346,18 @@ class ISCEDAnalytics:
             # Estimate ~2 minutes per turn for learning/review sessions
             estimated_hours = (turns * 2) / 60.0
 
-            # Map to ISCED domain
+            # Map to ISCED 4-digit codes
             if '/' in domain:
                 domain = domain.split('/')[0]  # Take primary domain
 
-            # Map common domains to ISCED
+            # Map common domains to ISCED codes
             domain_mapping = {
-                'programming': 'ict',
-                'finance': 'business-law',
-                'language': 'humanities',
-                'economics': 'social-sciences',
-                'english': 'humanities',
-                'language/french': 'humanities'
+                'programming': '0611-computer-use',
+                'finance': '0412-finance-banking-insurance',
+                'language': '0231-language-acquisition',
+                'french': '0231-language-acquisition',
+                'economics': '0311-economics',
+                'english': '0231-language-acquisition'
             }
 
             isced_domain = domain_mapping.get(domain, 'uncategorized')
@@ -376,7 +386,7 @@ class ISCEDAnalytics:
         by_domain = {}
         for domain, hours in domain_hours.items():
             if hours > 0:
-                by_domain[DOMAIN_NAMES.get(domain, domain.title())] = round(hours, 2)
+                by_domain[self.format_domain_name(domain)] = round(hours, 2)
 
         return {
             'totalHours': round(total_hours, 2),
@@ -506,7 +516,7 @@ class ISCEDAnalytics:
                     'onTime': stats['on_time'],
                     'late': stats['late'],
                     'totalDue': total,
-                    'domainName': DOMAIN_NAMES.get(domain, domain.title()),
+                    'domainName': self.format_domain_name(domain),
                     'classification': (
                         'excellent' if adherence_pct > 80 else
                         'good' if adherence_pct > 60 else

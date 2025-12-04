@@ -1189,10 +1189,10 @@
 
             const domains = Object.entries(adherenceByDomain)
                 .map(([domain, data]) => ({
-                    domain: domain,
-                    rate: data.rate || 0,
-                    dueReviews: data.dueReviews || 0,
-                    completedReviews: data.completedReviews || 0
+                    domain: data.domainName || domain,
+                    rate: data.adherence || 0,
+                    dueReviews: data.totalDue || 0,
+                    completedReviews: data.onTime || 0
                 }));
 
             if (domains.length === 0) {
