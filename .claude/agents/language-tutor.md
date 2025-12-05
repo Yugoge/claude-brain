@@ -173,6 +173,144 @@ You MUST output valid JSON following this schema:
 4. ❌ **NEVER hallucinate** concept IDs not in the list
 5. ❌ If no suitable existing concept, return empty `typed_relations: []`
 
+## ⚠️ CRITICAL: Hierarchical Relation Rules (Anti-Contradiction)
+
+**MANDATORY VALIDATION**: Before suggesting any relation, verify it doesn't create hierarchical contradictions.
+
+### Asymmetric Relations (NEVER bidirectional with same type)
+
+These relations have strict directionality and **CANNOT** exist in both directions:
+
+| Relation Type | Direction Rule | Example |
+|---------------|----------------|---------|
+| `example_of` | Specific → General | `french-greeting-bonjour` → `french-greetings` ✓ |
+| `prerequisite_of` | Fundamental → Advanced | `french-vowels` → `french-pronunciation` ✓ |
+| `extends` | Specific → General | `black-scholes-dividends` → `black-scholes` ✓ |
+| `generalizes` | General → Specific | `option-pricing` → `black-scholes` ✓ |
+| `specializes` | Specific → General | `vix-options` → `equity-options` ✓ |
+| `cause_of` | Cause → Effect | `inflation` → `interest-rate-rise` ✓ |
+| `is_a` | Subtype → Supertype | `call-option` → `option` ✓ |
+| `has_subtype` | Supertype → Subtype | `option` → `call-option` ✓ |
+
+### Validation Rules
+
+**BEFORE suggesting any relation**:
+
+1. **Check Reverse Direction**:
+   ```
+   IF proposing: A --[asymmetric_type]--> B
+   THEN verify: B --[same_type]--> A does NOT exist
+   IF exists → CONTRADICTION → Choose one direction only
+   ```
+
+2. **Choose Correct Direction**:
+   - **example_of**: Always specific→general (vocabulary→etymology, not vice versa)
+   - **prerequisite_of**: Always foundational→advanced (basics before applications)
+   - **extends**: Always specialized→base (variants extend originals)
+
+3. **Forbidden Patterns**:
+   ```
+   ❌ A example_of B AND B example_of A
+   ❌ A prerequisite_of B AND B prerequisite_of A
+   ❌ A extends B AND B extends A
+   ❌ A generalizes B AND B specializes A (use ONE inverse pair)
+   ```
+
+4. **Correct Patterns**:
+   ```
+   ✅ A example_of B (one direction only)
+   ✅ A prerequisite_of B (one direction only)
+   ✅ A extends B, B generalizes A (complementary inverse pair)
+   ✅ A contrasts_with B AND B contrasts_with A (symmetric type OK)
+   ```
+
+### Domain-Specific Heuristics
+
+**Language Domain**:
+- Etymology concepts are ALWAYS more general than specific vocabulary
+- Grammar rules are ALWAYS prerequisites for expressions
+- Basic phonetics are ALWAYS prerequisites for pronunciation
+
+**Finance Domain**:
+- Base models (Black-Scholes) are more general than variants (dividend-adjusted)
+- Fundamental concepts (NPV, discounting) are prerequisites for complex instruments
+- Theoretical frameworks prerequisite for practical applications
+
+**Programming Domain**:
+- Base classes/concepts are more general than derived classes
+- OOP fundamentals prerequisite for inheritance patterns
+- Abstract concepts prerequisite for concrete implementations
+
+### Conflict Resolution
+
+**If unsure about direction**:
+1. Apply generality test: Which concept has broader scope?
+2. Apply temporal test: Which must be learned first?
+3. Apply dependency test: Can A be understood without B?
+4. **If truly circular**: Use `uses`, `related_to`, or `applied_in` (symmetric types)
+
+### Example Validation Process
+
+**Proposed Relations for "french-greeting-bonjour"**:
+```json
+{
+  "typed_relations": [
+    {
+      "to": "french-greetings",
+      "type": "example_of",
+      "rationale": "Bonjour is specific example of general greeting category"
+    }
+  ]
+}
+```
+
+**Validation**:
+1. ✓ Is `french-greetings --[example_of]--> french-greeting-bonjour` existing? NO
+2. ✓ Direction check: Specific (bonjour) → General (greetings)? YES
+3. ✓ Logical: Can one greeting be example of greeting category? YES
+4. ✅ APPROVED
+
+**Counter-Example (BLOCKED)**:
+```json
+{
+  "typed_relations": [
+    {
+      "to": "french-etymology",
+      "type": "example_of",
+      "rationale": "Bonjour shows etymology patterns"
+    }
+  ]
+}
+```
+
+**Validation**:
+1. ⚠️ Check existing: `french-etymology --[example_of]--> french-greeting-bonjour`? 
+2. ❌ If YES → CONTRADICTION → REJECT this relation
+3. Alternative: Use `uses` instead (symmetric type)
+
+### Error Messages
+
+**If contradiction detected**:
+```json
+{
+  "validation_error": {
+    "type": "hierarchical_contradiction",
+    "from": "concept-a",
+    "to": "concept-b",
+    "attempted_relation": "example_of",
+    "conflict": "Reverse relation already exists: concept-b --[example_of]--> concept-a",
+    "resolution": "Choose ONE direction or use symmetric relation type (uses, related_to)"
+  }
+}
+```
+
+---
+
+**Remember**: Hierarchical contradictions have been the #1 cause of knowledge graph corruption (84 contradictions fixed in Dec 2025). Your validation is critical to prevent recurrence.
+
+
+
+
 ### Available Relation Types
 
 **Lexical** (word-level): `synonym`, `antonym`, `hypernym`, `hyponym`, `part_of`, `has_part`, `derivationally_related`, `cognate`, `collocates_with`, `translation_of`
