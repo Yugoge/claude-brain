@@ -282,20 +282,11 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --output /tmp/enriched_rems.json
 ```
 
-Script automatically performs:
-1. Validates all IDs match existing concepts
-2. Merges typed_relations into candidate Rems
-3. **✨ Validates hierarchical consistency** (prevents contradictions)
-   - Checks for bidirectional asymmetric relations (example_of, prerequisite_of, extends)
-   - Detects circular prerequisite chains
-   - **Detects multi-pair relations** (prevents A↔B having both example_of AND used_in pairs)
-   - Auto-removes problematic relations with detailed warnings
-4. Saves cleaned enriched_rems.json
-
-**Hierarchical Validation**:
-- **Protected**: Asymmetric relations (example_of, prerequisite_of, extends, etc.)
-- **Multi-pair prevention**: Ensures each node pair has at most ONE paired relation (uses semantic priority)
-- **Automatic**: No user intervention needed - problematic relations removed with logs
+Script validates IDs, merges typed_relations, and enforces hierarchical consistency:
+- Prevents bidirectional asymmetric contradictions
+- Detects circular prerequisite chains
+- Prevents multi-pair relations via semantic priority
+- Auto-removes problematic relations with detailed warnings
 
 **Output**: Enriched Rems saved to `/tmp/enriched_rems.json` (ready for Step 9)
 
