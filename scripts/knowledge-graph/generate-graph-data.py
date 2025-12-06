@@ -216,7 +216,8 @@ def extract_conversation_content(conversation_path: str) -> dict:
             elif in_summary and line.strip():
                 summary_lines.append(line.strip())
 
-        summary = ' '.join(summary_lines)
+        # Join summary lines preserving line breaks for markdown formatting
+        summary = '\n'.join(summary_lines) if summary_lines else ''
 
         # Extract first 5 exchanges (up to 2000 chars for excerpt)
         excerpt_lines = []

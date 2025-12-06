@@ -323,6 +323,54 @@ def main():
         total_relations = sum(len(r.get("typed_relations", [])) for r in enriched_rems)
         print(f"✓ Total typed_relations added: {total_relations}", file=sys.stderr)
 
+        # STEP 3.6: Validate hierarchical consistency
+        print("\n🔍 Validating hierarchical consistency...", file=sys.stderr)
+        from archival.validate_hierarchical_consistency import (
+            build_relation_map, validate_proposed_relations, detect_cycles
+        )
+
+        existing_relations = build_relation_map(backlinks)
+        is_valid, errors = validate_proposed_relations(enriched_rems, existing_relations)
+        cycles = detect_cycles(enriched_rems)
+
+        if not is_valid or cycles:
+            print(f"\n❌ VALIDATION FAILED: Hierarchical contradictions detected!", file=sys.stderr)
+            print(f"   Contradictions: {len(errors)}", file=sys.stderr)
+            print(f"   Cycles: {len(cycles)}", file=sys.stderr)
+
+            # Print details (show all, not truncated)
+            if errors:
+                print(f"\n   Contradictions found ({len(errors)}):", file=sys.stderr)
+                for error in errors:
+                    print(f"     • {error.from_rem} ⟷ {error.to_rem} [{error.rel_type}]", file=sys.stderr)
+
+            if cycles:
+                print(f"\n   Prerequisite cycles ({len(cycles)}):", file=sys.stderr)
+                for i, cycle in enumerate(cycles, 1):
+                    print(f"     {i}. {' → '.join(cycle + [cycle[0]])}", file=sys.stderr)
+
+            print("\n⚠️  These relations will be REMOVED to maintain graph consistency.", file=sys.stderr)
+            print("   Re-run /save or adjust tutor logic to avoid contradictions.\n", file=sys.stderr)
+
+            # Remove problematic relations
+            from collections import defaultdict
+            problem_pairs = defaultdict(set)
+            for error in errors:
+                problem_pairs[error.from_rem].add((error.to_rem, error.rel_type))
+
+            for rem in enriched_rems:
+                if rem['rem_id'] in problem_pairs:
+                    rem['typed_relations'] = [
+                        rel for rel in rem.get('typed_relations', [])
+                        if (rel['to'], rel['type']) not in problem_pairs[rem['rem_id']]
+                    ]
+
+            # Recalculate total after cleanup
+            total_relations = sum(len(r.get("typed_relations", [])) for r in enriched_rems)
+            print(f"✓ Cleaned relations count: {total_relations}", file=sys.stderr)
+        else:
+            print(f"✅ Validation passed: No contradictions detected", file=sys.stderr)
+
         # Auto-generate missing output_path values
         print("  Auto-generating missing output paths...", file=sys.stderr)
         enriched_rems = auto_generate_output_paths(enriched_rems, args.isced_path)

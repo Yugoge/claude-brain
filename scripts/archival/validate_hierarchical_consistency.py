@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
 """
-Hierarchical Consistency Validator
-==================================
-Validates that typed relations don't create hierarchical contradictions.
+Hierarchical Consistency Validator Library
+==========================================
+Functions for validating typed relations don't create hierarchical contradictions.
 
-Usage:
-    python scripts/archival/validate_hierarchical_consistency.py \\
-        --enriched-rems /tmp/enriched_rems.json \\
-        --backlinks knowledge-base/_index/backlinks.json
+This is a library module used by workflow_orchestrator.py.
+Not intended for standalone use.
 
 Created: 2025-12-05
 Purpose: Prevent hierarchical contradictions in knowledge graph
@@ -15,34 +12,11 @@ Purpose: Prevent hierarchical contradictions in knowledge graph
 
 import json
 import sys
-import argparse
 from typing import List, Dict, Tuple, Set
 from collections import defaultdict
 
-# Asymmetric relation types that must be unidirectional
-ASYMMETRIC_TYPES = {
-    'example_of',
-    'prerequisite_of',
-    'extends',
-    'generalizes',
-    'specializes',
-    'cause_of',
-    'is_a',
-    'has_subtype',
-    'member_of',
-    'applies_to',
-    'used_in',
-}
-
-# Symmetric types that are allowed to be bidirectional
-SYMMETRIC_TYPES = {
-    'related_to',
-    'contrasts_with',
-    'complements',
-    'analogous_to',
-    'synonym',
-    'antonym',
-}
+# Import relation types from central configuration
+from relation_types import ASYMMETRIC_TYPES, SYMMETRIC_TYPES
 
 
 class ContradictionError:
@@ -71,16 +45,9 @@ class ContradictionError:
 
 
 def load_json(file_path: str) -> dict:
-    """Load JSON file with error handling"""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"❌ Error: File not found: {file_path}", file=sys.stderr)
-        sys.exit(1)
-    except json.JSONDecodeError as e:
-        print(f"❌ Error: Invalid JSON in {file_path}: {e}", file=sys.stderr)
-        sys.exit(1)
+    """Load JSON file with error handling - raises exceptions for caller to handle"""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
 def build_relation_map(backlinks: dict) -> Dict[Tuple[str, str, str], bool]:
@@ -132,15 +99,19 @@ def validate_proposed_relations(
                 continue
 
             # Check for reverse relation in PROPOSED relations
-            reverse_key = (to_rem, rem_id, rel_type)
-            if reverse_key in proposed_relations.get(to_rem, []):
-                errors.append(ContradictionError(
-                    from_rem=rem_id,
-                    to_rem=to_rem,
-                    rel_type=rel_type,
-                    issue=f"Bidirectional {rel_type} detected in proposed relations"
-                ))
-                continue
+            # Look for (to_rem, rel_type) in proposed_relations[to_rem]
+            if to_rem in proposed_relations:
+                for reverse_to, reverse_type in proposed_relations[to_rem]:
+                    if reverse_to == rem_id and reverse_type == rel_type:
+                        errors.append(ContradictionError(
+                            from_rem=rem_id,
+                            to_rem=to_rem,
+                            rel_type=rel_type,
+                            issue=f"Bidirectional {rel_type} detected in proposed relations"
+                        ))
+                        break
+                if errors and errors[-1].from_rem == rem_id:
+                    continue
 
             # Check for reverse relation in EXISTING backlinks
             if (to_rem, rem_id, rel_type) in existing_relations:
@@ -254,77 +225,5 @@ def print_validation_report(errors: List[ContradictionError], cycles: List[List[
     print("=" * 80)
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Validate hierarchical consistency of typed relations'
-    )
-    parser.add_argument(
-        '--enriched-rems',
-        required=True,
-        help='Path to enriched_rems.json file'
-    )
-    parser.add_argument(
-        '--backlinks',
-        required=True,
-        help='Path to backlinks.json file'
-    )
-    parser.add_argument(
-        '--json',
-        action='store_true',
-        help='Output results as JSON'
-    )
-
-    args = parser.parse_args()
-
-    # Load files
-    enriched_data = load_json(args.enriched_rems)
-    backlinks = load_json(args.backlinks)
-
-    # Extract rems list
-    if 'rems' in enriched_data:
-        enriched_rems = enriched_data['rems']
-    elif isinstance(enriched_data, list):
-        enriched_rems = enriched_data
-    else:
-        print("❌ Error: enriched_rems must contain 'rems' array or be an array itself",
-              file=sys.stderr)
-        sys.exit(1)
-
-    # Build relation map from backlinks
-    existing_relations = build_relation_map(backlinks)
-
-    # Validate relations
-    is_valid, errors = validate_proposed_relations(enriched_rems, existing_relations)
-
-    # Detect cycles
-    cycles = detect_cycles(enriched_rems)
-
-    # Output results
-    if args.json:
-        result = {
-            'valid': is_valid and len(cycles) == 0,
-            'contradictions': [e.to_dict() for e in errors],
-            'cycles': cycles,
-            'summary': {
-                'total_contradictions': len(errors),
-                'total_cycles': len(cycles),
-                'by_type': {}
-            }
-        }
-
-        # Count by type
-        for error in errors:
-            rel_type = error.rel_type
-            result['summary']['by_type'][rel_type] = \
-                result['summary']['by_type'].get(rel_type, 0) + 1
-
-        print(json.dumps(result, indent=2))
-    else:
-        print_validation_report(errors, cycles)
-
-    # Exit with appropriate code
-    sys.exit(0 if (is_valid and len(cycles) == 0) else 1)
-
-
-if __name__ == '__main__':
-    main()
+# This module is a library for workflow_orchestrator.py
+# Not intended for standalone CLI use - functions are imported and used directly
