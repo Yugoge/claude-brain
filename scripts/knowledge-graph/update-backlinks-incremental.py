@@ -27,15 +27,24 @@ def extract_typed_links_from_rem(rem_file: Path) -> List[Dict[str, str]]:
     - Markdown links: [concept-id](file.md) {rel: type}
     - Wiki links: [[concept-id]] {rel: type}
 
+    Only extracts from "## Related Rems" section to avoid body text links.
+
     Returns list of dicts: [{'to': 'concept-id', 'type': 'relation_type'}, ...]
     """
     content = rem_file.read_text(encoding='utf-8')
     typed_links = []
     seen_targets = set()
 
+    # Extract only the "## Related Rems" section
+    related_section_match = re.search(r'## Related Rems\s*\n(.*?)(?=\n##|\Z)', content, re.DOTALL)
+    if not related_section_match:
+        return []  # No Related Rems section found
+
+    related_content = related_section_match.group(1)
+
     # Pattern 1: Match - [concept-id](file.md) {rel: type}
     markdown_typed_pattern = r'-\s*\[([^\]]+)\]\([^\)]+\)\s*\{rel:\s*([^}]+)\}'
-    markdown_matches = re.findall(markdown_typed_pattern, content)
+    markdown_matches = re.findall(markdown_typed_pattern, related_content)
 
     for concept_id, rel_type in markdown_matches:
         target_id = concept_id.strip()
@@ -49,7 +58,7 @@ def extract_typed_links_from_rem(rem_file: Path) -> List[Dict[str, str]]:
     # Pattern 2: Match - [[concept-id]] {rel: type}
     # or:          - [[concept-id|display]] {rel: type}
     wikilink_typed_pattern = r'-\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*\{rel:\s*([^}]+)\}'
-    wikilink_matches = re.findall(wikilink_typed_pattern, content)
+    wikilink_matches = re.findall(wikilink_typed_pattern, related_content)
 
     for concept_id, rel_type in wikilink_matches:
         target_id = concept_id.strip()
@@ -61,9 +70,9 @@ def extract_typed_links_from_rem(rem_file: Path) -> List[Dict[str, str]]:
             seen_targets.add(target_id)
 
     # Pattern 3: Also extract untyped markdown links [id](file.md) (assign default type)
-    # Use more specific negative lookahead to avoid matching typed relations
-    untyped_markdown_pattern = r'-\s*\[([^\]]+)\]\([^\)]+\)(?:\s*(?!\{rel:))'
-    markdown_links = re.findall(untyped_markdown_pattern, content)
+    # Only match lines starting with - to avoid conversation links
+    untyped_markdown_pattern = r'-\s*\[([^\]]+)\]\([^\)]+\)(?!\s*\{rel:)'
+    markdown_links = re.findall(untyped_markdown_pattern, related_content)
 
     for link in markdown_links:
         target_id = link.strip()
@@ -76,8 +85,8 @@ def extract_typed_links_from_rem(rem_file: Path) -> List[Dict[str, str]]:
             seen_targets.add(target_id)
 
     # Pattern 4: Also extract untyped [[wikilinks]] (assign default type)
-    untyped_wikilink_pattern = r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\](?!\s*\{rel:)'
-    wikilink_links = re.findall(untyped_wikilink_pattern, content)
+    untyped_wikilink_pattern = r'-\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\](?!\s*\{rel:)'
+    wikilink_links = re.findall(untyped_wikilink_pattern, related_content)
 
     for link in wikilink_links:
         target_id = link.strip()

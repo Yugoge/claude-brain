@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""
-Enhanced bidirectional links fixer with multi-pair detection.
-
-Prevents adding reverse links if the node pair already has a different paired relation.
-"""
+"""Fix all missing bidirectional links in the knowledge graph."""
 
 import json
 import sys
 from pathlib import Path
 from collections import defaultdict
+from datetime import datetime
 
-# Symmetric relations
+# Add scripts directory to path
+sys.path.append(str(Path(__file__).parent))
+
+# Symmetric relations that MUST be bidirectional
 SYMMETRIC_TYPES = {
     'related_to', 'contrasts_with', 'complements',
     'analogous_to', 'synonym', 'antonym'
@@ -47,38 +47,14 @@ def load_backlinks():
         data = json.load(f)
     return data
 
-def get_existing_paired_relations(backlinks, node_a, node_b):
-    """
-    Get all existing paired relations between two nodes.
-
-    Returns: set of relation types that form pairs between the nodes
-    """
-    paired_types = set()
-
-    # Check A → B
-    if node_a in backlinks:
-        for link in backlinks[node_a].get('typed_links_to', []):
-            if link.get('to') == node_b:
-                rel_type = link.get('type')
-                if rel_type in ASYMMETRIC_PAIRS:
-                    # Check if reverse exists
-                    expected_reverse = ASYMMETRIC_PAIRS[rel_type]
-                    if node_b in backlinks:
-                        for reverse_link in backlinks[node_b].get('typed_links_to', []):
-                            if reverse_link.get('to') == node_a and reverse_link.get('type') == expected_reverse:
-                                paired_types.add(rel_type)
-                                break
-
-    return paired_types
-
 def find_missing_bidirectional(backlinks_data):
-    """Find missing bidirectional links while detecting multi-pair conflicts."""
+    """Find all missing bidirectional links with duplicate prevention."""
     backlinks = backlinks_data.get('links', {})
     missing = []
-    multi_pair_warnings = []
-    checked_pairs = set()
+    checked_pairs = set()  # Track processed pairs to prevent duplicates
 
     for source_id, source_data in backlinks.items():
+        # Check outgoing typed links
         for link_info in source_data.get('typed_links_to', []):
             if not isinstance(link_info, dict):
                 continue
@@ -89,16 +65,20 @@ def find_missing_bidirectional(backlinks_data):
             if not target_id or not rel_type:
                 continue
 
+            # Check if target exists
             if target_id not in backlinks:
                 print(f"Warning: Target {target_id} not in backlinks index", file=sys.stderr)
                 continue
 
-            # Create canonical pair key
+            # Create canonical pair key to prevent duplicate processing
             if rel_type in SYMMETRIC_TYPES:
+                # For symmetric: (A,B) same as (B,A), use sorted tuple
                 pair_key = tuple(sorted([source_id, target_id])) + (rel_type,)
             else:
+                # For asymmetric: (A,B,prerequisite_of) is unique
                 pair_key = (source_id, target_id, rel_type)
 
+            # Skip if already processed
             if pair_key in checked_pairs:
                 continue
             checked_pairs.add(pair_key)
@@ -120,31 +100,16 @@ def find_missing_bidirectional(backlinks_data):
                     has_reverse = True
                     break
 
+            # Add to missing if no reverse found
             if not has_reverse:
-                # 🔧 NEW: Check if this pair already has OTHER paired relations
-                existing_pairs = get_existing_paired_relations(backlinks, source_id, target_id)
-
-                if existing_pairs:
-                    # This would create a second pair - SKIP
-                    multi_pair_warnings.append({
-                        'node_a': source_id,
-                        'node_b': target_id,
-                        'existing_pairs': list(existing_pairs),
-                        'would_add': expected_reverse,
-                        'forward_rel': rel_type,
-                        'reason': f"Would create multiple paired relations between {source_id} and {target_id}"
-                    })
-                    print(f"⚠️  SKIP: {source_id} ↔ {target_id} already has {existing_pairs}, won't add reverse {expected_reverse} for {rel_type}", file=sys.stderr)
-                    continue
-
                 missing.append({
-                    'source': target_id,
-                    'target': source_id,
-                    'type': expected_reverse,
+                    'source': target_id,           # Reverse: target becomes source
+                    'target': source_id,           # source becomes target
+                    'type': expected_reverse,      # Use expected reverse type
                     'reason': f'Missing reverse of {source_id} -> {target_id} [{rel_type}]'
                 })
 
-    return missing, multi_pair_warnings
+    return missing
 
 def add_missing_links(backlinks_data, missing_links):
     """Add the missing bidirectional links."""
@@ -156,16 +121,20 @@ def add_missing_links(backlinks_data, missing_links):
         target_id = link['target']
         rel_type = link['type']
 
+        # Ensure source exists in backlinks
         if source_id not in backlinks:
             print(f"Creating new entry for {source_id}", file=sys.stderr)
             backlinks[source_id] = {
+                'links_to': [],
                 'typed_links_to': [],
-                'typed_linked_from': []
+                'linked_from': [],
+                'typed_linked_from': [],
+                'inferred_links_to': []
             }
 
         source_data = backlinks[source_id]
 
-        # Check if link already exists
+        # Check if link already exists (avoid duplicates)
         exists = False
         for existing_link in source_data.get('typed_links_to', []):
             if existing_link.get('to') == target_id and existing_link.get('type') == rel_type:
@@ -173,6 +142,7 @@ def add_missing_links(backlinks_data, missing_links):
                 break
 
         if not exists:
+            # Add to typed_links_to
             if 'typed_links_to' not in source_data:
                 source_data['typed_links_to'] = []
 
@@ -181,12 +151,13 @@ def add_missing_links(backlinks_data, missing_links):
                 'type': rel_type
             })
 
-            # Update typed_linked_from for target
+            # Also update typed_linked_from for the target
             if target_id in backlinks:
                 target_data = backlinks[target_id]
                 if 'typed_linked_from' not in target_data:
                     target_data['typed_linked_from'] = []
 
+                # Check if already in typed_linked_from
                 from_exists = False
                 for existing_from in target_data['typed_linked_from']:
                     if existing_from.get('from') == source_id and existing_from.get('type') == rel_type:
@@ -208,6 +179,7 @@ def save_backlinks(backlinks_data):
     """Save the updated backlinks index."""
     backlinks_path = Path('knowledge-base/_index/backlinks.json')
 
+    # Create backup
     backup_path = backlinks_path.with_suffix('.backup.json')
     with open(backlinks_path, 'r') as f:
         backup_data = f.read()
@@ -215,6 +187,7 @@ def save_backlinks(backlinks_data):
         f.write(backup_data)
     print(f"Created backup at {backup_path}", file=sys.stderr)
 
+    # Save updated data
     with open(backlinks_path, 'w') as f:
         json.dump(backlinks_data, f, indent=2, ensure_ascii=False)
     print(f"Saved updated backlinks to {backlinks_path}", file=sys.stderr)
@@ -225,24 +198,18 @@ def main():
     backlinks_data = load_backlinks()
 
     print("Finding missing bidirectional links...", file=sys.stderr)
-    missing_links, multi_pair_warnings = find_missing_bidirectional(backlinks_data)
+    missing_links = find_missing_bidirectional(backlinks_data)
 
     print(f"\nFound {len(missing_links)} missing bidirectional links", file=sys.stderr)
 
-    if multi_pair_warnings:
-        print(f"\n⚠️  Detected {len(multi_pair_warnings)} multi-pair conflicts (skipped):", file=sys.stderr)
-        for warning in multi_pair_warnings[:5]:
-            print(f"  {warning['node_a']} ↔ {warning['node_b']}: existing={warning['existing_pairs']}, skip={warning['would_add']}", file=sys.stderr)
-
-    # Group by type
+    # Group by type for summary
     by_type = defaultdict(int)
     for link in missing_links:
         by_type[link['type']] += 1
 
-    if by_type:
-        print("\nMissing links by type:", file=sys.stderr)
-        for rel_type, count in sorted(by_type.items(), key=lambda x: -x[1]):
-            print(f"  {rel_type}: {count}", file=sys.stderr)
+    print("\nMissing links by type:", file=sys.stderr)
+    for rel_type, count in sorted(by_type.items(), key=lambda x: -x[1]):
+        print(f"  {rel_type}: {count}", file=sys.stderr)
 
     if missing_links:
         print(f"\nAdding {len(missing_links)} missing links...", file=sys.stderr)
