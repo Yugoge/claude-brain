@@ -352,6 +352,9 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
 
                         # Create conversation link from frontmatter source with FULL CONTENT
                         conversation_link = None
+                        # Clean up relative path prefixes (../../../..)
+                        if source:
+                            source = source.replace('../', '')
                         if source and source.startswith('chats/'):
                             # Extract full conversation content
                             conv_content = extract_conversation_content(source)
@@ -423,6 +426,10 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
 
                         # Prefer frontmatter source, fallback to body conversation link
                         final_conversation = conversation_link or body_conversation_link
+
+                        # If still no tags and we have a body conversation link, inherit from it
+                        if not tags and body_conversation_link and body_conversation_link.get('tags'):
+                            tags = body_conversation_link['tags']
 
                         metadata[rem_id] = {
                             'title': title or rem_id,  # Use title if available, fallback to rem_id
