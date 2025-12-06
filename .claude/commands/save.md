@@ -454,7 +454,7 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
 - **File Creation**: Create Knowledge Rems (atomic transaction, N files)
 - **Conversation**: Normalize metadata and rename file
 - **Updates**: Update existing Rems (review sessions with Type A clarifications)
-- **Graph**: Update knowledge graph (backlinks, conversation index, normalize wikilinks)
+- **Graph**: Update knowledge graph (backlinks, conversation index, normalize wikilinks, fix bidirectional links)
 - **Inferred Links**: Materialize inferred links (optional, with preview)
 - **FSRS Sync**: Add Rems to review schedule (automatic)
 - **Memory MCP**: Record to MCP (automatic)

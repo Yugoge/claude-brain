@@ -48,9 +48,10 @@ def load_backlinks():
     return data
 
 def find_missing_bidirectional(backlinks_data):
-    """Find all missing bidirectional links."""
+    """Find all missing bidirectional links with duplicate prevention."""
     backlinks = backlinks_data.get('links', {})
     missing = []
+    checked_pairs = set()  # Track processed pairs to prevent duplicates
 
     for source_id, source_data in backlinks.items():
         # Check outgoing typed links
@@ -69,42 +70,44 @@ def find_missing_bidirectional(backlinks_data):
                 print(f"Warning: Target {target_id} not in backlinks index", file=sys.stderr)
                 continue
 
+            # Create canonical pair key to prevent duplicate processing
+            if rel_type in SYMMETRIC_TYPES:
+                # For symmetric: (A,B) same as (B,A), use sorted tuple
+                pair_key = tuple(sorted([source_id, target_id])) + (rel_type,)
+            else:
+                # For asymmetric: (A,B,prerequisite_of) is unique
+                pair_key = (source_id, target_id, rel_type)
+
+            # Skip if already processed
+            if pair_key in checked_pairs:
+                continue
+            checked_pairs.add(pair_key)
+
             target_data = backlinks[target_id]
 
-            # Check for symmetric relations
+            # Determine expected reverse type
             if rel_type in SYMMETRIC_TYPES:
-                # Must have exact same relation back
-                has_reverse = False
-                for reverse_link in target_data.get('typed_links_to', []):
-                    if reverse_link.get('to') == source_id and reverse_link.get('type') == rel_type:
-                        has_reverse = True
-                        break
-
-                if not has_reverse:
-                    missing.append({
-                        'source': target_id,  # Reverse: target becomes source
-                        'target': source_id,  # source becomes target
-                        'type': rel_type,     # Same type for symmetric
-                        'reason': f'Missing symmetric reverse of {source_id} -> {target_id} [{rel_type}]'
-                    })
-
-            # Check for asymmetric relations
+                expected_reverse = rel_type
             elif rel_type in ASYMMETRIC_PAIRS:
                 expected_reverse = ASYMMETRIC_PAIRS[rel_type]
-                has_reverse = False
+            else:
+                continue
 
-                for reverse_link in target_data.get('typed_links_to', []):
-                    if reverse_link.get('to') == source_id and reverse_link.get('type') == expected_reverse:
-                        has_reverse = True
-                        break
+            # Check if reverse exists
+            has_reverse = False
+            for reverse_link in target_data.get('typed_links_to', []):
+                if reverse_link.get('to') == source_id and reverse_link.get('type') == expected_reverse:
+                    has_reverse = True
+                    break
 
-                if not has_reverse:
-                    missing.append({
-                        'source': target_id,           # Reverse: target becomes source
-                        'target': source_id,           # source becomes target
-                        'type': expected_reverse,      # Use paired type
-                        'reason': f'Missing asymmetric reverse of {source_id} -> {target_id} [{rel_type}]'
-                    })
+            # Add to missing if no reverse found
+            if not has_reverse:
+                missing.append({
+                    'source': target_id,           # Reverse: target becomes source
+                    'target': source_id,           # source becomes target
+                    'type': expected_reverse,      # Use expected reverse type
+                    'reason': f'Missing reverse of {source_id} -> {target_id} [{rel_type}]'
+                })
 
     return missing
 

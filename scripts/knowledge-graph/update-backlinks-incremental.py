@@ -20,15 +20,76 @@ from typing import Dict, List, Set
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
 
 
-def extract_links_from_rem(rem_file: Path) -> List[str]:
-    """Extract [[wiki-links]] from a Rem file."""
+def extract_typed_links_from_rem(rem_file: Path) -> List[Dict[str, str]]:
+    """Extract links with {rel: type} annotations from a Rem file.
+
+    Supports both formats:
+    - Markdown links: [concept-id](file.md) {rel: type}
+    - Wiki links: [[concept-id]] {rel: type}
+
+    Returns list of dicts: [{'to': 'concept-id', 'type': 'relation_type'}, ...]
+    """
     content = rem_file.read_text(encoding='utf-8')
+    typed_links = []
+    seen_targets = set()
 
-    # Match [[concept-id]] or [[concept-id|display text]]
-    pattern = r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\]'
-    links = re.findall(pattern, content)
+    # Pattern 1: Match - [concept-id](file.md) {rel: type}
+    markdown_typed_pattern = r'-\s*\[([^\]]+)\]\([^\)]+\)\s*\{rel:\s*([^}]+)\}'
+    markdown_matches = re.findall(markdown_typed_pattern, content)
 
-    return [link.strip() for link in links]
+    for concept_id, rel_type in markdown_matches:
+        target_id = concept_id.strip()
+        if target_id and target_id not in seen_targets:
+            typed_links.append({
+                'to': target_id,
+                'type': rel_type.strip()
+            })
+            seen_targets.add(target_id)
+
+    # Pattern 2: Match - [[concept-id]] {rel: type}
+    # or:          - [[concept-id|display]] {rel: type}
+    wikilink_typed_pattern = r'-\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*\{rel:\s*([^}]+)\}'
+    wikilink_matches = re.findall(wikilink_typed_pattern, content)
+
+    for concept_id, rel_type in wikilink_matches:
+        target_id = concept_id.strip()
+        if target_id and target_id not in seen_targets:
+            typed_links.append({
+                'to': target_id,
+                'type': rel_type.strip()
+            })
+            seen_targets.add(target_id)
+
+    # Pattern 3: Also extract untyped markdown links [id](file.md) (assign default type)
+    # Use more specific negative lookahead to avoid matching typed relations
+    untyped_markdown_pattern = r'-\s*\[([^\]]+)\]\([^\)]+\)(?:\s*(?!\{rel:))'
+    markdown_links = re.findall(untyped_markdown_pattern, content)
+
+    for link in markdown_links:
+        target_id = link.strip()
+        if target_id and target_id not in seen_targets:
+            # Default type for untyped links
+            typed_links.append({
+                'to': target_id,
+                'type': 'related_to'
+            })
+            seen_targets.add(target_id)
+
+    # Pattern 4: Also extract untyped [[wikilinks]] (assign default type)
+    untyped_wikilink_pattern = r'\[\[([^\]|]+)(?:\|[^\]]+)?\]\](?!\s*\{rel:)'
+    wikilink_links = re.findall(untyped_wikilink_pattern, content)
+
+    for link in wikilink_links:
+        target_id = link.strip()
+        if target_id and target_id not in seen_targets:
+            # Default type for untyped links
+            typed_links.append({
+                'to': target_id,
+                'type': 'related_to'
+            })
+            seen_targets.add(target_id)
+
+    return typed_links
 
 
 def load_backlinks() -> Dict:
@@ -89,7 +150,7 @@ def find_rem_file(concept_id: str) -> Path:
 
 
 def update_backlinks_for_concepts(concept_ids: List[str]):
-    """Update backlinks for specific concepts only (incremental)."""
+    """Update backlinks for specific concepts with typed relations."""
     backlinks = load_backlinks()
     links_map = backlinks.get('links', {})
 
@@ -97,31 +158,42 @@ def update_backlinks_for_concepts(concept_ids: List[str]):
     for concept_id in concept_ids:
         try:
             rem_file = find_rem_file(concept_id)
-            outgoing_links = extract_links_from_rem(rem_file)
+            typed_links = extract_typed_links_from_rem(rem_file)
 
-            # Initialize this concept's entry
+            # Initialize this concept's entry with typed structure
             if concept_id not in links_map:
                 links_map[concept_id] = {
-                    "links_to": [],
-                    "linked_from": []
+                    "typed_links_to": [],
+                    "typed_linked_from": []
                 }
 
-            # Update outgoing links (links_to)
-            links_map[concept_id]["links_to"] = outgoing_links
+            # Store typed relations
+            links_map[concept_id]["typed_links_to"] = typed_links
 
-            # Update incoming links (linked_from) for all referenced concepts
-            for target_concept in outgoing_links:
-                if target_concept not in links_map:
-                    links_map[target_concept] = {
-                        "links_to": [],
-                        "linked_from": []
+            # Update reverse typed relations for targets
+            for link in typed_links:
+                target_id = link['to']
+                rel_type = link['type']
+
+                # Initialize target if not exists
+                if target_id not in links_map:
+                    links_map[target_id] = {
+                        "typed_links_to": [],
+                        "typed_linked_from": []
                     }
 
-                # Add bidirectional link
-                if concept_id not in links_map[target_concept]["linked_from"]:
-                    links_map[target_concept]["linked_from"].append(concept_id)
+                # Add to target's typed_linked_from (if not duplicate)
+                reverse_entry = {
+                    'from': concept_id,
+                    'type': rel_type
+                }
 
-            print(f"✅ Updated backlinks for: {concept_id}")
+                # Check if already exists
+                existing = links_map[target_id]["typed_linked_from"]
+                if not any(e.get('from') == concept_id and e.get('type') == rel_type for e in existing):
+                    existing.append(reverse_entry)
+
+            print(f"✅ Updated typed backlinks for: {concept_id} ({len(typed_links)} relations)")
 
         except FileNotFoundError as e:
             print(f"❌ {e}", file=sys.stderr)
@@ -131,7 +203,7 @@ def update_backlinks_for_concepts(concept_ids: List[str]):
     backlinks['links'] = links_map
     save_backlinks(backlinks)
 
-    print(f"\n✅ Incremental backlinks update complete ({len(concept_ids)} concepts)")
+    print(f"\n✅ Incremental typed backlinks update complete ({len(concept_ids)} concepts)")
 
 
 def main():

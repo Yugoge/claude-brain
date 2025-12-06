@@ -3,20 +3,32 @@ Central configuration for relation types.
 Used across all validation and analysis scripts.
 """
 
-# Asymmetric relation types that must be unidirectional
-ASYMMETRIC_TYPES = {
-    'example_of',
-    'prerequisite_of',
-    'extends',
-    'generalizes',
-    'specializes',
-    'cause_of',
-    'is_a',
-    'has_subtype',
-    'member_of',
-    'applies_to',
-    'used_in',
+# Paired relation types (forward ⟷ reverse)
+PAIRED_TYPES = {
+    'example_of': 'has_example',
+    'has_example': 'example_of',
+    'prerequisite_of': 'depends_on',
+    'depends_on': 'prerequisite_of',
+    'extends': 'is_extended_by',
+    'is_extended_by': 'extends',
+    'generalizes': 'specializes',
+    'specializes': 'generalizes',
+    'cause_of': 'effect_of',
+    'effect_of': 'cause_of',
+    'is_a': 'has_subtype',
+    'has_subtype': 'is_a',
+    'member_of': 'has_member',
+    'has_member': 'member_of',
+    'used_in': 'uses',
+    'uses': 'used_in',
+    'part_of': 'has_part',
+    'has_part': 'part_of',
+    'applies_to': 'applied_by',
+    'applied_by': 'applies_to'
 }
+
+# Asymmetric relation types that must be unidirectional (derived from PAIRED_TYPES)
+ASYMMETRIC_TYPES = set(PAIRED_TYPES.keys())
 
 # Symmetric types that are allowed to be bidirectional
 SYMMETRIC_TYPES = {

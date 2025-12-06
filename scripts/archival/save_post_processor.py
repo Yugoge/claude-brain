@@ -67,6 +67,7 @@ import json
 import os
 import sys
 import subprocess
+import re
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -199,6 +200,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
       2. update-conversation-index.py (add to chats/index.json)
       3. normalize-links.py (normalize wikilinks)
       4. sync-related-rems-from-backlinks.py (update Related Rems sections)
+      5. fix-bidirectional-links.py (add missing reverse links)
     """
     print("\n" + "="*60, file=sys.stderr)
     print("🔗 Update Knowledge Graph", file=sys.stderr)
@@ -259,6 +261,30 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
         print(f"  ⚠️  Related Rems sync failed: {result.stderr}", file=sys.stderr)
     else:
         print(f"  ✓ Related Rems synced for {len(rem_ids)} Rems", file=sys.stderr)
+
+    # Sub-step 4.5: Fix bidirectional links (add missing reverses)
+    print("  Fixing bidirectional links...", file=sys.stderr)
+    result = subprocess.run(
+        ['python3', 'scripts/fix-bidirectional-links.py'],
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        print(f"  ⚠️  Bidirectional fix failed: {result.stderr}", file=sys.stderr)
+    else:
+        # Parse output to show how many links were added
+        output = result.stdout
+
+        # Extract count from "Successfully added N links" message
+        match = re.search(r'Successfully added (\d+) links', output)
+        if match:
+            count = match.group(1)
+            print(f"  ✓ Added {count} bidirectional links", file=sys.stderr)
+        else:
+            # No links added (all already complete)
+            print(f"  ✓ Bidirectional links verified (all complete)", file=sys.stderr)
 
 
 def materialize_inferred_links(prompt_user: bool = True):
