@@ -163,6 +163,20 @@ source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py [
 - **Note**: `/save` automatically syncs; this is for manual maintenance only
 - Extracts titles from Markdown headings (`# Title`) for better readability in review sessions
 
+### Task 10: Fix Multi-Pair Relations in Source Files
+**Purpose**: Detect and remove redundant paired relations between Rem pairs
+**When to use**: After importing Rems, when graph validation fails, or for periodic deep maintenance
+
+```bash
+source venv/bin/activate && python scripts/knowledge-graph/fix-source-multi-pair-relations.py [--execute] [--verbose]
+```
+
+- **Problem**: Two Rems with multiple paired relations (e.g., both `example_of↔has_example` AND `uses↔used_in`)
+- **Solution**: Uses semantic priority to keep highest-priority relation, removes others
+- **Priority** (high→low): is_a > prerequisite_of > example_of > extends > uses
+- Dry-run by default, use `--execute` to apply fixes
+- **Note**: Should be run BEFORE rebuild-backlinks (Task 6) for clean graph
+
 ---
 
 ## Workflow Logic
@@ -186,20 +200,22 @@ PHASE 3: ADVANCED MAINTENANCE
 7. Sync Related Rems from Backlinks
 8. Standardize Rem Names (domain-specific)
 9. Sync to FSRS Review Schedule
+10. Fix Multi-Pair Relations in Source Files
 
-Select tasks to run (comma-separated, e.g., 1,2,5,9 or 'all' or 'validate'):
+Select tasks to run (comma-separated, e.g., 1,2,5,10 or 'all' or 'validate'):
 ```
 
 ### Mode Behaviors
 
 **--validate**: Run tasks 1-4 (validation only)
-**--check-only**: Run all 9 tasks with dry-run flags
+**--check-only**: Run all 10 tasks with dry-run flags
 **--fix-all**:
 1. Run tasks 1-4 (validation - no changes)
 2. Run task 5 with `--execute` (basic fixes)
-3. Run tasks 6-8 with execution flags (advanced maintenance)
-4. Run task 9 with `--yes` (sync to FSRS)
-5. Ask for domain when reaching task 8
+3. Run task 10 with `--execute` (fix multi-pair relations in source files)
+4. Run tasks 6-7 with execution flags (rebuild backlinks, sync related rems)
+5. Run task 8 with execution flags (standardize names - ask for domain)
+6. Run task 9 (sync to FSRS)
 
 ### Summary Report
 
@@ -220,7 +236,10 @@ Recommendations:
 ## Notes
 
 - **Execution Order Matters**: Validation first, basic fixes second, advanced maintenance last
-- **Dependencies**: Task 7 requires Task 6 (backlinks must be up-to-date before syncing)
+- **CRITICAL**: Task 10 (fix multi-pair) MUST run BEFORE Task 6 (rebuild backlinks) to prevent propagating bad relations
+- **Dependencies**:
+  - Task 7 requires Task 6 (backlinks must be up-to-date before syncing)
+  - Task 6 should run AFTER Task 10 (source files must be cleaned first)
 - **Safety**: All tasks support dry-run mode for preview
 - **Impact**: Task 8 (standardize names) has highest impact - review carefully before executing
 - **Graph Maintenance**: Wikilink normalization is automatically handled by `/save` command
