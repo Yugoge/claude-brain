@@ -33,6 +33,21 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 
 ## Implementation
 
+### Step 0: Initialize Workflow Checklist
+
+**Load todos from**: `scripts/todo/graph.py`
+
+Execute via venv:
+```bash
+source venv/bin/activate && python scripts/todo/graph.py
+```
+
+Use output to create TodoWrite with all workflow steps.
+
+**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
+
+---
+
 ### Step 1: Parse Arguments
 
 Extract parameters from command arguments:

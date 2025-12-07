@@ -1489,15 +1489,33 @@ archived_at: {date_str}
             msg.get('parent_uuid') is None
         )
 
-        # Check if this is a subagent message or Task prompt
-        if msg.get('subagent_name'):
-            # Label as subagent with name
+        # 🔧 BUG 15 FIX: Detect JSON responses from consultant subagents
+        # These are labeled "Subagent → Assistant" (returning JSON to main agent)
+        is_json_response = False
+        if msg['role'] == 'assistant' and msg.get('subagent_name'):
+            # Check if content is JSON (consultant subagent response)
+            content_stripped = content.strip()
+            if content_stripped.startswith('{') and content_stripped.endswith('}'):
+                try:
+                    json.loads(content_stripped)
+                    is_json_response = True
+                except json.JSONDecodeError:
+                    pass
+
+        # Determine header based on message type
+        if is_task_prompt:
+            # Task prompt: Main agent calling subagent
+            md_content += f"### Assistant → Subagent\n\n"
+        elif is_json_response:
+            # JSON response: Subagent returning JSON to main agent
+            subagent_name = msg['subagent_name'].replace('-', ' ').title()
+            md_content += f"### Subagent → Assistant\n\n"
+        elif msg.get('subagent_name') and msg['role'] == 'user':
+            # User message from subagent (e.g., classification-expert)
             subagent_name = msg['subagent_name'].replace('-', ' ').title()
             md_content += f"### Subagent: {subagent_name}\n\n"
-        elif is_task_prompt:
-            # 🔧 BUG 14 PART 2 FIX: Label Task prompts as "Assistant → Subagent"
-            md_content += f"### Assistant → Subagent\n\n"
         else:
+            # Regular user/assistant message
             md_content += f"### {role}\n\n"
 
         # Demote headings in content to maintain hierarchy
