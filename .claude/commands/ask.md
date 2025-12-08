@@ -355,13 +355,19 @@ STEP 1: Check anticipated_follow_ups first
 - If user's request matches any trigger/question/challenge → Use prepared response
 - If 80%+ match → Adapt prepared response, no re-consult needed
 
-STEP 2: Quantify information gap
+STEP 2: Quantify information gap and determine re-consultation need
+
+**Quantitative thresholds**:
 - New information needed: >40% beyond current guidance → Re-consult
 - Topic shift: >50% different domain → Re-consult
-- Verification needed: User provides counter-evidence → Re-consult
-- User requests sources, citations, or evidence → Re-consult
-- User questions specific data or expresses doubt → Re-consult
 - Otherwise: Use existing guidance + reasoning
+
+**MUST re-consult when user**:
+- Requests sources, citations, references, or evidence
+- Questions accuracy of specific data, numbers, or claims
+- Expresses doubt about information provided
+- Asks for verification or proof of any statement
+- Provides counter-evidence to challenge claims
 
 **Exception - Skip re-consult only if ALL conditions met**:
 - Response is purely conceptual or definitional
