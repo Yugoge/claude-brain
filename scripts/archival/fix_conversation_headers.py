@@ -69,20 +69,17 @@ def fix_conversation_headers(file_path: Path, dry_run=False) -> tuple[int, int]:
             sections[i] = "### Subagent → Assistant"
             fixes += 1
 
-        # Fix 2: "### Subagent: {Name}" with teaching content → "### Assistant"
-        # These are consultant subagents that provide JSON advice, but main agent does teaching
-        consultant_subagents = [
-            'Analyst', 'Language Tutor', 'Finance Tutor', 'Programming Tutor',
-            'Medicine Tutor', 'Law Tutor', 'Science Tutor', 'Book Tutor',
-            'Review Master', 'Journalist', 'Deep Search'
-        ]
-
-        for subagent in consultant_subagents:
-            if header == f"### Subagent: {subagent}":
-                # This is main agent's teaching response, not subagent output
+        # Fix 2: "### Subagent: {Name}" → depends on content
+        elif header.startswith("### Subagent: "):
+            if detect_json_response(section_content):
+                # JSON response → "### Subagent → Assistant"
+                sections[i] = "### Subagent → Assistant"
+                fixes += 1
+            else:
+                # Non-JSON (teaching dialogue) → "### Assistant"
+                # This happens when main agent's response was mislabeled as subagent
                 sections[i] = "### Assistant"
                 fixes += 1
-                break
 
     # Rebuild content
     fixed_content = ''.join(sections)
