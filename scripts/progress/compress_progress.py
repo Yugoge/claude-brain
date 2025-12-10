@@ -55,7 +55,9 @@ def compress_sessions(content_lines: list, threshold: int = 3) -> list:
 
         # Extract info
         concepts_count = 0
+        pages = ""
         date = ""
+        conversation_link = ""
 
         # Try to extract session number
         session_num_match = re.search(r'Session (\d+)', session_header)
@@ -66,17 +68,28 @@ def compress_sessions(content_lines: list, threshold: int = 3) -> list:
         if date_match:
             date = date_match.group(1)
 
-        # Extract concepts count
+        # Extract concepts count and other info
         for line in session_content:
-            if 'Rems extracted' in line or 'concepts extracted' in line:
-                num_match = re.search(r'(\d+)\s+(?:Rems|concepts)', line)
+            if 'Rems' in line or 'concepts' in line.lower():
+                num_match = re.search(r'(\d+)\s+(?:Rems|concepts)', line, re.IGNORECASE)
                 if num_match:
                     concepts_count = int(num_match.group(1))
+            if 'Pages covered' in line or 'Pages:' in line or 'Pages**:' in line:
+                page_match = re.search(r'Pages?\s*\*?\*?:?\*?\*?\s*([\d\-,]+)', line)
+                if page_match:
+                    pages = page_match.group(1)
+            # Extract conversation link (markdown format)
+            if 'Conversation:' in line or 'Conversation**:' in line or '→' in line:
+                link_match = re.search(r'\[([^\]]+)\]\(([^)]+)\)', line)
+                if link_match:
+                    conversation_link = f'[{link_match.group(1)}]({link_match.group(2)})'
 
         old_sessions.append({
             'num': session_num,
             'date': date,
-            'concepts': concepts_count
+            'pages': pages,
+            'concepts': concepts_count,
+            'conversation_link': conversation_link
         })
 
     # Build new content
@@ -84,14 +97,25 @@ def compress_sessions(content_lines: list, threshold: int = 3) -> list:
     result.append('## Session History')
     result.append('')
 
-    # Add compressed archive section
+    # Add compressed archive section with individual session lines
     if old_sessions:
-        first_date = old_sessions[0]['date']
-        last_date = old_sessions[-1]['date']
-        total_concepts = sum(s['concepts'] for s in old_sessions)
-
         result.append('### Session Archive (Compressed)')
-        result.append(f'- Sessions 1-{len(old_sessions)}: {total_concepts} concepts extracted [{first_date} to {last_date}]')
+        result.append('')
+
+        # Add each old session as single line with conversation link if available
+        for sess in old_sessions:
+            line = f'- **Session {sess["num"]}** ({sess["date"]}): '
+            if sess['pages']:
+                line += f'Pages {sess["pages"]}, '
+            line += f'{sess["concepts"]} Rems'
+
+            # Add conversation link if present
+            conv_link = sess.get('conversation_link', '')
+            if conv_link:
+                line += f' → {conv_link}'
+
+            result.append(line)
+
         result.append('')
 
     # Add recent sessions header

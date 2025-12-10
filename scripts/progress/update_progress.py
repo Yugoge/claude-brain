@@ -145,6 +145,7 @@ def compress_old_sessions(content_lines: list, threshold: int = 3) -> list:
         concepts_count = 0
         pages = ""
         date = ""
+        conversation_link = ""
 
         for line in session_content:
             if 'concepts' in line.lower() and 'Rems' in line:
@@ -159,24 +160,41 @@ def compress_old_sessions(content_lines: list, threshold: int = 3) -> list:
                 date_match = re.search(r'\d{4}-\d{2}-\d{2}', session_header)
                 if date_match:
                     date = date_match.group()
+            # Extract conversation link (markdown format)
+            if 'Conversation:' in line or 'Conversation**:' in line or '→' in line:
+                link_match = re.search(r'\[([^\]]+)\]\(([^)]+)\)', line)
+                if link_match:
+                    conversation_link = f'[{link_match.group(1)}]({link_match.group(2)})'
 
         old_sessions.append({
             'num': i + 1,
             'date': date,
             'pages': pages,
-            'concepts': concepts_count
+            'concepts': concepts_count,
+            'conversation_link': conversation_link
         })
 
-    # Build compressed section
+    # Build compressed section with individual session lines
     if old_sessions:
-        first_date = old_sessions[0]['date']
-        last_date = old_sessions[-1]['date']
-        total_concepts = sum(s['concepts'] for s in old_sessions)
-
         compressed.append('## Session History')
         compressed.append('')
         compressed.append('### Session Archive (Compressed)')
-        compressed.append(f'- Sessions 1-{len(old_sessions)}: {total_concepts} concepts extracted [{first_date} to {last_date}]')
+        compressed.append('')
+
+        # Add each old session as single line with conversation link if available
+        for sess in old_sessions:
+            line = f'- **Session {sess["num"]}** ({sess["date"]}): '
+            if sess['pages']:
+                line += f'Pages {sess["pages"]}, '
+            line += f'{sess["concepts"]} Rems'
+
+            # Extract conversation link if present in original content
+            conv_link = sess.get('conversation_link', '')
+            if conv_link:
+                line += f' → {conv_link}'
+
+            compressed.append(line)
+
         compressed.append('')
         compressed.append('### Recent Sessions')
         compressed.append('')
@@ -257,6 +275,13 @@ def update_progress(material_path: str, position: str = None,
     if position:
         session_line += f'\n- **Pages**: {position}'
     session_line += f'\n- **Concepts extracted**: {concepts_count} Rems'
+
+    # Add conversation link if provided
+    if conversation_file:
+        conv_path = Path(conversation_file)
+        conv_title = conv_path.stem.replace('-', ' ').title()
+        relative_conv = Path('../../') / conv_path.relative_to(Path('chats'))
+        session_line += f'\n- **Conversation**: [{conv_title}]({relative_conv})'
 
     # Find insertion point (after "## Session History" or "### Recent Sessions")
     insert_idx = len(content_lines)
