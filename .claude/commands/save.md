@@ -444,7 +444,42 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 ---
 
-### Step 9: Execute Automated Post-Processing
+### Step 9: Update Learning Material Progress (Learn Sessions Only)
+
+**⚠️ SESSION TYPE GATING**: Only execute this step if `session_type == "learn"`. Skip for ask/review sessions.
+
+**Purpose**: Update learning material progress file with compressed session record.
+
+**AI extracts from conversation context**:
+- `material_path`: From `/learn learning-materials/.../file.pdf` command (extract exact path)
+- `position`: From conversation (e.g., "Pages 18-20", "Chapter 5", "Section 3.2")
+- `concepts_count`: Number of concepts extracted in Step 3 (from `/tmp/candidate_rems.json`)
+
+**Execute progress update**:
+```bash
+source venv/bin/activate && python scripts/progress/update_progress.py \
+  --material-path "{material_path extracted from /learn command}" \
+  --position "{position extracted from conversation}" \
+  --concepts-count {N from Step 3 extraction} \
+  --compress-threshold 3
+```
+
+**Script automatically**:
+- Updates frontmatter (session_count, progress_percentage)
+- Appends compressed session record (single line)
+- Compresses old sessions (keeps recent 3 detailed)
+- Creates progress file from template if missing
+
+**Exit codes**:
+- `0` = Success
+- `1` = Material file not found
+- `2` = Invalid parameters
+
+**Fallback**: If script fails, log warning and continue (non-blocking)
+
+---
+
+### Step 10: Execute Automated Post-Processing
 
 **⚠️ CRITICAL - MANDATORY USE OF SCRIPTS**:
 - ✅ MUST use `save_post_processor.py` for ALL file creation

@@ -368,19 +368,12 @@ Process:
 
 **Processing**:
 - Display to user: "Mastered X concepts, Practiced Y concepts, Introduced to Z concepts"
-- Update progress file: Add only `mastered` and `practiced` to "learned concepts" list
-- Log `introduced_only` separately (not counted as "learned")
+- Do NOT update progress file manually - /save workflow handles this automatically in Step 9
 - Do NOT write Rems to knowledge-base - user must run `/save` to extract from conversation
-
-#### PHASE 4: Progress Update
-
-- Update progress file: new position, learned concepts, session count
 - Indexes are auto-updated by PostToolUse hooks when Rem files are modified
 
 ### Step 11: Post-Session Actions
 
-- Update material index with progress percentage
-- Log session to history (material, duration, concepts, progress delta)
 - Display completion message: Progress %, new concepts count, next steps
 - CRITICAL: Display prominent `/save` reminder with option:
 

@@ -61,7 +61,12 @@ def get_todos():
             "status": "pending"
         },
         {
-            "content": "Step 9: Execute Post-Processing (Batch Execution)",
+            "content": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
+            "activeForm": "Updating learning material progress",
+            "status": "pending"
+        },
+        {
+            "content": "Step 10: Execute Post-Processing (Batch Execution)",
             "activeForm": "Running post-processing orchestrator",
             "status": "pending"
         }
