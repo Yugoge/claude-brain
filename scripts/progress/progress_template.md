@@ -35,6 +35,16 @@ session_count: 0
 
 *Sessions will appear here as you learn*
 
+## Rems Extracted
+
+*(Knowledge Rems extracted from this material)*
+*(Format: - **Rem Title** - [link](../../knowledge-base/.../rem-file.md))*
+
+## Related Conversations
+
+*(Conversation archives from learning sessions)*
+*(Format: - **Conversation Title** (Date) - [link](../../chats/YYYY-MM/conversation-file.md))*
+
 ## Notes
 
 *Add learning notes, observations, or challenges here*

@@ -191,9 +191,9 @@ Exit codes: 0=valid, 1=invalid (blocks pipeline)
 
 ---
 
-### Step 4: Analyze User Learning & Rem Updates (Review Sessions Only)
+### Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)
 
-**If session_type == "review"**, AI analyzes the full conversation context to determine:
+**If session_type == "learn" or "review"**, AI analyzes the full conversation context to determine:
 
 **Two Decision Paths**:
 

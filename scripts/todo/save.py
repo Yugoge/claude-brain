@@ -36,8 +36,8 @@ def get_todos():
             "status": "pending"
         },
         {
-            "content": "Step 4: Question Type Classification (Review Sessions Only)",
-            "activeForm": "Classifying question types",
+            "content": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
+            "activeForm": "Analyzing user learning and Rem updates",
             "status": "pending"
         },
         {

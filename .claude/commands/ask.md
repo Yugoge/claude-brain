@@ -86,7 +86,11 @@ Wait for user clarification, then proceed to Step 2 with refined question.
 
 ### Step 2: Initial Analyst Consultation (JSON)
 
-**Consult analyst agent for research and strategy**:
+**Consult analyst agent for research and strategy**.
+
+You can call multiple analysts in parallel (multiple Task calls in single message) if the question has multiple distinct aspects.
+
+**Standard consultation**:
 
 ```
 Use Task tool with:
