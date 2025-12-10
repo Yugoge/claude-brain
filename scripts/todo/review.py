@@ -15,18 +15,18 @@ def get_todos():
     """
     return [
     {
-        "content": "Step 1: Load Rems and Show Timeline",
-        "activeForm": "Step 1: Load Rems and Show Timeline",
+        "content": "Load Rems and Show Timeline",
+        "activeForm": "Loading Rems and showing timeline",
         "status": "pending"
     },
     {
-        "content": "Step 2: Conduct Review Session (Main Agent Dialogue Loop)",
-        "activeForm": "Step 2: Conduct Review Session (Main Agent Dialogue Loop)",
+        "content": "Conduct Review Dialogue",
+        "activeForm": "Conducting review dialogue",
         "status": "pending"
     },
     {
-        "content": "Step 3: Post-Session Summary",
-        "activeForm": "Step 3: Post-Session Summary",
+        "content": "Show Post-Session Summary",
+        "activeForm": "Showing post-session summary",
         "status": "pending"
     }
 ]

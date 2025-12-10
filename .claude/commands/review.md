@@ -307,6 +307,68 @@ Wait for user to answer the question.
 
 #### 3.5 Provide Feedback and Ask for Self-Rating
 
+**[OPTIONAL] Deep Dive Consultation**
+
+If user asks deep question (trigger signals):
+- Formula or logic questions
+- Challenges your explanation
+- Requests deeper detail
+- Multiple follow-ups on same concept
+
+Then consult analyst (Three-Party Architecture):
+```
+Use Task tool:
+- subagent_type: "analyst"
+- model: "haiku"
+- description: "Research deep question during review"
+- prompt: "
+  ⚠️ CRITICAL: Return ONLY valid JSON. NO markdown.
+
+  You are a CONSULTANT to the main review agent, NOT the user's teacher.
+  The user will NEVER see your response - only the main agent will.
+
+  **OUTPUT REQUIREMENTS**:
+  - Return ONLY the JSON object specified below
+  - NO markdown code blocks
+  - NO explanatory text before or after JSON
+
+  Context: User is reviewing {rem_title} (domain: {domain})
+
+  User's deep question: {user_question}
+
+  Rem content: {core_memory_points}
+
+  Previous dialogue context: {brief_summary_of_conversation}
+
+  ---
+
+  Research the question using WebSearch if needed, then return ONLY:
+
+  {
+    \"research_findings\": \"Key facts from search (if needed)\",
+    \"explanation_strategy\": \"formula_derivation | analogy | prerequisite_review | direct_answer\",
+    \"content\": {
+      \"answer\": \"Direct answer to user's question\",
+      \"sources\": [\"URL1\", \"URL2\"],
+      \"follow_up\": \"Optional follow-up question to deepen understanding\"
+    },
+    \"confidence\": 85
+  }
+
+  **IMPORTANT**: Return the JSON object above WITHOUT any wrapping.
+  "
+```
+
+**Internalize guidance and respond naturally**:
+- Use first-person voice
+- NO meta-commentary
+- Present findings as natural teaching dialogue
+- Return to rating flow when question resolved
+
+---
+
+**Standard Feedback Flow** (no deep dive needed):
+
 **If response is strong** (Quality 3-4):
 ```
 {Positive feedback}
