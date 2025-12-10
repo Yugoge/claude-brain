@@ -448,27 +448,27 @@ Files: [N] Rems + 1 conversation + 2 index updates
 
 **⚠️ SESSION TYPE GATING**: Only execute this step if `session_type == "learn"`. Skip for ask/review sessions.
 
-**Purpose**: Update learning material progress file with compressed session record.
+**⚠️ TIMING**: This step executes AFTER Step 10 (post-processor), called by save_post_processor.py
 
-**AI extracts from conversation context**:
-- `material_path`: From `/learn learning-materials/.../file.pdf` command (extract exact path)
-- `position`: From conversation (e.g., "Pages 18-20", "Chapter 5", "Section 3.2")
-- `concepts_count`: Number of concepts extracted in Step 3 (from `/tmp/candidate_rems.json`)
+**Purpose**: Update learning material progress file with:
+- Compressed session record
+- Bidirectional links to Rems extracted
+- Bidirectional links to conversation archive
 
-**Execute progress update**:
-```bash
-source venv/bin/activate && python scripts/progress/update_progress.py \
-  --material-path "{material_path extracted from /learn command}" \
-  --position "{position extracted from conversation}" \
-  --concepts-count {N from Step 3 extraction} \
-  --compress-threshold 3
-```
+**Automated by post-processor**:
+The save_post_processor.py script automatically calls update_progress.py with:
+- `material_path`: Extracted from conversation context
+- `position`: Extracted from conversation
+- `concepts_count`: Number of Rems created
+- `rems_extracted`: List of created Rem files (with titles)
+- `conversation_file`: Path to archived conversation
 
 **Script automatically**:
 - Updates frontmatter (session_count, progress_percentage)
 - Appends compressed session record (single line)
+- Updates "## Rems Extracted" section with bidirectional links
+- Updates "## Related Conversations" section with bidirectional links
 - Compresses old sessions (keeps recent 3 detailed)
-- Creates progress file from template if missing
 
 **Exit codes**:
 - `0` = Success
@@ -476,6 +476,8 @@ source venv/bin/activate && python scripts/progress/update_progress.py \
 - `2` = Invalid parameters
 
 **Fallback**: If script fails, log warning and continue (non-blocking)
+
+**Note**: This step is handled automatically by post-processor, AI does not call script directly
 
 ---
 

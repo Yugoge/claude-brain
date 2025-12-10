@@ -6,13 +6,17 @@ Auto-updates progress file with minimal footprint:
 - Updates position, progress %, session count
 - Appends compressed session record (single line)
 - Auto-compresses old sessions (keeps recent N detailed)
+- Updates "## Rems Extracted" section with bidirectional links
+- Updates "## Related Conversations" section with bidirectional links
 
 Usage:
     source venv/bin/activate && python scripts/progress/update_progress.py \\
       --material-path "learning-materials/language/french/1453.pdf" \\
       --position "Pages 18-20" \\
       --concepts-count 6 \\
-      --compress-threshold 3
+      --compress-threshold 3 \\
+      --rems-extracted '[{"title": "Concept", "path": "knowledge-base/.../rem.md"}]' \\
+      --conversation-file "chats/2025-12/conversation-2025-12-10.md"
 """
 
 import argparse
@@ -195,7 +199,8 @@ def compress_old_sessions(content_lines: list, threshold: int = 3) -> list:
 
 
 def update_progress(material_path: str, position: str = None,
-                   concepts_count: int = 0, compress_threshold: int = 3):
+                   concepts_count: int = 0, compress_threshold: int = 3,
+                   rems_extracted: list = None, conversation_file: str = None):
     """
     Main update logic.
 
@@ -204,6 +209,8 @@ def update_progress(material_path: str, position: str = None,
         position: Current position (e.g., "Pages 18-20")
         concepts_count: Number of concepts extracted this session
         compress_threshold: Keep last N sessions detailed
+        rems_extracted: List of dicts with 'title' and 'path' keys
+        conversation_file: Path to archived conversation
     """
     # Determine progress file path
     mat_path = Path(material_path)
@@ -267,6 +274,91 @@ def update_progress(material_path: str, position: str = None,
     # Compress old sessions
     content_lines = compress_old_sessions(content_lines, compress_threshold)
 
+    # Update "## Rems Extracted" section
+    if rems_extracted:
+        rems_section_idx = -1
+        for i, line in enumerate(content_lines):
+            if line.startswith('## Rems Extracted'):
+                rems_section_idx = i
+                break
+
+        if rems_section_idx >= 0:
+            # Find end of section (next ## header or end of file)
+            section_end = len(content_lines)
+            for i in range(rems_section_idx + 1, len(content_lines)):
+                if content_lines[i].startswith('##'):
+                    section_end = i
+                    break
+
+            # Remove old content (keep header and format comment)
+            existing_lines = content_lines[rems_section_idx:section_end]
+            header_lines = [existing_lines[0]]  # ## Rems Extracted
+            for line in existing_lines[1:]:
+                if line.startswith('*(') or line.strip() == '':
+                    header_lines.append(line)
+                else:
+                    break
+
+            # Build new Rem links
+            rem_links = []
+            for rem in rems_extracted:
+                title = rem.get('title', 'Untitled')
+                path = rem.get('path', '')
+                # Convert absolute path to relative path from progress file
+                if path:
+                    rem_path = Path(path)
+                    relative = Path('../../') / rem_path.relative_to(Path('knowledge-base'))
+                    rem_links.append(f'- **{title}** - [{title}]({relative})')
+
+            # Rebuild section
+            new_section = header_lines + [''] + rem_links + ['']
+            content_lines[rems_section_idx:section_end] = new_section
+
+    # Update "## Related Conversations" section
+    if conversation_file:
+        conv_section_idx = -1
+        for i, line in enumerate(content_lines):
+            if line.startswith('## Related Conversations'):
+                conv_section_idx = i
+                break
+
+        if conv_section_idx >= 0:
+            # Find end of section
+            section_end = len(content_lines)
+            for i in range(conv_section_idx + 1, len(content_lines)):
+                if content_lines[i].startswith('##'):
+                    section_end = i
+                    break
+
+            # Extract title and date from conversation file
+            conv_path = Path(conversation_file)
+            conv_title = conv_path.stem.replace('-', ' ').title()
+            conv_date = frontmatter['last_session']
+
+            # Convert to relative path
+            relative_conv = Path('../../') / conv_path.relative_to(Path('chats'))
+
+            # Check if already exists
+            existing_lines = content_lines[conv_section_idx:section_end]
+            already_exists = False
+            for line in existing_lines:
+                if str(relative_conv) in line:
+                    already_exists = True
+                    break
+
+            if not already_exists:
+                # Insert new conversation link
+                insert_pos = conv_section_idx + 1
+                # Skip header and format comments
+                while insert_pos < section_end and (
+                    content_lines[insert_pos].startswith('*(') or
+                    content_lines[insert_pos].strip() == ''
+                ):
+                    insert_pos += 1
+
+                conv_link = f'- **{conv_title}** ({conv_date}) - [{conv_title}]({relative_conv})'
+                content_lines.insert(insert_pos, conv_link)
+
     # Write back
     write_progress_file(progress_path, frontmatter, content_lines)
 
@@ -287,14 +379,23 @@ def main():
     parser.add_argument('--concepts-count', type=int, default=0, help='Number of concepts extracted')
     parser.add_argument('--compress-threshold', type=int, default=3,
                        help='Keep last N sessions detailed')
+    parser.add_argument('--rems-extracted', help='JSON list of dicts with title and path')
+    parser.add_argument('--conversation-file', help='Path to archived conversation')
 
     args = parser.parse_args()
+
+    # Parse rems_extracted if provided
+    rems_extracted = None
+    if args.rems_extracted:
+        rems_extracted = json.loads(args.rems_extracted)
 
     return update_progress(
         args.material_path,
         args.position,
         args.concepts_count,
-        args.compress_threshold
+        args.compress_threshold,
+        rems_extracted,
+        args.conversation_file
     )
 
 
