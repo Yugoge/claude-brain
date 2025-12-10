@@ -292,6 +292,53 @@ Script validates IDs, merges typed_relations, and enforces hierarchical consiste
 
 **Fallback**: If tutor unavailable → Use original candidate Rems (empty typed_relations)
 
+**⚠️ CRITICAL - User Modifies Candidate Rems**:
+
+If user requests modifications to extracted concepts (filter, add, edit) in Step 8, you MUST:
+
+1. **Update candidate_rems.json** with user's changes:
+   ```bash
+   cat > /tmp/candidate_rems.json << 'EOF'
+   [{updated concepts}]
+   EOF
+   ```
+
+2. **RE-RUN COMPLETE 3-PHASE WORKFLOW** (DO NOT skip phases):
+   - Phase 1: Re-generate tutor prompt with new candidate list
+   - Phase 2: Re-call domain tutor with new prompt
+   - Phase 3: Merge and validate with new tutor response
+
+3. **❌ FORBIDDEN SHORTCUTS**:
+   - ❌ Manually editing tutor_response.json
+   - ❌ Reusing old tutor prompt/response
+   - ❌ Skipping Phase 1 and going directly to Phase 3
+
+**Why**: The tutor prompt contains `valid_ids` list that includes both existing concepts AND candidate Rem IDs. When candidate Rems change, the valid_ids list becomes stale, causing ID validation errors in Phase 3.
+
+**Correct workflow after user modification**:
+```bash
+# 1. Save filtered concepts
+cat > /tmp/candidate_rems_filtered.json << 'EOF'
+[{filtered concepts only}]
+EOF
+
+# 2. Phase 1: Re-generate prompt
+source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
+  --domain "$domain" \
+  --isced-path "$isced_detailed_path" \
+  --candidate-rems /tmp/candidate_rems_filtered.json
+
+# 3. Phase 2: Copy prompt output, call tutor, save to /tmp/tutor_response_new.json
+
+# 4. Phase 3: Merge with NEW tutor response
+source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
+  --domain "$domain" \
+  --isced-path "$isced_detailed_path" \
+  --candidate-rems /tmp/candidate_rems_filtered.json \
+  --tutor-response /tmp/tutor_response_new.json \
+  --output /tmp/enriched_rems_filtered.json
+```
+
 ---
 
 ### Step 6: Rem Extraction Transparency

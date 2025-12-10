@@ -1495,9 +1495,23 @@ archived_at: {date_str}
         if msg['role'] == 'assistant':
             # Check if content is JSON (consultant subagent response)
             content_stripped = content.strip()
-            if content_stripped.startswith('{') and content_stripped.endswith('}'):
+
+            # Strip markdown code fences if present (```json...```)
+            content_for_check = content_stripped
+            if content_stripped.startswith('```'):
+                lines = content_stripped.split('\n')
+                # Remove opening fence (```json or ```)
+                if lines[0].startswith('```'):
+                    lines = lines[1:]
+                # Remove closing fence (```)
+                if lines and lines[-1].strip() == '```':
+                    lines = lines[:-1]
+                content_for_check = '\n'.join(lines).strip()
+
+            # Now check if it's JSON
+            if content_for_check.startswith('{') and content_for_check.endswith('}'):
                 try:
-                    parsed_json = json.loads(content_stripped)
+                    parsed_json = json.loads(content_for_check)
                     # Verify it's actually a subagent response (has typical JSON consultant fields)
                     consultant_indicators = [
                         'strategy', 'rationale', 'content', 'confidence',  # analyst/tutor responses
@@ -1522,8 +1536,8 @@ archived_at: {date_str}
                 md_content += f"### Subagent → Assistant\n\n"
         elif msg.get('subagent_name') and msg['role'] == 'user':
             # User message from subagent (e.g., classification-expert)
-            subagent_name = msg['subagent_name'].replace('-', ' ').title()
-            md_content += f"### Subagent: {subagent_name}\n\n"
+            subagent_label = msg['subagent_name'].replace('-', ' ').title()
+            md_content += f"### Subagent: {subagent_label}\n\n"
         else:
             # Regular user/assistant message
             md_content += f"### {role}\n\n"
