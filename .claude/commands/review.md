@@ -315,6 +315,8 @@ If user asks deep question (trigger signals):
 - Requests deeper detail
 - Multiple follow-ups on same concept
 
+You can call multiple analysts in parallel (multiple Task calls in single message) if the question has multiple distinct aspects.
+
 Then consult analyst (Three-Party Architecture):
 ```
 Use Task tool:
