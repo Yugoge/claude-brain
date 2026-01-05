@@ -20,29 +20,11 @@ from pathlib import Path
 # Constants
 ROOT = Path(__file__).parent.parent.parent
 
-# Valid relation types from docs/architecture/standards/RELATION_TYPES.md
-VALID_RELATION_TYPES = {
-    # Lexical relations
-    'synonym', 'antonym', 'hypernym', 'hyponym',
-    'part_of', 'has_part', 'derivationally_related',
-    'cognate', 'collocates_with', 'translation_of',
+# Add scripts to path for imports
+sys.path.append(str(ROOT / "scripts"))
 
-    # Conceptual relations
-    'is_a', 'has_subtype', 'instance_of', 'has_instance',
-    'prerequisite_of', 'has_prerequisite',
-    'cause_of', 'caused_by',
-    'example_of', 'has_example',
-    'uses', 'used_by',
-    'defines', 'defined_by',
-    'generalizes', 'specializes',
-
-    # Comparative/Associative
-    'contrasts_with', 'complements', 'complemented_by',
-    'analogous_to',
-
-    # Fallback (discouraged but allowed)
-    'related'
-}
+# Import valid relation types from central configuration
+from archival.relation_types import ALL_TYPES as VALID_RELATION_TYPES
 
 
 def load_domain_concepts(domain_path):
@@ -55,12 +37,12 @@ def load_domain_concepts(domain_path):
     Returns:
         Set of concept IDs in this domain
     """
-    from get_domain_concepts import load_backlinks, extract_domain_concepts
+    from archival.get_domain_concepts import load_backlinks, extract_domain_concepts
 
     backlinks_data = load_backlinks()
     concepts = extract_domain_concepts(backlinks_data, domain_path)
 
-    return {c['id'] for c in concepts}
+    return {c['rem_id'] for c in concepts}
 
 
 def normalize_concept_id(concept_id, domain_concepts=None):

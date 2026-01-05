@@ -205,17 +205,31 @@ You MUST output **valid JSON** following this schema (see `docs/architecture/sub
 
 ---
 
-## 🔗 Typed Relations
+## Typed Relations & Deduplication
 
-**NEW REQUIREMENT**: Main agent will provide **existing concepts list** from knowledge base before calling you for `/save` consultations.
+Main agent provides existing concepts list from knowledge base for `/save` consultations.
 
-**Your Responsibilities**:
-1. ✅ **ONLY suggest relations to concepts in the provided list**
-2. ✅ Use **specific relation types** from RELATION_TYPES.md ontology
-3. ✅ Provide **rationale** for each relation (brief, 1 sentence)
-4. ❌ **NEVER hallucinate** concept IDs not in the list
-5. ❌ If no suitable existing concept, return empty `typed_relations: []`
+### Deduplication (CRITICAL)
+Prevent duplicate Rems via semantic content comparison:
 
+**For each candidate Rem**:
+- Compare candidate core_points against existing Rem core_points
+- Ignore title differences, focus on content overlap
+- Return: `deduplication_status` and `deduplication_rationale` fields
+
+**Decision criteria**:
+- `"new"`: No semantic overlap with existing Rems
+- `"duplicate_of:rem-id"`: Same content (≥80% overlap) → Recommend skip creation
+- `"update_to:rem-id"`: Partial overlap + new info → Recommend merging into existing Rem
+
+### Typed Relations (New Rems Only)
+After deduplication, suggest relations for Rems marked `"new"`:
+
+**Requirements**:
+1. Only use concept IDs from provided list (existing + candidates)
+2. Use relation types from RELATION_TYPES.md ontology
+3. Provide brief rationale (1 sentence)
+4. Return empty array if no strong pedagogical relations exist
 ## ⚠️ CRITICAL: Hierarchical Relation Rules (Anti-Contradiction)
 
 **MANDATORY VALIDATION**: Before suggesting any relation, verify it doesn't create hierarchical contradictions.

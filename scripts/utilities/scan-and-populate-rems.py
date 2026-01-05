@@ -109,20 +109,59 @@ def load_schedule() -> Dict:
 
 def save_schedule(schedule: Dict, dry_run: bool = False):
     """
-    Save schedule atomically with file locking.
+    Save schedule atomically with file locking and validation.
 
     Uses safe_write_json to prevent concurrent write conflicts.
+    Validates data integrity before writing to prevent data loss.
+    Creates automatic backup before saving.
     """
     if dry_run:
         print(f"\n[DRY RUN] Would write to: {SCHEDULE_PATH}")
         return
 
+    # Validation: Ensure concepts dict is not empty
+    concepts = schedule.get('concepts', {})
+    if not concepts or len(concepts) == 0:
+        raise ValueError(
+            "CRITICAL: Refusing to save empty schedule.json!\n"
+            "  This would cause data loss. Check your data source.\n"
+            "  If you need to clear the schedule, delete .review/schedule.json manually."
+        )
+
+    # Validation: Ensure concepts is a dictionary
+    if not isinstance(concepts, dict):
+        raise ValueError(
+            f"CRITICAL: concepts must be a dictionary, got {type(concepts)}\n"
+            "  Data corruption detected. Aborting save."
+        )
+
+    print(f"\n✅ Validation passed: {len(concepts)} concepts ready to save")
+
     SCHEDULE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create automatic backup before save
+    if SCHEDULE_PATH.exists():
+        import subprocess
+        backup_script = ROOT / "scripts" / "review" / "backup-schedule.sh"
+        if backup_script.exists():
+            try:
+                result = subprocess.run(
+                    ['bash', str(backup_script)],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(ROOT)
+                )
+                if result.returncode == 0:
+                    # Extract backup filename from output
+                    output = result.stdout.strip()
+                    print(f"📦 {output}")
+            except Exception as e:
+                print(f"⚠️  Backup failed (continuing anyway): {e}")
 
     # Use safe_write_json with file locking and atomic write
     try:
         safe_write_json(SCHEDULE_PATH, schedule, indent=2)
-        print(f"\n✅ Schedule updated: {SCHEDULE_PATH}")
+        print(f"✅ Schedule saved: {SCHEDULE_PATH}")
     except TimeoutError as e:
         print(f"\n❌ Failed to save schedule: {e}")
         print("   Another process may be accessing the file. Try again in a moment.")

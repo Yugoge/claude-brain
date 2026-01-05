@@ -458,26 +458,10 @@ def generate_analytics():
     else:
         print(f"  ✓ Analytics dashboard → analytics-dashboard.html", file=sys.stderr)
 
-    # Sub-step 5: Deploy to GitHub Pages (default) or Netlify (legacy)
+    # Sub-step 5: Deploy to GitHub Pages
     github_token = os.getenv('GITHUB_TOKEN')
-    netlify_token = os.getenv('NETLIFY_AUTH_TOKEN')
-    use_netlify = os.getenv('USE_NETLIFY', 'false').lower() == 'true'
 
-    if use_netlify and netlify_token:
-        # Legacy: Netlify deployment
-        print("  Deploying to Netlify (legacy)...", file=sys.stderr)
-        result = subprocess.run(
-            ['bash', 'scripts/deploy-to-netlify.sh'],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            env={**os.environ, 'NETLIFY_AUTH_TOKEN': netlify_token}
-        )
-        if result.returncode != 0:
-            print(f"  ⚠️  Netlify deployment failed: {result.stderr}", file=sys.stderr)
-        else:
-            print(f"  ✓ Deployed to Netlify → https://knowledge-analytics.netlify.app/", file=sys.stderr)
-    elif github_token or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
+    if github_token or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
         # Default: GitHub Pages deployment
         print("\n  🚀 Deploying to GitHub Pages...", file=sys.stderr)
         result = subprocess.run(
@@ -575,12 +559,7 @@ def display_completion_report(
     print(f"   • analytics-dashboard.html (dashboard)", file=sys.stderr)
 
     # Show deployment status
-    use_netlify = os.getenv('USE_NETLIFY', 'false').lower() == 'true'
-    if use_netlify and os.getenv('NETLIFY_AUTH_TOKEN'):
-        print(f"\n🌐 Netlify Deployment (legacy):", file=sys.stderr)
-        print(f"   • Dashboard: https://knowledge-analytics.netlify.app/", file=sys.stderr)
-        print(f"   • Graph: https://knowledge-analytics.netlify.app/graph.html", file=sys.stderr)
-    elif os.getenv('GITHUB_TOKEN') or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
+    if os.getenv('GITHUB_TOKEN') or Path.home().joinpath('.ssh/id_rsa').exists() or Path.home().joinpath('.ssh/id_ed25519').exists():
         # Extract username from git config
         try:
             git_user_result = subprocess.run(

@@ -5,7 +5,8 @@
     "REVIEW_GATE_THRESHOLD": "1",
     "ANALYTICS_PERIOD": "90",
     "ANALYTICS_DOMAIN": "finance",
-    "NETLIFY_AUTH_TOKEN": "nfp_TGhirwYRmVJDWbKRL5eVJ5HxtDgkyMz3aaed"
+    "NETLIFY_AUTH_TOKEN": "nfp_TGhirwYRmVJDWbKRL5eVJ5HxtDgkyMz3aaed",
+    "PLAYWRIGHT_MCP_SANDBOX": "false"
   },
   "permissions": {
     "allow": [

@@ -32,7 +32,7 @@ Your job is to analyze user questions or conversations and determine which ISCED
 You will receive a user question as plain text:
 
 ```
-Question: "帮助我彻底记忆Black-Scholes模型及其衍生的模型..."
+Question: "Help me thoroughly memorize the Black-Scholes model and its derivatives..."
 ```
 
 ---

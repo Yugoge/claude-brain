@@ -172,6 +172,21 @@ source venv/bin/activate && python scripts/knowledge-graph/fix-source-multi-pair
 
 **Must run before rebuilding backlinks to prevent propagating conflicts**
 
+### Task 11: Sync Renamed Rems to Schedule
+**Purpose**: Detect and sync file path/rem_id changes to schedule.json automatically
+**When to use**: After file renames, to prevent orphaned schedule entries
+
+```bash
+source venv/bin/activate && python scripts/review/sync-renamed-rems.py [--dry-run] [--verbose]
+```
+
+- Auto-detects orphaned schedule entries (rem_id not in any Rem file)
+- Uses domain + pattern matching to find renamed files
+- Preserves ALL FSRS history (difficulty, stability, review_count)
+- Only updates rem_id, domain, title, last_modified
+- Safe to run repeatedly (idempotent)
+- **Root cause**: Prevents issues like commit adfc1c1 where files were renamed but schedule.json wasn't updated
+
 ---
 
 ## Workflow Logic
@@ -196,6 +211,7 @@ PHASE 3: ADVANCED MAINTENANCE
 8. Standardize Rem Names (domain-specific)
 9. Sync to FSRS Review Schedule
 10. Fix Multi-Pair Relations
+11. Sync Renamed Rems to Schedule
 
 Select tasks to run (comma-separated or 'all' or 'validate'):
 ```

@@ -97,3 +97,6 @@ tmp/
 !knowledge-base/_taxonomy/
 !chats/_templates/
 !.claude/
+
+# Playwright MCP
+.playwright-mcp/

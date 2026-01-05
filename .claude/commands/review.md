@@ -113,6 +113,26 @@ source venv/bin/activate && python scripts/review/run_review.py --timeline
 source venv/bin/activate && python scripts/review/run_review.py --days 14
 ```
 
+**Force question format** (override review-master's adaptive selection):
+```bash
+source venv/bin/activate && python scripts/review/run_review.py --format m  # multiple-choice
+source venv/bin/activate && python scripts/review/run_review.py --format c  # cloze
+source venv/bin/activate && python scripts/review/run_review.py --format s  # short-answer
+source venv/bin/activate && python scripts/review/run_review.py --format p  # problem-solving
+```
+
+**Force dialogue language**:
+```bash
+source venv/bin/activate && python scripts/review/run_review.py --lang zh  # Chinese
+source venv/bin/activate && python scripts/review/run_review.py --lang en  # English
+source venv/bin/activate && python scripts/review/run_review.py --lang fr  # French
+```
+
+**Combined parameters**:
+```bash
+source venv/bin/activate && python scripts/review/run_review.py --format m --lang zh finance
+```
+
 **Note**: Path resolution prefers `.md` and falls back to `.rem.md` when content still uses the legacy extension.
 
 ### Step 2: Read Rem File Content
@@ -141,6 +161,15 @@ Use Read tool: {rem_path_from_run_review_json}
 **⚠️ CRITICAL**: This is the core FSRS review workflow. Poor questioning = inaccurate self-ratings = suboptimal scheduling.
 
 **ARCHITECTURE**: Main agent (you) conducts the review dialogue directly with the user. Review-master is a **consultant agent** that provides JSON guidance.
+
+**Session Setup** (before first Rem):
+```
+Load session tracking from run_review.py JSON output:
+  format_history = data['format_history']  // Loaded from .review/format_history.json
+  session_rem_ids = []  // Track Rems reviewed (for logging)
+```
+
+**Note**: format_history is populated by run_review.py from persistent state file. This fixes the stateless architecture issue introduced in commit 3ed6b6f.
 
 **For each Rem in the session, follow this loop**:
 
@@ -188,7 +217,10 @@ Use Task tool:
     \"session_context\": {
       \"total_rems\": {total},
       \"current_index\": {N},
-      \"mode\": \"{mode}\"
+      \"mode\": \"{mode}\",
+      \"recent_formats\": {format_history},
+      \"format_preference\": \"{format_preference from run_review.py JSON or null}\",
+      \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\"
     }
   }
 
@@ -196,6 +228,22 @@ Use Task tool:
   - Reference prerequisites for foundational context
   - Contrast with antonyms/contrasts_with for differentiation
   - Use examples for concrete understanding
+
+  Use recent_formats to ensure variety:
+  - Avoid 3+ consecutive same format (user gets bored!)
+  - Mix formats based on content AND diversity
+  - format_history = last 5 formats from persistent state (tracks across agent messages)
+
+  Use format_preference if provided:
+  - If format_preference is not null, ALWAYS use that format (overrides adaptive selection)
+  - Format codes: 'm'=multiple-choice, 'c'=cloze, 's'=short-answer, 'p'=problem-solving
+  - User wants quick mode or exam prep
+
+  Use lang_preference if provided:
+  - If lang_preference is not null, generate ALL dialogue in that language
+  - Language codes: 'zh'=Chinese, 'en'=English, 'fr'=French
+  - Applies to primary_question, hints, follow_ups, context_scenario
+  - Rem content (Core Memory Points) remains unchanged
 
   Return JSON guidance as specified in your instructions.
   "
@@ -236,9 +284,14 @@ Use Task tool:
 - `primary_question` - The question text (may include `<option>` tags for MCQ)
 - `format_specific` - Additional format data if needed
 
-#### 3.2 Present Question to User (First-Person Voice)
+**⚠️ CRITICAL: Track the format for next iteration**:
+```bash
+source venv/bin/activate && python scripts/review/track_format.py {question_format}
+```
 
-**⚠️ CRITICAL**: Output `primary_question` EXACTLY as received from review-master. PRESERVE ALL `<option>` TAGS VERBATIM.
+This updates `.review/format_history.json` with the format used. Next Rem will load updated history via run_review.py.
+
+#### 3.2 Present Question to User (First-Person Voice)
 
 **Adapt presentation based on question_format**:
 
@@ -251,15 +304,23 @@ Let's review: {rem_title}
 {primary_question}
 ```
 
-**Multiple Choice** (primary_question contains `<option>` tags):
+**Multiple Choice** (primary_question contains plain text options A) B) C) D)):
 ```
 Let's review: {rem_title}
 
 {context_scenario if provided}
 
-{primary_question}
+{primary_question without options}
+
+<options>
+<option>{Option A text}</option>
+<option>{Option B text}</option>
+<option>{Option C text}</option>
+<option>{Option D text}</option>
+</options>
 ```
-**IMPORTANT**: Output the `<option>` tags exactly as provided - they are user-facing UI elements, not formatting instructions.
+
+**Processing**: Extract options from primary_question (format: "A) text\nB) text\nC) text\nD) text"), wrap each in `<option>` tag, place in `<options>` block at message end.
 
 **Cloze** (fill-in-the-blank):
 ```

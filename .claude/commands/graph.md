@@ -1,13 +1,13 @@
 ---
 description: "Generate and deploy knowledge graph visualization and analytics dashboard to GitHub Pages"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, TodoWrite
-argument-hint: "[--period <days>] [--domain <domain>] [--deploy] [--netlify]"
+argument-hint: "[--period <days>] [--domain <domain>] [--deploy]"
 model: inherit
 ---
 
 # Graph Command
 
-Generate knowledge graph visualization and analytics dashboard, optionally deploy to GitHub Pages (default) or Netlify (legacy).
+Generate knowledge graph visualization and analytics dashboard, optionally deploy to GitHub Pages.
 
 ## Usage
 
@@ -17,7 +17,6 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
 /graph --domain finance         # Generate for finance domain only
 /graph --no-deploy              # Skip deployment (local files only)
 /graph --period 90              # Generate 90-day view with auto-deployment
-/graph --netlify                # Use Netlify instead of GitHub Pages (legacy)
 ```
 
 ## What This Command Does
@@ -29,7 +28,6 @@ Generate knowledge graph visualization and analytics dashboard, optionally deplo
    - Checks for GITHUB_TOKEN or SSH keys (~/.ssh/id_ed25519)
    - If found → deploys to https://{username}.github.io/{current-repo}-graph/
    - If not found → shows local files only with setup instructions
-5. **Deploy to Netlify** (legacy): Use --netlify flag for Netlify deployment
 
 ## Implementation
 
@@ -54,7 +52,6 @@ Extract parameters from command arguments:
 - `--period <N>`: Time period in days (default: 30)
 - `--domain <name>`: Filter by specific domain (default: all)
 - `--no-deploy`: Skip deployment (local files only)
-- `--netlify`: Use Netlify instead of GitHub Pages (legacy option)
 
 **Default behavior**: Auto-deploy if credentials available (GITHUB_TOKEN or SSH keys)
 
@@ -189,20 +186,6 @@ fi
    3. Try manual deployment: bash scripts/deploy-to-github.sh
 ```
 
-**Legacy: Netlify (if --netlify flag)**
-
-Only use if `--netlify` flag is specified:
-```bash
-if [ "$USE_NETLIFY" = "true" ]; then
-  bash scripts/deploy-to-netlify.sh
-fi
-```
-
-Requires:
-- Netlify CLI: `npm install -g netlify-cli`
-- Auth token: `export NETLIFY_AUTH_TOKEN='your_token_here'`
-
-**Note**: Netlify has rate limits and may require payment. GitHub Pages is recommended.
 
 ## Error Handling
 
@@ -217,8 +200,6 @@ Requires:
 - Repository creation fails → Check token permissions or create manually
 - Push fails → Check network/authentication
 - GitHub Pages not enabled → Provide manual setup instructions
-- (Legacy) Netlify CLI not installed → Provide installation command
-- (Legacy) Netlify rate limit → Suggest GitHub Pages instead
 
 **Generation errors**:
 - Script failures → Show error, suggest manual run
@@ -231,7 +212,6 @@ After generation, present options:
 ```xml
 <options>
     <option>Deploy to GitHub Pages</option>
-    <option>Deploy to Netlify (legacy)</option>
     <option>Generate different period</option>
     <option>Filter by domain</option>
     <option>View local files</option>

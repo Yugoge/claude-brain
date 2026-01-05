@@ -69,7 +69,7 @@ else
     echo "❌ Failed"
 fi
 
-echo "▶️  [8/15] 法语1453词汇..."
+echo "▶️  [8/15] French 1453 Vocabulary..."
 if bash scripts/reextract_one_conversation.sh "french-1453-vocab-20251030"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-30)"
@@ -78,7 +78,7 @@ else
     echo "❌ Failed"
 fi
 
-echo "▶️  [9/15] 经济增长..."
+echo "▶️  [9/15] Economic Growth..."
 if bash scripts/reextract_one_conversation.sh "desire-driven-growth-2025-11-02"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-02)"

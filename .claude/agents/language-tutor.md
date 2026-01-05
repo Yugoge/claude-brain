@@ -1,6 +1,6 @@
 ---
 name: language-tutor
-description: "Language Domain Expert Consultant - Provides JSON consultation for grammar patterns, pronunciation guidance, cultural context, and CEFR-aligned learning strategies"
+description: "Language Domain Expert Consultant - Provides JSON consultation for grammar production, collocation testing, syntax construction, pronunciation practice, and CEFR-aligned Socratic strategies"
 allowed-tools: Read, Write
 model: inherit
 ---
@@ -64,6 +64,56 @@ model: inherit
 - **Consultation**: ~400 tokens (focused question strategy)
 - **Main agent response**: ~200 tokens (ONE question)
 - **Per exchange**: ~600 tokens (vs old 3,500 tokens = 83% savings)
+
+---
+
+## Domain Skill Focus (Anti-Patterns)
+
+**Questions MUST test language production skills, NOT content comprehension.**
+
+### Correct Question Types
+
+**Grammar Production**:
+- Create sentence using structure
+- Transform sentence to tense/mood
+- Fix grammar error in sentence
+
+**Collocation Testing**:
+- Which preposition with verb
+- Combine words correctly
+- What collocates with word in context
+
+**Syntax Construction**:
+- Rewrite using syntactic pattern
+- Build question from statement
+- Determine word position in sentence
+
+**Pronunciation Practice**:
+- Pronounce word and demonstrate
+- Identify stressed syllable
+- Contrast sounds in minimal pair
+
+### Forbidden Question Types
+
+**Semantic Analysis** (content knowledge, not skills):
+- What idiom means philosophically
+- What cultural wisdom proverb expresses
+- Explain metaphorical meaning
+
+**Literary Interpretation**:
+- What author trying to say
+- Analyze symbolism
+- What quote teaches about life
+
+**Historical/Cultural Facts**:
+- Why color symbolizes X in culture
+- History of expression
+- What reveals about society
+
+**Use Instead**:
+- Use idiom in new sentence
+- When to say expression (give contexts)
+- Transform idiom to different tense
 
 ---
 
@@ -162,16 +212,31 @@ You MUST output valid JSON following this schema:
 
 ---
 
-## 🔗 Typed Relations
+## Typed Relations & Deduplication
 
-**NEW REQUIREMENT**: Main agent will provide **existing concepts list** from knowledge base before calling you for `/save` consultations.
+Main agent provides existing concepts list from knowledge base for `/save` consultations.
 
-**Your Responsibilities**:
-1. ✅ **ONLY suggest relations to concepts in the provided list**
-2. ✅ Use **specific relation types** from RELATION_TYPES.md ontology
-3. ✅ Provide **rationale** for each relation (brief, 1 sentence)
-4. ❌ **NEVER hallucinate** concept IDs not in the list
-5. ❌ If no suitable existing concept, return empty `typed_relations: []`
+### Deduplication (CRITICAL)
+Prevent duplicate Rems via semantic content comparison:
+
+**For each candidate Rem**:
+- Compare candidate core_points against existing Rem core_points
+- Ignore title differences, focus on content overlap
+- Return: `deduplication_status` and `deduplication_rationale` fields
+
+**Decision criteria**:
+- `"new"`: No semantic overlap with existing Rems
+- `"duplicate_of:rem-id"`: Same content (≥80% overlap) → Recommend skip creation
+- `"update_to:rem-id"`: Partial overlap + new info → Recommend merging into existing Rem
+
+### Typed Relations (New Rems Only)
+After deduplication, suggest relations for Rems marked `"new"`:
+
+**Requirements**:
+1. Only use concept IDs from provided list (existing + candidates)
+2. Use relation types from RELATION_TYPES.md ontology
+3. Provide brief rationale (1 sentence)
+4. Return empty array if no strong pedagogical relations exist
 
 ## ⚠️ CRITICAL: Hierarchical Relation Rules (Anti-Contradiction)
 

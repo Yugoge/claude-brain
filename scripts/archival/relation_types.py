@@ -24,7 +24,12 @@ PAIRED_TYPES = {
     'part_of': 'has_part',
     'has_part': 'part_of',
     'applies_to': 'applied_by',
-    'applied_by': 'applies_to'
+    'applied_by': 'applies_to',
+    'caused_by': 'cause_of',
+    'has_prerequisite': 'prerequisite_of',
+    'used_by': 'uses',
+    'defined_by': 'defines',
+    'defines': 'defined_by'
 }
 
 # Asymmetric relation types that must be unidirectional (derived from PAIRED_TYPES)
@@ -40,5 +45,15 @@ SYMMETRIC_TYPES = {
     'antonym',
 }
 
-# All valid relation types (union of asymmetric and symmetric)
-ALL_TYPES = ASYMMETRIC_TYPES | SYMMETRIC_TYPES
+# Lexical relation types (language-specific, no inverse pairs)
+LEXICAL_TYPES = {
+    'derivationally_related',
+    'cognate',
+    'collocates_with',
+    'translation_of',
+    'hypernym',
+    'hyponym'
+}
+
+# All valid relation types (union of asymmetric, symmetric, and lexical)
+ALL_TYPES = ASYMMETRIC_TYPES | SYMMETRIC_TYPES | LEXICAL_TYPES

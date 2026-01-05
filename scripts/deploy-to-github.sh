@@ -1,26 +1,16 @@
 #!/bin/bash
 # Deploy analytics HTML to GitHub Pages
-#
-# This script creates/updates a GitHub repository named '{current-repo}-graph'
-# and deploys the knowledge graph visualizations to GitHub Pages.
-#
-# Prerequisites:
-#   1. Git installed and configured
-#   2. GitHub authentication via:
-#      - GITHUB_TOKEN environment variable (Personal Access Token), OR
-#      - SSH keys configured (~/.ssh/id_rsa)
-#
-# Usage:
-#   bash scripts/deploy-to-github.sh
+# Prerequisites: Git + (GITHUB_TOKEN or SSH keys)
 
 set -e
 
-SOURCE_DIR="/root/knowledge-system"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # Dynamically determine repository name based on current repo
 CURRENT_REPO_NAME=$(basename $(git rev-parse --show-toplevel 2>/dev/null || pwd))
 REPO_NAME="${CURRENT_REPO_NAME}-graph"
-BRANCH="gh-pages"
-DEPLOY_DIR="/tmp/${REPO_NAME}-deploy"
+BRANCH="${GITHUB_PAGES_BRANCH:-gh-pages}"
+TEMP_BASE="${TEMP_DIR:-/tmp}"
+DEPLOY_DIR="${TEMP_BASE}/${REPO_NAME}-deploy"
 
 echo "=================================================="
 echo "🚀 Deploying to GitHub Pages"

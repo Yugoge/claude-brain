@@ -2,7 +2,7 @@
 """
 Preloaded TodoList for maintain workflow.
 
-Provides structured task list for /maintain command's 9 maintenance tasks.
+Provides structured task list for /maintain command's 11 maintenance tasks.
 """
 
 
@@ -60,6 +60,16 @@ def get_todos():
         {
             "content": "Task 9: Sync to FSRS Review Schedule",
             "activeForm": "Syncing to FSRS review schedule",
+            "status": "pending"
+        },
+        {
+            "content": "Task 10: Fix Multi-Pair Relations",
+            "activeForm": "Fixing multi-pair relations",
+            "status": "pending"
+        },
+        {
+            "content": "Task 11: Sync Renamed Rems to Schedule",
+            "activeForm": "Syncing renamed Rems to schedule",
             "status": "pending"
         }
     ]

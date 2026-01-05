@@ -284,6 +284,10 @@ def load_concept_metadata(knowledge_base_path: Path) -> dict:
         if concept_file.name.startswith('_'):
             continue
 
+        # Skip template files in _templates/ directory
+        if '/_templates/' in str(concept_file) or str(concept_file).endswith('_templates/rem-template.md'):
+            continue
+
         try:
             with open(concept_file, 'r', encoding='utf-8') as f:
                 content = f.read()

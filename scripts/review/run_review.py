@@ -3,11 +3,16 @@
 Run review session with comprehensive timeline view.
 
 Usage:
-    python3 scripts/review/run_review.py              # Default: show timeline + due Rems
-    python3 scripts/review/run_review.py --timeline   # Show timeline only (no filtering)
-    python3 scripts/review/run_review.py --days 14    # Timeline with 14-day lookahead
-    python3 scripts/review/run_review.py finance      # Domain-specific review
-    python3 scripts/review/run_review.py [[rem-id]]   # Specific Rem review
+    source venv/bin/activate && python scripts/review/run_review.py              # Default: show timeline + due Rems
+    source venv/bin/activate && python scripts/review/run_review.py --timeline   # Show timeline only (no filtering)
+    source venv/bin/activate && python scripts/review/run_review.py --days 14    # Timeline with 14-day lookahead
+    source venv/bin/activate && python scripts/review/run_review.py --format m   # Force multiple-choice format
+    source venv/bin/activate && python scripts/review/run_review.py --lang zh    # Force Chinese dialogue
+    source venv/bin/activate && python scripts/review/run_review.py finance      # Domain-specific review
+    source venv/bin/activate && python scripts/review/run_review.py [[rem-id]]   # Specific Rem review
+
+Format codes: m=multiple-choice, c=cloze, s=short-answer, p=problem-solving
+Language codes: zh=Chinese, en=English, fr=French
 """
 import sys
 sys.path.append('scripts/review')
@@ -66,7 +71,11 @@ def resolve_content_path(domain: str, rem_id: str) -> str:
     # Example: rem_id "fx-greeks-delta-vs-fxdelta" matches "040-fx-derivatives-delta-vs-fxdelta.md"
     # (greeks→derivatives substitution)
     # Require at least 70% of parts to match (handles subdomain/category swaps)
-    all_md_files = list(kb_root.glob(f"{domain}/*.md"))  # Restrict to correct domain
+    domain_pattern = f"{domain}/*.md" if domain and '/' not in domain else "**/*.md"
+    all_md_files = list(kb_root.glob(domain_pattern))
+    # Filter by domain if pattern was too broad
+    if '/' in domain:
+        all_md_files = [f for f in all_md_files if domain in str(f)]
     for md_file in all_md_files:
         filename_lower = md_file.stem.lower()
         matching_parts = sum(1 for part in rem_id_parts if part in filename_lower)
@@ -101,6 +110,8 @@ args = sys.argv[1:] if len(sys.argv) > 1 else []
 # Check for special flags
 timeline_only = '--timeline' in args
 future_days = 7  # Default lookahead
+format_preference = None
+lang_preference = None
 
 # Extract --days parameter if present
 if '--days' in args:
@@ -112,6 +123,45 @@ if '--days' in args:
         except ValueError:
             print("Error: --days must be followed by a number")
             sys.exit(1)
+
+# Extract --format parameter if present
+if '--format' in args:
+    format_index = args.index('--format')
+    if format_index + 1 < len(args):
+        format_code = args[format_index + 1]
+        # Validate format code
+        format_map = {
+            'm': 'multiple-choice',
+            'c': 'cloze',
+            's': 'short-answer',
+            'p': 'problem-solving'
+        }
+        if format_code in format_map:
+            format_preference = format_map[format_code]
+            args = [a for a in args if a not in ['--format', format_code]]
+        else:
+            print(f"Error: Invalid format code '{format_code}'. Valid codes: m, c, s, p")
+            sys.exit(1)
+    else:
+        print("Error: --format must be followed by a format code (m, c, s, p)")
+        sys.exit(1)
+
+# Extract --lang parameter if present
+if '--lang' in args:
+    lang_index = args.index('--lang')
+    if lang_index + 1 < len(args):
+        lang_code = args[lang_index + 1]
+        # Validate language code
+        valid_langs = ['zh', 'en', 'fr']
+        if lang_code in valid_langs:
+            lang_preference = lang_code
+            args = [a for a in args if a not in ['--lang', lang_code]]
+        else:
+            print(f"Error: Invalid language code '{lang_code}'. Valid codes: zh, en, fr")
+            sys.exit(1)
+    else:
+        print("Error: --lang must be followed by a language code (zh, en, fr)")
+        sys.exit(1)
 
 # Remove timeline flag from args for loader
 args = [a for a in args if a != '--timeline']
@@ -160,8 +210,10 @@ if missing_files:
 # Filter based on mode
 today = datetime.now().strftime('%Y-%m-%d')
 if criteria['mode'] == 'automatic':
-    # Filter for rems due today
-    rems = [r for r in schedule if r.get('fsrs_state', {}).get('next_review') == today]
+    # Filter for rems due today OR overdue (next_review <= today)
+    # Fixed: Changed == to <= to include accumulated overdue Rems
+    # Root cause: commit b86de74 only considered 'due today', not overdue
+    rems = [r for r in schedule if r.get('fsrs_state', {}).get('next_review') <= today]
 elif criteria['mode'] == 'domain':
     domain_query = criteria['domain'].lower()
     # Domain filtering with hierarchical matching support
@@ -173,8 +225,9 @@ elif criteria['mode'] == 'specific':
     rem_id = criteria['rem_id']
     rems = [r for r in schedule if r.get('id') == rem_id]
 else:
-    # Default to all due today
-    rems = [r for r in schedule if r.get('fsrs_state', {}).get('next_review') == today]
+    # Default to all due today OR overdue (next_review <= today)
+    # Fixed: Changed == to <= to include accumulated overdue Rems
+    rems = [r for r in schedule if r.get('fsrs_state', {}).get('next_review') <= today]
 
 # ALWAYS show comprehensive timeline first
 timeline = stats.format_timeline(schedule_data, 'fsrs', today, future_days)
@@ -210,6 +263,22 @@ if has_more:
     print(f"   (Remaining {total_rems - BATCH_LIMIT} will appear in next session)")
     print(f"   Tip: Review regularly to avoid accumulation.\n")
 
+# Load format history for session continuity (tracks question formats to ensure variety)
+# Root cause fix: commit 3ed6b6f added format tracking but didn't persist across stateless architecture
+# Solution: External state file tracks format_history, main agent reads and passes to review-master
+format_history_file = Path('.review/format_history.json')
+format_history = []
+if format_history_file.exists():
+    try:
+        with open(format_history_file, 'r', encoding='utf-8') as f:
+            history_data = json.load(f)
+            # Load recent formats (last 5 for session diversity)
+            # Extract just format strings for review-master consumption
+            recent_formats = history_data.get('recent_formats', [])[-5:]
+            format_history = [f['format'] if isinstance(f, dict) else f for f in recent_formats]
+    except (json.JSONDecodeError, IOError):
+        format_history = []
+
 # Output JSON for agent to use
 output = {
     'mode': criteria['mode'],
@@ -217,7 +286,10 @@ output = {
     'showing': len(sorted_rems_limited),
     'has_more': has_more,
     'rems': sorted_rems_limited,
-    'by_domain': {k: len(v) for k, v in by_domain.items()}
+    'by_domain': {k: len(v) for k, v in by_domain.items()},
+    'format_history': format_history,  # Track formats for variety
+    'format_preference': format_preference,  # User-requested format override
+    'lang_preference': lang_preference  # User-requested language override
 }
 print(f"\n--- DATA ---")
 print(json.dumps(output, indent=2))

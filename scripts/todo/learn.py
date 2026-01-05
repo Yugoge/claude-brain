@@ -15,8 +15,8 @@ def get_todos():
     """
     return [
     {
-        "content": "Step 1: Validate Input & Check File Size + Content Type",
-        "activeForm": "Step 1: Validate Input & Check File Size + Content Type",
+        "content": "Step 1: Validate Input & File Size",
+        "activeForm": "Step 1: Validate Input & File Size",
         "status": "pending"
     },
     {
@@ -30,18 +30,18 @@ def get_todos():
         "status": "pending"
     },
     {
-        "content": "Step 4: Image-Heavy PDF Workflow (2-Phase Approach)",
-        "activeForm": "Step 4: Image-Heavy PDF Workflow (2-Phase Approach)",
+        "content": "Step 4: Image-Heavy PDF Workflow",
+        "activeForm": "Step 4: Image-Heavy PDF Workflow",
         "status": "pending"
     },
     {
-        "content": "Step 5: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)",
-        "activeForm": "Step 5: Dynamic Single-Page PDF Extraction (Zero-Pollution Visual Study)",
+        "content": "Step 5: Single-Page PDF Extraction",
+        "activeForm": "Step 5: Single-Page PDF Extraction",
         "status": "pending"
     },
     {
-        "content": "Step 6: Smart Material Loading (Size-Aware)",
-        "activeForm": "Step 6: Smart Material Loading (Size-Aware)",
+        "content": "Step 6: Smart Material Loading",
+        "activeForm": "Step 6: Smart Material Loading",
         "status": "pending"
     },
     {
@@ -50,28 +50,33 @@ def get_todos():
         "status": "pending"
     },
     {
-        "content": "Step 8: Select Appropriate Agent",
-        "activeForm": "Step 8: Select Appropriate Agent",
+        "content": "Step 8: Segment Content for Progressive Display",
+        "activeForm": "Step 8: Segment Content for Progressive Display",
         "status": "pending"
     },
     {
-        "content": "Step 9: Domain Focus Constraints",
-        "activeForm": "Step 9: Domain Focus Constraints",
+        "content": "Step 9: Select Appropriate Agent",
+        "activeForm": "Step 9: Select Appropriate Agent",
         "status": "pending"
     },
     {
-        "content": "Step 10: Consultation-Based Learning Session",
-        "activeForm": "Step 10: Consultation-Based Learning Session",
+        "content": "Step 10: Domain Focus Constraints",
+        "activeForm": "Step 10: Domain Focus Constraints",
         "status": "pending"
     },
     {
-        "content": "Step 11: Post-Session Actions",
-        "activeForm": "Step 11: Post-Session Actions",
+        "content": "Step 11: Consultation-Based Learning",
+        "activeForm": "Step 11: Consultation-Based Learning",
         "status": "pending"
     },
     {
-        "content": "Step 12: User-Facing Output",
-        "activeForm": "Step 12: User-Facing Output",
+        "content": "Step 12: Post-Session Actions",
+        "activeForm": "Step 12: Post-Session Actions",
+        "status": "pending"
+    },
+    {
+        "content": "Step 13: User-Facing Output",
+        "activeForm": "Step 13: User-Facing Output",
         "status": "pending"
     }
 ]

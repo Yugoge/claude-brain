@@ -85,29 +85,45 @@ def safe_write_json(
     file_path: Path,
     data: Dict[str, Any],
     indent: int = 2,
-    timeout: int = 30
+    timeout: int = 30,
+    validator: callable = None
 ) -> None:
     """
-    Safely write JSON with file locking.
+    Safely write JSON with file locking and optional validation.
 
     Prevents data corruption from concurrent writes by:
-    1. Acquiring exclusive file lock
-    2. Writing to temporary file
-    3. Atomic rename to target file
-    4. Releasing lock
+    1. Running optional validator on data before write
+    2. Acquiring exclusive file lock
+    3. Writing to temporary file
+    4. Atomic rename to target file
+    5. Releasing lock
 
     Args:
         file_path: Path to JSON file
         data: Data to write (must be JSON-serializable)
         indent: JSON indentation (default: 2)
         timeout: Lock timeout in seconds (default: 30)
+        validator: Optional callable(data) -> bool to validate before write
+                   Raises ValueError if validation fails
 
     Raises:
         TimeoutError: If lock cannot be acquired within timeout
         json.JSONEncodeError: If data is not JSON-serializable
+        ValueError: If validator returns False or raises exception
     """
     file_path = Path(file_path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Run validator before acquiring lock (fail fast)
+    if validator is not None:
+        try:
+            is_valid = validator(data)
+            if not is_valid:
+                raise ValueError(f"Data validation failed for {file_path}")
+        except ValueError:
+            raise  # Re-raise validation errors
+        except Exception as e:
+            raise ValueError(f"Validator error: {e}")
 
     with FileLock(file_path, timeout=timeout):
         # Write to temporary file first

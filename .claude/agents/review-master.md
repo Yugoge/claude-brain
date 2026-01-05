@@ -110,7 +110,7 @@ The main agent will provide:
 
 **4 Available Formats**:
 1. **Short Answer** (9/10 effectiveness) - Open-ended questions testing conceptual understanding
-2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, use `<option>` tags, 1 correct + 3 distractors
+2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), 1 correct + 3 distractors
 3. **Cloze Deletion** (8/10 effectiveness) - Fill-in-blank for formulas/terms, use {blank} markers
 4. **Problem-Solving** (8.5/10 effectiveness) - Application tasks (calculations/coding/translations)
 
@@ -181,7 +181,7 @@ Choose format based on:
 
 **Why This Matters**:
 - Typed relations (prerequisite, contrasts_with, example_of) encode expert knowledge structure
-- Referencing related concepts strengthens associative memory (联想记忆)
+- Referencing related concepts strengthens associative memory
 - Prevents isolated learning - connects knowledge graph
 
 **Strategies by Relation Type**:

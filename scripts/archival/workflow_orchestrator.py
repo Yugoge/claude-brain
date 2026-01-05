@@ -22,6 +22,7 @@ ROOT = Path(__file__).parent.parent.parent
 sys.path.append(str(ROOT / "scripts"))
 
 from archival.get_domain_concepts import extract_domain_concepts, load_backlinks
+from archival.relation_types import ALL_TYPES, PAIRED_TYPES, SYMMETRIC_TYPES, LEXICAL_TYPES
 
 
 def validate_rem_id(rem_id):
@@ -103,12 +104,21 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
     candidate_ids = [r["rem_id"] for r in candidate_rems]
     all_valid_ids = existing_ids + candidate_ids  # Support inter-candidate relations
 
+    # Include core_points for deduplication
+    existing_list_detailed = []
+    for c in existing_concepts:
+        existing_list_detailed.append({
+            "rem_id": c["rem_id"],
+            "title": c["title"],
+            "core_points": c.get("core_points", [])[:3]  # First 3 points for comparison
+        })
+
     prompt = f"""Domain expert: {domain}
 
 **CRITICAL**: Use EXACT concept_id values from the lists below. DO NOT create new IDs.
 
-**Existing Concepts** ({len(existing_list)}):
-{json.dumps(existing_list, indent=2, ensure_ascii=False)}
+**Existing Concepts** ({len(existing_list_detailed)}):
+{json.dumps(existing_list_detailed, indent=2, ensure_ascii=False)}
 
 **Candidate Rems** ({len(candidates_summary)}) - NEW in this session:
 {json.dumps(candidates_summary, indent=2, ensure_ascii=False)}
@@ -116,7 +126,9 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
 **Valid rem_id values** (use these EXACTLY in "to" fields of typed_relations):
 {json.dumps(all_valid_ids, ensure_ascii=False)}
 
-**Task**: Return JSON with typed_relations for each Rem.
+**Tasks**:
+1. Deduplication: Check if each candidate duplicates existing Rem content (semantic comparison, not title matching)
+2. Typed Relations: For new Rems only, suggest pedagogically relevant relations
 
 **Rules**:
 1. Use "concept_id" from Candidate Rems list (the new concepts being created)
@@ -129,10 +141,19 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
    - Inter-candidate relations when concepts are tightly coupled
 4. DO NOT create composite, normalized, or descriptive IDs
 5. Use ONLY these relation types (from RELATION_TYPES.md standard):
-   Lexical: synonym, antonym, hypernym, hyponym, part_of, has_part
-   Conceptual: is_a, has_subtype, prerequisite_of, has_prerequisite, cause_of, caused_by, example_of, has_example, uses, used_by, defines, defined_by, generalizes, specializes
-   Comparative: contrasts_with, complements, complemented_by, analogous_to, related
-6. Empty array if no strong pedagogical relations exist
+   {json.dumps(sorted(ALL_TYPES), ensure_ascii=False)}
+
+   Paired types (use correct direction):
+   {json.dumps({k: v for k, v in sorted(PAIRED_TYPES.items())}, indent=2, ensure_ascii=False)}
+
+   Symmetric types (bidirectional allowed):
+   {json.dumps(sorted(SYMMETRIC_TYPES), ensure_ascii=False)}
+
+   Lexical types (language-specific):
+   {json.dumps(sorted(LEXICAL_TYPES), ensure_ascii=False)}
+
+6. Use field name 'type' (NOT 'relation_type') in your JSON response
+7. Empty array if no strong pedagogical relations exist
 
 **Output Format**:
 {{
@@ -140,6 +161,8 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
     "rem_suggestions": [
       {{
         "concept_id": "exact-id-from-valid-list",
+        "deduplication_status": "new|duplicate_of:existing-rem-id|update_to:existing-rem-id",
+        "deduplication_rationale": "brief explanation",
         "typed_relations": [
           {{"to": "exact-id-from-valid-list", "type": "relation-type", "rationale": "brief reason"}}
         ]
@@ -147,13 +170,19 @@ def build_tutor_prompt(domain, existing_concepts, candidate_rems):
     ]
   }}
 }}
+
+**Deduplication Decision Guide**:
+- "new": Genuinely new concept, no semantic overlap with existing Rems
+- "duplicate_of:rem-id": Same content as existing Rem (recommend skip/merge)
+- "update_to:rem-id": Adds clarification/extension to existing Rem (recommend update existing Rem's core points)
 """
     return prompt
 
 
 def validate_tutor_response(tutor_response_json, valid_ids):
     """
-    Validate that tutor response only uses IDs from valid_ids set.
+    Validate that tutor response only uses IDs from valid_ids set
+    and uses only standard relation types.
 
     Returns: (is_valid, error_messages)
     """
@@ -169,11 +198,22 @@ def validate_tutor_response(tutor_response_json, valid_ids):
         # NOTE: Do NOT validate concept_id itself - these are NEW candidate Rems being created
         # Only validate that typed_relations reference existing concepts
 
-        # Check all "to" fields are valid
+        # Check all "to" fields are valid and relation types are standard
         for relation in suggestion.get("typed_relations", []):
             to_id = relation.get("to")
+            rel_type = relation.get("type")
+
+            # Validate concept ID
             if to_id not in valid_ids_set:
                 errors.append(f"Invalid 'to' ID in {concept_id}: '{to_id}' not in valid ID list")
+
+            # Validate relation type
+            if rel_type and rel_type not in ALL_TYPES:
+                valid_types_list = sorted(ALL_TYPES)
+                errors.append(
+                    f"Invalid relation type in {concept_id}: '{rel_type}' not in standard types.\n"
+                    f"   Valid types: {', '.join(valid_types_list[:10])}... (see ALL_TYPES)"
+                )
 
     return (len(errors) == 0, errors)
 
@@ -215,6 +255,8 @@ def merge_tutor_suggestions(candidate_rems, tutor_response_json):
     """
     Merge tutor's typed_relations into candidate Rems.
 
+    Normalizes field names: accepts both 'type' and 'relation_type' from tutors.
+
     Args:
         candidate_rems: Original candidate Rems list
         tutor_response_json: Parsed tutor JSON response
@@ -237,7 +279,18 @@ def merge_tutor_suggestions(candidate_rems, tutor_response_json):
         # Add typed_relations from tutor
         if rem_id in tutor_map:
             tutor_data = tutor_map[rem_id]
-            enriched_rem["typed_relations"] = tutor_data.get("typed_relations", [])
+            typed_relations = tutor_data.get("typed_relations", [])
+
+            # Normalize field names: accept both 'type' and 'relation_type'
+            normalized_relations = []
+            for rel in typed_relations:
+                normalized_rel = rel.copy()
+                # If tutor used 'relation_type', rename to 'type'
+                if 'relation_type' in normalized_rel and 'type' not in normalized_rel:
+                    normalized_rel['type'] = normalized_rel.pop('relation_type')
+                normalized_relations.append(normalized_rel)
+
+            enriched_rem["typed_relations"] = normalized_relations
         else:
             enriched_rem["typed_relations"] = []
 

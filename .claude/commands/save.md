@@ -62,7 +62,7 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 ```
 
 **Automatically performs**:
-1. **Archive Conversation**: `python3 scripts/services/chat_archiver.py`
+1. **Archive Conversation**: `source venv/bin/activate && python scripts/services/chat_archiver.py`
 2. **Parse Arguments**: Extract from `$ARGUMENTS` (topic-name | --all | empty)
 3. **Session Validation**: Detect type (learn|ask|review) with confidence checks
 4. **Filter FSRS** (review only): Remove test dialogues via pattern matching
@@ -140,21 +140,24 @@ source venv/bin/activate && python scripts/archival/save_orchestrator.py
 **IMPORTANT**: Extract Rems from **active session context** (NOT from `archived_file`). The file is only used for Rem `source` field paths.
 
 **Extraction Priority** (highest to lowest):
-1. **Formulas & Equations**: Mathematical expressions, pricing models, technical calculations
-2. **Professional Terminology**: Domain-specific terms, abbreviations, technical jargon, standard definitions
-3. **Concepts & Mechanisms**: How systems work, causal relationships, theoretical frameworks
-4. **Grammar Patterns & Rules**: Language structures, syntax rules, exception patterns (language domains)
+1. **Vocabulary & Terminology**: Core vocabulary, professional terms, domain-specific terminology, technical jargon
+2. **Formulas & Equations**: Mathematical expressions, pricing models, technical calculations
+3. **Grammar Patterns & Rules**: Language structures, syntax rules, exception patterns (language domains)
+4. **Concepts & Mechanisms**: How systems work, causal relationships, theoretical frameworks
 5. **Procedures & Methods**: Step-by-step workflows, algorithms, problem-solving approaches
 
 **LOW PRIORITY** (extract ONLY if user actively practiced/applied):
 - Conversational examples, story contexts, narrative illustrations
 - Background information, historical anecdotes
-- Single-word vocabulary without grammar patterns or usage rules
 
 **Extraction Process**:
 1. Scan conversation for HIGH-PRIORITY content that user engaged with (questions, corrections, practice)
 2. If user specified topic in /save arguments → Extract only concepts related to that topic
-3. **Write extracted Rems to temp file** for validation:
+3. **Group related concepts**: Before extracting, consider consolidation
+   - Prefer grouping concepts from same conversation topic into comprehensive Rems
+   - Extract separately only if: different domains OR each has ≥3 independent core points OR user practiced each independently
+   - Flexible judgment: Natural concept boundaries matter more than rigid counts
+4. **Write extracted Rems to temp file** for validation:
 
 ```bash
 cat > /tmp/candidate_rems.json << 'EOF'
@@ -172,7 +175,7 @@ EOF
 
 **Note**: `usage_scenario` and `my_mistakes` are initially empty. They will be filled by the domain tutor in Step 5.
 
-4. **Validate format immediately** (blocks on errors):
+5. **Validate format immediately** (blocks on errors):
 
 ```bash
 source venv/bin/activate && python scripts/archival/validate_extraction_format.py \
@@ -250,7 +253,9 @@ rems_to_update = [
 
 **⚠️ MANDATORY - DO NOT SKIP**: This step is required for [programming|language|finance|science|medicine|law] domains.
 
-**Purpose**: Discover typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts.
+**Purpose**:
+1. **Deduplication**: Identify if candidate Rems duplicate existing knowledge (same content, different names)
+2. **Relation Discovery**: Find typed relations (synonym, prerequisite_of, contrasts_with, etc.) between new and existing concepts
 
 **3-Phase Workflow**:
 
@@ -263,12 +268,19 @@ source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \
   --candidate-rems /tmp/candidate_rems.json
 ```
 
-Script loads `/tmp/candidate_rems.json` from Step 3, outputs tutor prompt with existing concepts from domain and valid concept_id list.
+Script loads `/tmp/candidate_rems.json` from Step 3, **reads ALL existing Rems in the domain**, outputs tutor prompt with:
+- All existing concepts (titles + core points)
+- Candidate Rems for deduplication check
+- Valid concept_id list for validation
 
 **Phase 2: Call Domain Tutor**
 - Use Task tool: `{domain}-tutor` (e.g., `language-tutor`, `finance-tutor`)
 - Pass generated prompt from Phase 1
-- Tutor returns JSON with typed_relations
+- **Tutor MUST**:
+  - **Deduplication check**: For each candidate Rem, determine if it duplicates existing Rem content (not just title)
+  - **Decision**: Mark as "new" | "duplicate_of:{existing-rem-id}" | "update_to:{existing-rem-id}"
+  - **Relation discovery**: If new, find typed_relations to existing concepts
+- Tutor returns JSON with deduplication results + typed_relations
 - Write response to temp file: `/tmp/tutor_response.json`
 
 **Phase 3: Merge Relations & Validate Hierarchical Consistency**

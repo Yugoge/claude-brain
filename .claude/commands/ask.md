@@ -69,7 +69,7 @@ Question: "$ARGUMENTS"
 - Otherwise → Proceed to Step 2
 
 **Vague question detection** (triggers clarification):
-- Contains "everything", "all", "全部", "一切" about a topic
+- Contains "everything", "all" about a topic
 - Single word/phrase without context (e.g., "Python", "finance")
 - Multiple unrelated topics (e.g., "Python and French and options")
 
@@ -116,7 +116,43 @@ Use Task tool with:
 
   ---
 
-  Research the question using WebSearch (NOT WebFetch - to avoid timeouts), then return ONLY:
+  **RESEARCH INSTRUCTIONS**:
+
+  ⚠️ **CRITICAL - WebFetch is DISABLED**: Never use WebFetch (disabled to prevent 10-minute timeouts).
+
+  You have access to specialized search slash commands via SlashCommand tool:
+  - `/research-deep <topic>` - Comprehensive multi-source research (15-20 searches)
+  - `/deep-search <domain> <goal>` - Deep site exploration
+  - `/search-tree <question>` - Tree search for complex problem-solving
+  - `/reflect-search <goal>` - Reflection-driven iterative search
+  - `/site-navigate <url> <task>` - Multi-page navigation
+
+  **Use SlashCommand when**:
+  - User requests comprehensive/deep/thorough research
+  - Question requires 5+ authoritative sources
+  - Need to explore official documentation comprehensively
+  - Complex multi-faceted analysis needed
+
+  **Use WebSearch when**:
+  - Simple factual queries (1-3 searches sufficient)
+  - Quick lookups and definitions
+  - Conceptual explanations
+
+  **Use Playwright MCP when**:
+  - Need specific page content or dynamic content interaction
+
+  **⚠️ MANDATORY EXECUTION REQUIREMENT**:
+  1. Analyze question complexity NOW
+  2. Choose tool based on rules above (SlashCommand/WebSearch/Playwright)
+  3. **EXECUTE THE RESEARCH NOW** - Call the chosen tool(s) before returning JSON
+  4. Collect actual results (URLs, data, findings)
+  5. ONLY AFTER research is complete → Synthesize into JSON below
+
+  **VALIDATION CHECK**: Your JSON "sources" field MUST contain real URLs you discovered during research.
+  - Empty sources array = you did NOT execute research = CRITICAL FAILURE
+  - Low confidence (<50) + empty sources = you skipped research = UNACCEPTABLE
+
+  After completing actual research using tools, return ONLY:
 
   {
     \"strategy\": \"socratic\" | \"direct_answer\" | \"diagnostic\",
@@ -196,9 +232,40 @@ The analyst should have returned a JSON object. Parse and validate it:
 - ✅ If analyst provided Markdown with research, extract and use it
 - ✅ Graceful degradation: something is better than nothing
 
-**Result**: You now have a `guidance` object (guaranteed to exist) to use in Step 3.
+**Result**: You now have a `guidance` object (guaranteed to exist) to use in Step 4.
 
-### Step 4: Internalize Guidance and Respond Naturally
+### Step 4: Confidence Gate and Escalation
+
+**Check analyst response quality before proceeding**:
+
+If analyst returns confidence < 70 OR sources array has < 5 URLs:
+- Re-invoke analyst via Task tool with escalated requirements
+- Force use of /research-deep slash command
+- Require minimum 10 authoritative sources
+- If second attempt still fails threshold: Inform user information unavailable
+
+Maximum escalation attempts: 2
+
+**Escalation prompt template**:
+```
+Previous response had confidence={X} < 70 or insufficient sources.
+
+REQUIREMENTS for escalated research:
+- Use SlashCommand to execute /research-deep {topic}
+- Collect minimum 10 authoritative sources
+- Return JSON with confidence >= 70
+
+If comprehensive research yields insufficient information, return:
+{
+  "status": "information_unavailable",
+  "reason": "Explanation of research limitations",
+  "partial_findings": {...}
+}
+```
+
+After validation passes OR escalation completes: Proceed to Step 5.
+
+### Step 5: Internalize Guidance and Respond Naturally
 
 Architecture: This command uses the Three-Party Architecture pattern:
 - You (main agent) orchestrate the conversation and are THE TEACHER visible to user
@@ -275,7 +342,7 @@ What do you think happens to an option's value as time passes if the underlying 
 User perceives: YOU generated this question naturally
 Reality: You internalized analyst's guidance and executed the strategy
 
-### Step 5: Multi-Turn Dialogue Loop
+### Step 6: Multi-Turn Dialogue Loop
 
 Conversation Flow:
 1. User responds to your question
@@ -313,6 +380,11 @@ Use Task tool with:
   - NO markdown formatting
   - NO explanatory text
 
+  **RESEARCH REMINDER**:
+  ⚠️ NEVER use WebFetch (disabled to prevent timeouts).
+  You have SlashCommand access to: /research-deep, /deep-search, /search-tree, /reflect-search, /site-navigate
+  Use them for deep/comprehensive research needs. Use WebSearch for simple queries.
+
   Based on user's response, provide NEXT teaching step as JSON:
   {
     \"assessment\": \"User understands X but not Y\",
@@ -330,7 +402,7 @@ Receive new guidance → Validate (Step 2 logic) → Internalize → Respond nat
 
 ---
 
-**OPTIONAL: Deep Dive Mode** (Step 5a)
+### Step 7: Deep Dive Mode (Optional)
 
 **Trigger signals** (3+ occurrences):
 - User remains confused despite explanations
@@ -391,8 +463,8 @@ If ANY checkbox is unchecked → Re-consult analyst for accuracy.
 **Dialogue Length Protection** (track turns internally, no user-facing counter):
 
 Turn tracking:
-- Initialize: turn_count = 0 after Step 3 first response
-- Increment: +1 after each user response in Step 4 loop
+- Initialize: turn_count = 0 after Step 5 first response
+- Increment: +1 after each user response in Step 6 loop
 - Check: Evaluate at each turn
 
 Turn 10: Natural summary injection
@@ -419,10 +491,10 @@ We've had an excellent deep dive! Let me summarize the key insights:
 
 I strongly recommend archiving this conversation now to preserve these learnings.
 
-[Proceed directly to Step 6 archival prompt]
+[Proceed directly to Step 9 archival prompt]
 ```
 
-Hard limit: Turn 18 → Auto-trigger Step 6 regardless of user signal
+Hard limit: Turn 18 → Auto-trigger Step 9 regardless of user signal
 
 Repeat this loop until:
 - User indicates completion ("thanks", "got it", "perfect")
@@ -431,7 +503,7 @@ Repeat this loop until:
 
 DO NOT prompt archival after FIRST response.
 
-### Step 6: Natural Conclusion Detection
+### Step 8: Natural Conclusion Detection
 
 Wait for EXPLICIT conclusion signals.
 
@@ -446,9 +518,9 @@ Weak signals (continue dialogue):
 - User says "interesting" (might want more)
 - User provides partial understanding
 
-Only proceed to Step 6 when you detect STRONG conclusion signal.
+Only proceed to Step 9 when you detect STRONG conclusion signal.
 
-### Step 7: Post-Conversation Archival Prompt
+### Step 9: Post-Conversation Archival Prompt
 
 ONLY NOW (after natural conclusion) prompt for archival:
 
@@ -469,7 +541,7 @@ Please choose 1, 2, or 3.
 
 Default recommendation: Option 2 (preview first)
 
-### Step 8: Handle Archival Response
+### Step 10: Handle Archival Response
 
 If user chooses 1 or 2:
 ```

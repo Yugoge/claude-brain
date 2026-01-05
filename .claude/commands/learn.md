@@ -199,8 +199,27 @@ CORRECT WORKFLOW:
 - Get `current_position` from progress file (e.g., "Page 42", "Chapter 3")
 - Calculate chunk boundaries using semantic strategy (break at section/paragraph)
 - Extract chunk: `content[chunk_start:chunk_end]`
+- **If loading new chunk mid-session**: Triggers re-consultation (PHASE 2 STEP 2)
 
-### Step 8: Select Appropriate Agent
+### Step 8: Segment Content for Progressive Display
+
+**Purpose**: Break chunk into teachable micro-segments to ensure full coverage
+
+**Segmentation strategy**:
+- Break chunk into natural segments (paragraph/section level)
+- Target: 1-3 paragraphs per segment (200-500 words)
+- Preserve semantic boundaries (don't break mid-concept)
+- Track segments: `current_segment_index`, `total_segments`
+
+**Segment state**:
+- Initialize: `segments = [seg1, seg2, ...]`, `current_index = 0`
+- Load segment: `current_segment = segments[current_index]`
+- Progression: User says "next" / "continue" → `current_index += 1`
+
+**Completion detection**:
+- If `current_index >= len(segments)` → Chunk complete, load next chunk (Step 7)
+
+### Step 9: Select Appropriate Agent
 
 **⚠️ CRITICAL**: Selecting the wrong agent = mismatched domain expertise = poor learning outcomes.
 
@@ -219,12 +238,12 @@ CORRECT WORKFLOW:
 - If agent unavailable → Use book-tutor as fallback
 - If domain mismatch detected mid-session → Consult correct agent and pivot
 
-### Step 9: Domain Focus Constraints
+### Step 10: Domain Focus Constraints
 
 Questions must test DOMAIN SKILLS, not content knowledge.
 
 Domain-specific focus areas for consultation prompts:
-- **Language**: Grammar patterns, vocabulary usage, sentence structure, pronunciation
+- **Language**: Grammar production, collocation patterns, syntax construction, pronunciation practice
 - **Finance**: Formula application, risk analysis, valuation methods, market mechanisms
 - **Programming**: Syntax patterns, algorithm analysis, debugging, design patterns
 - **Science**: Experimental design, calculations, concept application, data interpretation
@@ -232,7 +251,7 @@ Domain-specific focus areas for consultation prompts:
 
 Validate questions test skills, not facts/history. If invalid, re-consult for correction.
 
-### Step 10: Consultation-Based Learning Session
+### Step 11: Consultation-Based Learning Session
 
 **⚠️ CRITICAL**: This is the core learning workflow. Skipping consultation phases = no Socratic teaching = passive content dump.
 
@@ -244,14 +263,27 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 
 **Task Call**:
 - Use Task tool with `subagent_type={agent}` (book/language/finance/programming/medicine/law/science-tutor)
-- Include in prompt: Material, Current Section, Content Chunk, User Profile, Domain Focus Constraints (from Step 9)
-- Request JSON consultation: Learning plan, Socratic questioning (with domain_focus/question_type/domain_element_tested), Concept extraction, Success criteria, Strategy adjustments
-- Parse JSON result for consultation data
+- model: "haiku"
+- Include in prompt: Material, Current Section, **Current Segment** (from Step 8), Segment Position, Domain Focus Constraints (from Step 10)
+- Request JSON: learning_plan, socratic_questioning (domain_focus/question_type/domain_element_tested), **anticipated_follow_ups**, success_criteria
+- Parse JSON result
 
-**Fallback strategy**:
-- If consultant returns invalid JSON → Retry once with clarified prompt
-- If JSON missing required fields → Use minimal defaults (learning_plan: exploration phase)
-- If consultation fails twice → Proceed with direct teaching (no Socratic questions)
+**Required JSON structure**:
+```json
+{
+  "learning_plan": {...},
+  "socratic_questioning": {...},
+  "anticipated_follow_ups": [
+    {"trigger": "user requests examples", "prepared_response": "...", "re_consult_needed": false},
+    {"trigger": "user challenges accuracy", "prepared_response": "verify with sources", "re_consult_needed": true}
+  ]
+}
+```
+
+**Fallback**:
+- Invalid JSON → Retry once
+- Missing fields → Use defaults
+- Fails twice → Direct teaching
 
 #### PHASE 2: Socratic Dialogue Execution
 
@@ -283,47 +315,76 @@ Validate questions test skills, not facts/history. If invalid, re-consult for co
 **Initial Question**:
 1. Use consultant's `socratic_questioning.questioning_phases.next_question`
 2. Validate question stays in domain focus - if invalid, re-consult for correction
-3. Display content to user (vocabulary: full list; text: 2-3 sentences)
+3. **Display FULL current segment to user** (from Step 8: `current_segment`)
+   - Show complete segment text (all paragraphs, no truncation)
+   - Indicate position: "Segment {current_index+1}/{total_segments}"
 4. Ask validated question
 5. Wait for user response
 
 **Conversation Flow** (repeat until natural conclusion):
-1. **User responds** to your question
-2. **Assess understanding level**: Parse user's response quality
-3. **Determine next teaching step**: Need more research? Re-consult tutor?
-4. **If re-consultation needed**: Tutor returns JSON with new guidance, updated strategy
-5. **Respond naturally**: Incorporate new guidance in first-person teacher voice
-6. **Evaluate response** using consultant's `expected_answer`
-7. **If correct** → Proceed to next concept
-8. **If incorrect** → Track struggle, use `if_incorrect` guidance
-9. **If struggled 3+ times** → Re-consult for strategy adjustment
-10. Repeat until user satisfied
 
-**When to Re-Consult Tutor**:
-- User asks for more depth ("explain in detail", "tell me more", "dive deeper")
-- User requests specific examples or applications
-- User challenges your answer (need verification/additional research)
-- **Topic shifts significantly** (user wants to skip or change focus)
+After each user response, apply **Re-Consultation Decision Framework**:
 
-**Re-consultation for Topic Shift** (if detected):
+**STEP 1: Check anticipated_follow_ups**
+- Match user response against tutor's `anticipated_follow_ups` triggers
+- If 80%+ match and `re_consult_needed: false` → Use prepared response
+- If match and `re_consult_needed: true` → Proceed to STEP 4
+- If no match → Proceed to STEP 2
+
+**STEP 2: Mandatory triggers**
+Re-consult immediately if:
+- Loading new content chunk (Step 7)
+- **User requests next segment** ("next", "continue", "show more", "got it, continue")
+- User requests domain-specific examples or verification
+- User challenges explanation accuracy
+- User expresses confusion after 2+ attempts
+- User requests depth expansion
+
+**Segment progression flow**:
+- If "next segment" trigger detected:
+  - Increment `current_index += 1`
+  - If `current_index < len(segments)`: Load next segment, re-consult tutor with new segment
+  - If `current_index >= len(segments)`: Chunk complete, trigger Step 7 for new chunk
+
+**STEP 3: Quantify information gap**
+Estimate gap relative to tutor's guidance:
+- New content needed: >40% beyond guidance → Re-consult
+- Topic shift: >50% different content → Re-consult
+- Otherwise → STEP 4
+
+**STEP 4: Self-check before responding**
+Verify ALL conditions:
+- [ ] Covered in tutor guidance or anticipated_follow_ups
+- [ ] Not evaluating domain-specific correctness
+- [ ] Not making domain claims beyond expertise
+- [ ] Confidence ≥70%
+
+If ANY unchecked → Re-consult via Task tool
+
+**STEP 5: Re-consultation prompt**
 ```
-Detection keywords: "skip", "next topic", "switch to", "move on", "change focus"
+Use Task tool:
+- subagent_type: {domain}-tutor
+- model: "haiku"
+- prompt: "
+  Return JSON only (no Markdown).
 
-Process:
-1. Confirm intent: "You want to skip [current topic] and move to [new topic]?"
-2. If confirmed:
-   - Mark current topic as "skipped" in progress file
-   - Re-consult tutor with new focus (include: new topic, skip reason, remaining material context)
-   - Parse fresh JSON: Extract updated `learning_plan` and `socratic_questioning`
-   - Resume teaching loop with new questions from fresh consultation
-   - Continue session with updated teaching outline
+  User response: {answer}
+  Expected: {expected_answer}
+  Trigger: {reason}
+  Context: {material, section, concept}
+
+  Provide:
+  {
+    \"evaluation\": {\"correctness\": \"...\", \"evidence\": \"...\"},
+    \"next_strategy\": \"continue|reteach|skip_ahead\",
+    \"content\": {\"feedback\": \"...\", \"next_question\": \"...\"},
+    \"anticipated_follow_ups\": [{\"trigger\": \"...\", \"prepared_response\": \"...\", \"re_consult_needed\": bool}]
+  }
+  "
 ```
 
-**When NOT to Re-Consult**:
-- Simple clarifications (you already have sufficient context)
-- Rephrasing same answer in different words
-- Confirming user's understanding (acknowledgment only)
-- Answering follow-ups covered in original tutor guidance
+Internalize JSON → Respond naturally
 
 **Token Budget Tracking**:
 - Track cumulative tokens in session state (estimate ~1.5 tokens per word)
@@ -372,7 +433,7 @@ Process:
 - Do NOT write Rems to knowledge-base - user must run `/save` to extract from conversation
 - Indexes are auto-updated by PostToolUse hooks when Rem files are modified
 
-### Step 11: Post-Session Actions
+### Step 12: Post-Session Actions
 
 - Display completion message: Progress %, new concepts count, next steps
 - CRITICAL: Display prominent `/save` reminder with option:
@@ -389,7 +450,7 @@ Without this step, your learning won't be saved as Rems.
 </options>
 ```
 
-### Step 12: User-Facing Output
+### Step 13: User-Facing Output
 
 Generate custom welcome summary and greetings based on progress file content and session state.
 

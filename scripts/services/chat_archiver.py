@@ -121,7 +121,7 @@ BUG 13 (P0): No Tiered Fallback for Repeated First/Last Patterns - CRITICAL [FIX
     * Tier 4: first+oldest (insurance mode for 10-day repeated patterns)
   - Usage examples:
     * Tier 0: python chat_archiver.py --session-id abc123
-    * Tier 1: python chat_archiver.py --first-message "继续" --last-message "完成" --date-from 2025-10-30 --date-to 2025-10-31
+    * Tier 1: python chat_archiver.py --first-message "continue" --last-message "done" --date-from 2025-10-30 --date-to 2025-10-31
     * Tier 2: Auto-fallback when Tier 1 finds no date match
     * Tier 3: Auto-fallback when last message not found in date range (split sessions)
     * Tier 4: Auto-fallback when all else fails, finds oldest matching first message
