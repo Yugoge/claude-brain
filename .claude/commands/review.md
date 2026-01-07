@@ -436,11 +436,40 @@ Use Task tool:
 ```
 {Positive feedback}
 
-{Optional: Ask follow_up_if_strong question from JSON}
+{ONLY if review-master JSON has non-empty follow_up_if_strong: Display that question}
 
-How would you rate your recall? (1-4)
-1 = Again (forgot), 2 = Hard (struggled), 3 = Good (recalled with thought), 4 = Easy (instant)
+{Rating request in appropriate language - see below}
 ```
+
+**Follow-up Logic**:
+- Check if review-master JSON contains `socratic_question.follow_up_if_strong`
+- If field is empty string or null → Skip follow-up, go directly to rating
+- If field has content → Display follow-up question BEFORE rating request
+
+**Rating Request** (compose in appropriate language):
+
+Check `lang_preference` from run_review.py JSON output:
+- If `lang_preference` has a value: Compose rating request in that language
+- If `lang_preference` is null or not provided: Infer language from conversation context or default to Chinese
+
+**Structure** (compose yourself, adapt to target language naturally):
+```
+{Rating question in target language} (1-4)
+<options>
+<option>1 - {Complete forget / need to relearn}</option>
+<option>2 - {Recalled with significant effort}</option>
+<option>3 - {Recalled with some thought}</option>
+<option>4 - {Instant recall / too easy}</option>
+</options>
+```
+
+**FSRS 1-4 scale semantics** (express naturally in target language):
+1. Again: Complete forget, need to relearn
+2. Hard: Recalled with significant effort
+3. Good: Recalled with some thought (optimal difficulty)
+4. Easy: Instant recall, too easy
+
+Compose the rating question and option labels yourself using natural phrasing for the target language. Do not use hardcoded templates or language lists.
 
 **If response is weak** (Quality 1-2):
 ```
@@ -450,7 +479,7 @@ How would you rate your recall? (1-4)
 
 [If still struggling, provide additional hints]
 
-How would you rate your recall? (1-4)
+{Rating request in appropriate language - use same format as above}
 ```
 
 **User Self-Rating**: User provides rating (1-4)
