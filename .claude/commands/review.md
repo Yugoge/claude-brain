@@ -175,13 +175,6 @@ Load session tracking from run_review.py JSON output:
 
 #### 3.1 Consult Review-Master for Guidance
 
-**Load linked context**:
-```bash
-source venv/bin/activate && python scripts/review/get_linked_rems.py {rem_id}
-```
-
-Parse JSON and extract linked_rems for consultation.
-
 **Fallback strategy**:
 - If review-master unavailable → Ask direct recall question: "What do you remember about {Rem title}?"
 - If JSON invalid → Use minimal guidance (ask for free recall, no hints)
@@ -210,10 +203,6 @@ Use Task tool:
         \"review_count\": {review_count}
       }
     },
-    \"linked_context\": {
-      \"linked_rems\": [{\"id\": \"...\", \"type\": \"...\", \"direction\": \"...\"}],
-      \"summary\": {\"total\": N, \"by_type\": {...}}
-    },
     \"session_context\": {
       \"total_rems\": {total},
       \"current_index\": {N},
@@ -223,11 +212,6 @@ Use Task tool:
       \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\"
     }
   }
-
-  Use linked_context to enrich questions:
-  - Reference prerequisites for foundational context
-  - Contrast with antonyms/contrasts_with for differentiation
-  - Use examples for concrete understanding
 
   Use recent_formats to ensure variety:
   - Avoid 3+ consecutive same format (user gets bored!)
@@ -627,7 +611,7 @@ Would you like to do a focused review session on these?
 - Use `/save` after review to capture new concepts from your questions
 - FSRS Algorithm Benefits: 30-50% fewer reviews, adaptive difficulty modeling (0-10 scale), personalized scheduling, memory stability tracking
 - Goal: Long-term retention through scientifically optimized spaced repetition and active recall
-- **Linked Review**: System automatically loads typed relations (prerequisites, contrasts, examples) for context-aware questions. Low ratings trigger prerequisite suggestions.
+- **Relation-Based Clustering**: Graph clustering (DFS) determines review order - related Rems review consecutively for associative learning. Relations are NOT passed to review-master; tutor focuses solely on Rem file content.
 - **Question Format Adaptation**: Review-master uses 4 formats based on content type:
   - **Cloze**: Formulas, vocabulary with precise spelling (e.g., "minuscule" spelling test)
   - **Problem-Solving**: Calculations, translations, coding tasks

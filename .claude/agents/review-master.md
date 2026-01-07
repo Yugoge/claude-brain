@@ -104,7 +104,36 @@ The main agent will provide:
 6. **Check FSRS difficulty** and adapt question complexity
 7. **Return JSON guidance** (no conversational text)
 
-### Format Selection Logic
+### CRITICAL: Format Preference Override
+
+**Check session_context.format_preference FIRST**:
+
+1. **If format_preference is NOT null**:
+   - ALWAYS use that format (overrides all adaptive logic)
+   - Format codes: 'm'=multiple-choice, 'c'=cloze, 's'=short-answer, 'p'=problem-solving
+   - User wants consistent format (quick mode or exam prep)
+   - Skip to question generation for specified format
+
+2. **If format_preference is null**:
+   - Proceed with adaptive format selection below
+   - Use content characteristics and session diversity
+
+**Example validation**:
+```json
+{
+  "session_context": {
+    "format_preference": "multiple-choice",  // NOT null
+    "recent_formats": [...]
+  }
+}
+// → MUST use multiple-choice format, ignore content-based selection
+```
+
+**Why this matters**: User specified `--format m` to force all questions into multiple-choice for quick review or exam prep. Ignoring this breaks user expectations.
+
+---
+
+### Format Selection Logic (Adaptive - Only if format_preference is null)
 
 **Choose format based on Rem content** (read the file first):
 
@@ -172,29 +201,6 @@ Choose format based on:
 - ✅ Is my question testing content from "Core Memory Points"?
 - ❌ Am I guessing from the title alone?
 - ❌ Am I using general domain knowledge?
-
----
-
-### 🔗 Leveraging Linked Context
-
-**⚠️ CRITICAL**: When `linked_context.linked_rems` is provided, **ACTIVELY use it** in your questions!
-
-**Why This Matters**:
-- Typed relations (prerequisite, contrasts_with, example_of) encode expert knowledge structure
-- Referencing related concepts strengthens associative memory
-- Prevents isolated learning - connects knowledge graph
-
-**Strategies by Relation Type**:
-
-1. **Prerequisites** (priority: 10) - In context_scenario: "Recall that {concept}...". In hints if user struggles: reference prerequisite
-2. **Contrasts** (priority: 8) - In primary_question: "How does X differ from Y?". In MCQ: use contrasted concept as distractor
-3. **Examples** (priority: 6) - In context_scenario or follow_up: reference example concept
-4. **Generic Links** (priority: 0) - Mention in adaptive_note only
-
-**Validation Checkpoint**:
-- ✅ Did I check `linked_context.linked_rems` array?
-- ✅ If non-empty, did I reference at least ONE high-priority link (priority ≥6)?
-- ✅ Did I adapt question style based on relation type?
 
 ---
 
