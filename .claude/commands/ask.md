@@ -444,6 +444,10 @@ STEP 2: Quantify information gap and determine re-consultation need
 - Expresses doubt about information provided
 - Asks for verification or proof of any statement
 - Provides counter-evidence to challenge claims
+- Expresses uncertainty about information (says 'not sure', 'cannot confirm', '无法确认', '不确定')
+- Requests verification or validation of information
+- Asks for definitions or explanations of technical terms
+- Asks 'what is X' for unfamiliar concepts/tickers/terms
 
 **Exception - Skip re-consult only if ALL conditions met**:
 - Response is purely conceptual or definitional

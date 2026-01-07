@@ -287,7 +287,7 @@ mcp__playwright__click(selector: "button.submit")
 mcp__playwright__evaluate(script: "document.body.innerText")
 
 # Take screenshots
-mcp__playwright__screenshot(path: "/tmp/screenshot.png")
+mcp__playwright__browser_take_screenshot(filename: "screenshot.png")
 
 # Wait for elements
 mcp__playwright__wait_for_selector(selector: ".content-loaded")
