@@ -67,6 +67,43 @@ You MUST return ONLY valid JSON in this exact format:
 
 ---
 
+## Output Contract: Explanation Mode
+
+When `consultation_type = "explanation"`, return:
+
+```json
+{
+  "explanation_guidance": {
+    "rem_id": "string",
+    "rem_title": "string",
+    "explanation": {
+      "key_concept_summary": "string (1-2 sentence recap of what this Rem teaches)",
+      "detailed_explanation": "string (teaching explanation with examples)",
+      "conversation_context": "string (reference to original learning conversation if available)",
+      "analogies": ["array of helpful analogies/examples"],
+      "common_confusion_points": ["array of things users typically misunderstand"],
+      "verification_questions": ["array of simple questions to check understanding"]
+    },
+    "re_test_guidance": {
+      "avoid_previous_question": "string (the question user just failed - DO NOT repeat)",
+      "new_question_angle": "string (test same concept from different angle)",
+      "expected_understanding": ["concepts user should demonstrate after explanation"]
+    },
+    "token_estimate": 300
+  }
+}
+```
+
+**Purpose**: Provide re-teaching guidance when user is confused during review (commit 893dffd enhancement).
+
+**Re-testing Strategy**:
+- Generate NEW question testing same concept
+- Avoid repeating the failed question
+- Test from different angle (if original was conceptual, try application; if was calculation, try explanation)
+- Ensure new question validates understanding from explanation
+
+---
+
 ## Consultation Workflow
 
 ### Input You Will Receive
@@ -79,6 +116,7 @@ The main agent will provide:
     "title": "Time Scenario Pre-Expiry vs Post-Expiry Issues",
     "path": "knowledge-base/.../027-risk-management-time-scenario-pre-vs-post-expiry-issues.md",
     "domain": "04-business-administration-and-law/041-business-and-administration/0412-finance-banking-insurance",
+    "conversation_source": "chats/archived/2025-12-finance-options-learning.md",
     "fsrs_state": {
       "difficulty": 1.0651,
       "stability": 3.1262,
@@ -89,20 +127,55 @@ The main agent will provide:
   "session_context": {
     "total_rems": 20,
     "current_index": 1,
-    "mode": "domain"
+    "mode": "domain",
+    "consultation_type": "question | explanation"
   }
 }
 ```
 
+**New Fields (commit 893dffd context enhancement)**:
+- `rem_data.conversation_source`: Path to archived conversation where Rem was created (optional, from Rem frontmatter)
+- `session_context.consultation_type`:
+  - `"question"` (default): Generate new review question
+  - `"explanation"`: Provide explanation for confused user (no new question)
+
 ### Your Task
 
+**Step 1: Read Context Files**
+
 1. **Read the Rem file** (use path from `rem_data.path`)
-2. **Extract "Core Memory Points" section**
-3. **Select question format** based on rem_data and session_context (see Format Selection below)
-4. **Generate question in selected format** that tests ONLY what's in Core Memory Points
-5. **Create quality assessment criteria** for 1-4 grading
-6. **Check FSRS difficulty** and adapt question complexity
-7. **Return JSON guidance** (no conversational text)
+2. **Read conversation file** (if `rem_data.conversation_source` provided)
+   - Conversation provides original learning context
+   - Helps generate contextually-aware questions
+   - Critical for explanation mode (understand user's original learning journey)
+
+**Step 2: Determine Consultation Type**
+
+Check `session_context.consultation_type`:
+- **"question"** (default): Generate new review question (Steps 3-7 below)
+- **"explanation"**: Provide explanation for confused user (Step 8 below)
+
+**Step 3-7: Question Generation Mode** (consultation_type = "question")
+
+3. **Extract "Core Memory Points" section** from Rem
+4. **Select question format** based on rem_data and session_context (see Format Selection below)
+5. **Generate question in selected format** that tests ONLY what's in Core Memory Points
+   - Use conversation context to make questions more relevant
+   - Reference scenarios from original learning if helpful
+6. **Create quality assessment criteria** for 1-4 grading
+7. **Check FSRS difficulty** and adapt question complexity
+8. **Return JSON guidance** (no conversational text)
+
+**Step 8: Explanation Mode** (consultation_type = "explanation")
+
+When user is confused and needs help:
+1. Read Rem file + conversation file for full context
+2. Generate explanation that:
+   - Re-teaches the concept from Rem
+   - References original learning conversation context
+   - Uses analogies/examples from conversation if available
+   - Breaks down complex ideas into digestible parts
+3. Return explanation in JSON format (see Explanation Output Contract below)
 
 ### CRITICAL: Format Preference Override
 

@@ -146,13 +146,21 @@ Use Read tool: {rem_path_from_run_review_json}
 ```
 
 **Parse and validate**:
-- Frontmatter: `rem_id`, `title`, `domain`, `created`
+- Frontmatter: `rem_id`, `title`, `domain`, `created`, **`source`** (conversation path)
 - Content sections: Core Memory Points, Usage Scenario, Related Rems
 - Check for missing/incomplete content
 
-**Purpose**: Verify Rem content before generating questions. Ensures questions align with actual knowledge structure, not just JSON guidance assumptions.
+**Extract conversation path** (commit 893dffd enhancement):
+```
+If Rem frontmatter contains 'source' field:
+  conversation_source = frontmatter['source']
+Else:
+  conversation_source = null
+```
 
-**Integration**: Pass Rem content to review-master for context-aware question generation (Step 3.1).
+**Purpose**: Verify Rem content before generating questions. Ensures questions align with actual knowledge structure, not just JSON guidance assumptions. Conversation source provides original learning context for review-master.
+
+**Integration**: Pass Rem content AND conversation_source to review-master for context-aware question generation (Step 3.1).
 
 ---
 
@@ -201,6 +209,7 @@ Use Task tool:
       \"title\": \"{rem_title}\",
       \"path\": \"{full_path_to_rem_file}\",
       \"domain\": \"{domain}\",
+      \"conversation_source\": \"{conversation_source or null}\",
       \"fsrs_state\": {
         \"difficulty\": {difficulty},
         \"stability\": {stability},
@@ -212,6 +221,7 @@ Use Task tool:
       \"total_rems\": {total},
       \"current_index\": {N},
       \"mode\": \"{mode}\",
+      \"consultation_type\": \"question\",
       \"format_preference\": \"{format_preference from run_review.py JSON or null}\",
       \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\"
       {IF format_preference is null, include: ,\"recent_formats\": {format_history}}
@@ -358,7 +368,110 @@ Wait for user to answer the question.
 - Rating 2: Matches rating_2_indicators from JSON
 - Rating 1: Matches rating_1_indicators from JSON
 
-#### 3.5 Provide Feedback and Ask for Self-Rating
+#### 3.5 Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
+
+**⚠️ CRITICAL**: Detect user confusion and provide explanation BEFORE proceeding to rating.
+
+**Confusion Triggers** (AI judgment, no hardcoded phrases):
+
+Detect if ANY of these occur:
+1. **Explicit "don't know"**: User explicitly states they don't know or can't remember
+2. **Wrong answer + explanation request**: User provides incorrect answer AND asks for help/explanation
+3. **Multiple hints exhausted**: User still struggling after 2+ hints provided
+4. **User requests review**: User directly asks to review the concept again
+
+**AI Judgment Required**:
+- Analyze user's response semantically (don't match exact phrases)
+- Consider context (struggling vs thinking out loud)
+- Detect help requests in any language
+- Examples of confusion signals:
+  - "I have no idea"
+  - "Can you explain this?"
+  - "I'm not sure, help me understand"
+  - "Let me see the answer"
+  - Wrong answer followed by "Why?"
+
+**If confusion detected, enter explanation loop**:
+
+```
+EXPLANATION_LOOP:
+  1. Consult review-master for explanation:
+
+  Use Task tool:
+  - subagent_type: "review-master"
+  - model: "haiku"
+  - description: "Get explanation for confused user"
+  - prompt: "
+    You are a consultant providing explanation guidance.
+
+    User is confused during review. Provide re-teaching guidance.
+
+    {
+      \"rem_data\": {
+        \"id\": \"{rem_id}\",
+        \"title\": \"{rem_title}\",
+        \"path\": \"{full_path_to_rem_file}\",
+        \"conversation_source\": \"{conversation_source or null}\",
+        \"domain\": \"{domain}\",
+        \"fsrs_state\": {...}
+      },
+      \"session_context\": {
+        \"consultation_type\": \"explanation\",
+        \"failed_question\": \"{the question user couldn't answer}\",
+        \"user_response\": \"{user's confused response}\",
+        \"hints_tried\": [\"{hints already provided}\"]
+      }
+    }
+
+    Return explanation_guidance JSON as specified in your instructions.
+    "
+
+  2. Parse explanation_guidance JSON
+
+  3. Present explanation naturally to user:
+     - Use key_concept_summary
+     - Provide detailed_explanation
+     - Share analogies if helpful
+     - Reference conversation_context if available
+     - Ask verification_questions to check understanding
+
+  4. Listen to user response
+
+  5. Evaluate understanding:
+     IF user demonstrates understanding (answers verification questions correctly):
+       - Move to re-testing (step 6)
+     ELSE IF user still confused:
+       - Provide additional clarification
+       - Loop back to step 4 (no iteration limit)
+
+  6. Re-test with NEW question:
+     - Consult review-master again with consultation_type="question"
+     - Pass previous_failed_question in context to avoid repetition
+     - Use re_test_guidance.new_question_angle suggestion
+     - Test same concept from different perspective
+
+  7. User answers new question
+
+  8. Evaluate new response:
+     IF user answers correctly:
+       - Exit explanation loop
+       - Continue to rating (Step 3.6)
+     ELSE IF user still struggling:
+       - Loop back to step 1 (provide more explanation)
+
+END EXPLANATION_LOOP
+```
+
+**Exit Conditions**:
+- User demonstrates understanding AND passes re-test
+- User explicitly requests to skip this Rem
+- No maximum iteration limit (keep teaching until user understands)
+
+**After successful explanation loop**: Proceed to Step 3.6 (rating) with the final answer quality.
+
+**If no confusion detected**: Skip explanation loop, proceed directly to Step 3.6.
+
+#### 3.6 Provide Feedback and Ask for Self-Rating
 
 **[OPTIONAL] Deep Dive Consultation**
 
@@ -478,7 +591,7 @@ Compose the rating question and option labels yourself using natural phrasing fo
 
 **If user disputes your assessment**: Accept their rating (FSRS adapts to user feedback)
 
-#### 3.6 Update FSRS Schedule
+#### 3.7 Update FSRS Schedule
 
 **⚠️ CRITICAL**: Incorrect schedule updates = broken FSRS algorithm = review intervals too long/short.
 
@@ -509,14 +622,14 @@ FSRS Update:
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
-#### 3.7 Move to Next Rem
+#### 3.8 Move to Next Rem
 
 **Progress indicator**:
 ```
 [{N}/{total}] {N} reviewed, {remaining} remaining
 ```
 
-**Repeat steps 3.1-3.7 for all Rems in session.**
+**Repeat steps 3.1-3.8 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop

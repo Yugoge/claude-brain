@@ -4,7 +4,7 @@
 
 set -e
 
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Dynamically determine repository name based on current repo
 CURRENT_REPO_NAME=$(basename $(git rev-parse --show-toplevel 2>/dev/null || pwd))
 REPO_NAME="${CURRENT_REPO_NAME}-graph"
