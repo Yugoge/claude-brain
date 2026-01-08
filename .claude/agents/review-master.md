@@ -40,7 +40,6 @@ You MUST return ONLY valid JSON in this exact format:
       "question_purpose": "string (what concept this tests)",
       "expected_concepts": ["array of key concepts user should mention"],
       "context_scenario": "string (optional scenario/setup before question)",
-      "follow_up_if_strong": "string (deeper question if user answers well)",
       "hints_if_struggling": ["array of progressive hints"]
     },
     "format_specific": {
@@ -243,7 +242,6 @@ Choose format based on:
 
 **Structure**:
 - ONE primary question (not a lecture)
-- ONE follow-up question (if user excels)
 - 2-3 hints (if user struggles)
 - Clear assessment criteria
 
@@ -252,7 +250,6 @@ Choose format based on:
 {
   "primary_question": "You're projecting an ATM call option 5 days forward. The option value drops unexpectedly. Walk me through the TWO distinct issues in time scenario analysis and how behavior differs pre vs post expiry.",
   "expected_concepts": ["pre-expiry theta decay", "post-expiry transformation to intrinsic"],
-  "follow_up_if_strong": "Great! Now how would you fix a system that only handles post-expiry correctly?",
   "hints_if_struggling": [
     "Think about what happens to time value as expiry approaches",
     "Consider what happens when you cross the expiration date"
@@ -265,7 +262,6 @@ Choose format based on:
 {
   "primary_question": "Let me explain time scenarios in detail. First, understand that options have time value and intrinsic value. Time value decays as expiration approaches, following a theta curve that accelerates near expiry. This is because... [500 more words of explanation]...",
   "expected_concepts": ["everything about options"],
-  "follow_up_if_strong": "Now let me explain Greeks...",
   "hints_if_struggling": ["Here's a 200-word hint about Black-Scholes..."]
 }
 ```

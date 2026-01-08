@@ -541,15 +541,8 @@ Use Task tool:
 ```
 {Positive feedback}
 
-{ONLY if review-master JSON has non-empty follow_up_if_strong: Display that question}
-
 {Rating request in appropriate language - see below}
 ```
-
-**Follow-up Logic**:
-- Check if review-master JSON contains `socratic_question.follow_up_if_strong`
-- If field is empty string or null → Skip follow-up, go directly to rating
-- If field has content → Display follow-up question BEFORE rating request
 
 **Rating Request** (compose in appropriate language):
 
