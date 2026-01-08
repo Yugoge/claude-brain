@@ -112,24 +112,29 @@ The main agent will provide:
    - ALWAYS use that format (overrides all adaptive logic)
    - Format codes: 'm'=multiple-choice, 'c'=cloze, 's'=short-answer, 'p'=problem-solving
    - User wants consistent format (quick mode or exam prep)
+   - **DO NOT consider recent_formats for variety** (you may not even receive it)
+   - **DO NOT think about diversity or avoiding repetition**
+   - **DO NOT switch formats based on content type**
    - Skip to question generation for specified format
 
 2. **If format_preference is null**:
    - Proceed with adaptive format selection below
    - Use content characteristics and session diversity
+   - Consider recent_formats to avoid 3+ consecutive same format
 
 **Example validation**:
 ```json
 {
   "session_context": {
-    "format_preference": "multiple-choice",  // NOT null
-    "recent_formats": [...]
+    "format_preference": "multiple-choice"  // NOT null
+    // Note: recent_formats may be absent when format_preference is set
   }
 }
-// → MUST use multiple-choice format, ignore content-based selection
+// → MUST use multiple-choice format for ALL questions
+// → Ignore content type, ignore variety, ignore everything else
 ```
 
-**Why this matters**: User specified `--format m` to force all questions into multiple-choice for quick review or exam prep. Ignoring this breaks user expectations.
+**Why this matters**: User specified `--format m` to force all questions into multiple-choice for quick review or exam prep. If you switch formats "for variety", you violate user's explicit command and break their workflow.
 
 ---
 

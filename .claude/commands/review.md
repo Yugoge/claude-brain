@@ -190,6 +190,11 @@ Use Task tool:
 
   Review this Rem and provide Socratic question guidance:
 
+  **IMPORTANT INSTRUCTION**:
+  - Check format_preference field FIRST
+  - If format_preference is NOT null → Use that format exclusively, ignore all diversity/variety logic
+  - If format_preference is null → Use adaptive format selection with variety
+
   {
     \"rem_data\": {
       \"id\": \"{rem_id}\",
@@ -207,21 +212,24 @@ Use Task tool:
       \"total_rems\": {total},
       \"current_index\": {N},
       \"mode\": \"{mode}\",
-      \"recent_formats\": {format_history},
       \"format_preference\": \"{format_preference from run_review.py JSON or null}\",
       \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\"
+      {IF format_preference is null, include: ,\"recent_formats\": {format_history}}
     }
   }
 
-  Use recent_formats to ensure variety:
-  - Avoid 3+ consecutive same format (user gets bored!)
-  - Mix formats based on content AND diversity
-  - format_history = last 5 formats from persistent state (tracks across agent messages)
+  **Format Selection Logic**:
 
-  Use format_preference if provided:
-  - If format_preference is not null, ALWAYS use that format (overrides adaptive selection)
+  IF format_preference is NOT null:
+  - ALWAYS use that format (no exceptions, no variety considerations)
   - Format codes: 'm'=multiple-choice, 'c'=cloze, 's'=short-answer, 'p'=problem-solving
-  - User wants quick mode or exam prep
+  - User wants consistent format (quick mode or exam prep)
+  - Ignore recent_formats completely
+
+  IF format_preference is null:
+  - Use adaptive format selection based on content type
+  - Consider recent_formats for variety (avoid 3+ consecutive same format)
+  - Mix formats based on content characteristics AND diversity
 
   Use lang_preference if provided:
   - If lang_preference is not null, generate ALL dialogue in that language
