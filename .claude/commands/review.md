@@ -160,7 +160,7 @@ Else:
 
 **Purpose**: Verify Rem content before generating questions. Ensures questions align with actual knowledge structure, not just JSON guidance assumptions. Conversation source provides original learning context for review-master.
 
-**Integration**: Pass Rem content AND conversation_source to review-master for context-aware question generation (Step 3.1).
+**Integration**: Pass Rem content AND conversation_source to review-master for context-aware question generation (Step 4).
 
 ---
 
@@ -181,7 +181,7 @@ Load session tracking from run_review.py JSON output:
 
 **For each Rem in the session, follow this loop**:
 
-#### 3.1 Consult Review-Master for Guidance
+#### 4. Consult Review-Master for Guidance
 
 **Fallback strategy**:
 - If review-master unavailable → Ask direct recall question: "What do you remember about {Rem title}?"
@@ -293,7 +293,7 @@ source venv/bin/activate && python scripts/review/track_format.py {question_form
 
 This updates `.review/format_history.json` with the format used. Next Rem will load updated history via run_review.py.
 
-#### 3.2 Present Question to User (First-Person Voice)
+#### 5. Present Question to User (First-Person Voice)
 
 **Adapt presentation based on question_format**:
 
@@ -350,11 +350,11 @@ Let's review: {rem_title}
 - ❌ Never third-person: "The review-master asks..."
 - ❌ No meta-commentary: "I'm consulting the agent..."
 
-#### 3.3 Listen to User Response
+#### 6. Listen to User Response
 
 Wait for user to answer the question.
 
-#### 3.4 Evaluate Response Quality
+#### 7. Evaluate Response Quality
 
 **Compare user response to quality_assessment_guide from JSON**:
 
@@ -368,7 +368,7 @@ Wait for user to answer the question.
 - Rating 2: Matches rating_2_indicators from JSON
 - Rating 1: Matches rating_1_indicators from JSON
 
-#### 3.5 Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
+#### 8. Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
 
 **⚠️ CRITICAL**: Detect user confusion and provide explanation BEFORE proceeding to rating.
 
@@ -455,7 +455,7 @@ EXPLANATION_LOOP:
   8. Evaluate new response:
      IF user answers correctly:
        - Exit explanation loop
-       - Continue to rating (Step 3.6)
+       - Continue to rating (Step 9)
      ELSE IF user still struggling:
        - Loop back to step 1 (provide more explanation)
 
@@ -467,11 +467,11 @@ END EXPLANATION_LOOP
 - User explicitly requests to skip this Rem
 - No maximum iteration limit (keep teaching until user understands)
 
-**After successful explanation loop**: Proceed to Step 3.6 (rating) with the final answer quality.
+**After successful explanation loop**: Proceed to Step 9 (rating) with the final answer quality.
 
-**If no confusion detected**: Skip explanation loop, proceed directly to Step 3.6.
+**If no confusion detected**: Skip explanation loop, proceed directly to Step 9.
 
-#### 3.6 Provide Feedback and Ask for Self-Rating
+#### 9. Provide Feedback and Ask for Self-Rating
 
 **[OPTIONAL] Deep Dive Consultation**
 
@@ -584,7 +584,7 @@ Compose the rating question and option labels yourself using natural phrasing fo
 
 **If user disputes your assessment**: Accept their rating (FSRS adapts to user feedback)
 
-#### 3.7 Update FSRS Schedule
+#### 10. Update FSRS Schedule
 
 **⚠️ CRITICAL**: Incorrect schedule updates = broken FSRS algorithm = review intervals too long/short.
 
@@ -615,14 +615,14 @@ FSRS Update:
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
-#### 3.8 Move to Next Rem
+#### 11. Move to Next Rem
 
 **Progress indicator**:
 ```
 [{N}/{total}] {N} reviewed, {remaining} remaining
 ```
 
-**Repeat steps 3.1-3.8 for all Rems in session.**
+**Repeat steps 4-11 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop

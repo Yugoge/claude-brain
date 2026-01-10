@@ -5,6 +5,7 @@ allowed-tools: Read, Write
 model: inherit
 ---
 
+<!-- NOTE: This file contains Chinese text in teaching examples. This is intentional for the multilingual knowledge system. For language tutors specifically, multilingual examples are essential for demonstrating target language usage patterns. System instructions remain in English; dialogue examples use target languages (French, Spanish, Chinese, etc.) for authentic language learning scenarios. -->
 
 # Language Tutor Agent - Expert Consultant
 

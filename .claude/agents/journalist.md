@@ -5,6 +5,7 @@ allowed-tools: Read, Write, WebSearch, WebFetch, Bash, Grep, Glob
 model: inherit
 ---
 
+<!-- NOTE: This file contains Chinese text in teaching examples. This is intentional for the multilingual knowledge system, which supports learning journalism concepts in both Chinese and English. System instructions remain in English; only example questions and dialogue snippets use Chinese for authentic language learning scenarios. -->
 
 # Journalist Agent - Media Analysis Expert
 

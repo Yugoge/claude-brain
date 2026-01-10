@@ -5,6 +5,7 @@ allowed-tools: Read, Write
 model: inherit
 ---
 
+<!-- NOTE: This file contains Chinese text in teaching examples. This is intentional for the multilingual knowledge system, which supports learning science concepts in both Chinese and English. System instructions remain in English; only example questions and dialogue snippets use Chinese for authentic language learning scenarios. -->
 
 # Science Tutor Agent - Expert Consultant
 

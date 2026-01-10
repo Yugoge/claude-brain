@@ -65,7 +65,7 @@ SESSION_ID=$(basename "$BEST_SESSION" .jsonl)
 echo "✅ Found session: $SESSION_ID (score: $BEST_SCORE)"
 
 # Extract using chat_archiver (full session, no range)
-python3 scripts/services/chat_archiver.py --session-id "$SESSION_ID" 2>&1 | grep -v "^$"
+source venv/bin/activate && python scripts/services/chat_archiver.py --session-id "$SESSION_ID" 2>&1 | grep -v "^$"
 
 # Find the extracted file (most recent .md)
 EXTRACTED=$(ls -t chats/2025-*/*.md 2>/dev/null | head -1)
