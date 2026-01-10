@@ -100,3 +100,5 @@ tmp/
 
 # Playwright MCP
 .playwright-mcp/
+session-env/
+systemd/
