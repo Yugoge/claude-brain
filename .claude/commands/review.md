@@ -718,7 +718,7 @@ Would you like to do a focused review session on these?
 
 - Reviews are interactive conversations, not flashcards
 - Rating honesty is crucial for FSRS personalization
-- Sessions should be 15-20 Rems maximum (avoid fatigue)
+- Keep sessions reasonably short to avoid cognitive fatigue
 - Always update schedule.json after each Rem
 - Log all sessions to history.json for analytics
 - FSRS learns from your performance - more reviews = better scheduling

@@ -49,7 +49,7 @@ Use output to create TodoWrite with all workflow steps.
 ### Step 1: Parse Arguments
 
 Extract parameters from command arguments:
-- `--period <N>`: Time period in days (default: 30)
+- `--period <N>`: Time period in days
 - `--domain <name>`: Filter by specific domain (default: all)
 - `--no-deploy`: Skip deployment (local files only)
 

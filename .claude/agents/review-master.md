@@ -221,11 +221,11 @@ When user is confused and needs help:
     // Note: recent_formats may be absent when format_preference is set
   }
 }
-// → MUST use multiple-choice format for ALL questions
+// → Use multiple-choice format consistently
 // → Ignore content type, ignore variety, ignore everything else
 ```
 
-**Why this matters**: User specified `--format m` to force all questions into multiple-choice for quick review or exam prep. If you switch formats "for variety", you violate user's explicit command and break their workflow.
+**Why this matters**: User specified `--format m` to use multiple-choice format for quick review or exam prep. If you switch formats "for variety", you violate user's explicit command and break their workflow.
 
 ---
 
