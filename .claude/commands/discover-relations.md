@@ -38,10 +38,7 @@ Use output to create TodoWrite with all workflow steps.
 
 ## Examples
 
-```
-/discover-relations csharp-null-conditional-operator
-/discover-relations --domain 0611-computer-use
-```
+Use with a specific Rem ID or domain path to discover typed relations for existing knowledge.
 
 ## What This Command Does
 

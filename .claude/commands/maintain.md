@@ -23,12 +23,7 @@ Automated maintenance for Rem files and knowledge graph.
 
 ## Examples
 
-```
-/maintain                 # Interactive menu
-/maintain --check-only    # Dry-run all tasks
-/maintain --fix-all       # Auto-fix everything
-/maintain --validate      # Validation only
-```
+Run in interactive mode to select specific tasks, or use mode flags for automated execution.
 
 ## Implementation
 
@@ -55,12 +50,13 @@ Tasks are ordered from validation → basic fixes → advanced maintenance.
 **Checks**: rem_id, isced, created, source fields
 
 ```bash
-source venv/bin/activate && python scripts/validation/check_rem_formats.py [--verbose]
+source venv/bin/activate && python scripts/validation/check_rem_formats.py
 ```
 
 - Read-only check, no modifications
 - Reports non-compliant files
 - Run first to identify format issues
+- Optional verbosity flag available
 
 ### Task 2: Validate Rem Size (150-200 Token Target)
 **Purpose**: Check token size compliance with Story 1.10 standards
@@ -78,11 +74,11 @@ source venv/bin/activate && python scripts/validation/validate-rem-size.py
 **Detects**: Unquoted colons, special characters, syntax errors
 
 ```bash
-source venv/bin/activate && python scripts/validation/validate-yaml-frontmatter.py [--fix]
+source venv/bin/activate && python scripts/validation/validate-yaml-frontmatter.py
 ```
 
-- Use without `--fix` for check-only mode
-- Use `--fix` to automatically correct YAML issues
+- Default: check-only mode
+- Optional fix flag available to automatically correct issues
 
 ### Task 4: Check Source Fields
 **Purpose**: Check distribution of source field values
@@ -104,10 +100,10 @@ source venv/bin/activate && python scripts/utilities/check-source-fields.py
 **Strategy**: Generates rem_id from filename
 
 ```bash
-source venv/bin/activate && python scripts/add-missing-rem-ids.py [--execute]
+source venv/bin/activate && python scripts/add-missing-rem-ids.py
 ```
 
-- Dry-run by default, use `--execute` to apply
+- Dry-run by default, execution flag available to apply changes
 - Run early to ensure all Rems have IDs
 
 ---
@@ -119,12 +115,13 @@ source venv/bin/activate && python scripts/add-missing-rem-ids.py [--execute]
 **When to use**: After major changes, when backlinks.json is corrupted, or for periodic deep maintenance
 
 ```bash
-source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py [--verbose]
+source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py
 ```
 
 - Full scan of all Rems in knowledge-base
 - Rebuilds backlinks.json with typed relations
 - Use when incremental updates (from `/save`) are insufficient
+- Optional verbosity flag available
 - **Note**: `/save` automatically does incremental updates; this is for manual deep maintenance
 
 ### Task 7: Sync Related Rems from Backlinks
@@ -132,10 +129,11 @@ source venv/bin/activate && python scripts/knowledge-graph/rebuild-backlinks.py 
 **Requires**: Up-to-date backlinks.json (run rebuild-backlinks.py first if needed)
 
 ```bash
-source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-from-backlinks.py [--dry-run] [--verbose]
+source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-from-backlinks.py
 ```
 
-- Use `--dry-run` for preview
+- Optional dry-run flag for preview
+- Optional verbosity flag available
 - Updates "Related Rems" sections based on actual link structure
 
 ### Task 8: Standardize Rem Names (Domain-Specific)
@@ -143,11 +141,12 @@ source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-fro
 **Scope**: Updates KB + chat archives + FSRS schedule
 
 ```bash
-source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names.py --domain <domain> [--dry-run] [--verbose]
+source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names.py --domain <domain>
 ```
 
 - **Interactive**: Ask user which domain to process (auto-discover available ISCED paths by scanning knowledge-base)
-- Use `--dry-run` for preview
+- Optional dry-run flag for preview
+- Optional verbosity flag available
 - Run last because it renames files and updates references
 
 ### Task 9: Sync to FSRS Review Schedule
@@ -155,89 +154,69 @@ source venv/bin/activate && python scripts/knowledge-graph/standardize-rem-names
 **When to use**: After adding rem_ids (Task 5), importing external Rems, or updating Rem titles
 
 ```bash
-source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py [--force] [--verbose]
+source venv/bin/activate && python scripts/utilities/scan-and-populate-rems.py
 ```
 
 - Add new Rems to `.review/schedule.json` with initial FSRS state
-- With `--force`: Update metadata (title, domain) while preserving FSRS history (difficulty, stability, review_count)
+- Optional force flag to update metadata while preserving FSRS history
+- Optional verbosity flag available
 - **Note**: `/save` automatically syncs; this is for manual maintenance only
-- Extracts titles from Markdown headings (`# Title`) for better readability in review sessions
+- Extracts titles from Markdown headings for better readability in review sessions
 
 ### Task 10: Fix Multi-Pair Relations
 **Purpose**: Detect and remove redundant paired relations using semantic priority
 
 ```bash
-source venv/bin/activate && python scripts/knowledge-graph/fix-source-multi-pair-relations.py [--execute]
+source venv/bin/activate && python scripts/knowledge-graph/fix-source-multi-pair-relations.py
 ```
 
-**Must run before rebuilding backlinks to prevent propagating conflicts**
+- Optional execution flag to apply fixes
+- **Must run before rebuilding backlinks to prevent propagating conflicts**
 
 ### Task 11: Sync Renamed Rems to Schedule
 **Purpose**: Detect and sync file path/rem_id changes to schedule.json automatically
 **When to use**: After file renames, to prevent orphaned schedule entries
 
 ```bash
-source venv/bin/activate && python scripts/review/sync-renamed-rems.py [--dry-run] [--verbose]
+source venv/bin/activate && python scripts/review/sync-renamed-rems.py
 ```
 
 - Auto-detects orphaned schedule entries (rem_id not in any Rem file)
 - Uses domain + pattern matching to find renamed files
 - Preserves ALL FSRS history (difficulty, stability, review_count)
 - Only updates rem_id, domain, title, last_modified
+- Optional dry-run flag for preview
+- Optional verbosity flag available
 - Safe to run repeatedly (idempotent)
-- **Root cause**: Prevents issues like commit adfc1c1 where files were renamed but schedule.json wasn't updated
+- **Root cause**: Prevents issues where files are renamed but schedule.json isn't updated
 
 ---
 
 ## Workflow Logic
 
 ### Interactive Mode (Default)
-Present menu:
-```
-Knowledge Base Maintenance Tasks:
+Present menu with three phases:
+- **Phase 1: Validation** - Format checks, size validation, YAML syntax, source fields
+- **Phase 2: Basic Fixes** - Add missing rem_ids
+- **Phase 3: Advanced Maintenance** - Graph operations, naming, FSRS sync
 
-PHASE 1: VALIDATION
-1. Validate Rem Formats (v2.0)
-2. Validate Rem Size (150-200 tokens)
-3. Validate YAML Frontmatter
-4. Check Source Fields
-
-PHASE 2: BASIC FIXES
-5. Add Missing rem_ids
-
-PHASE 3: ADVANCED MAINTENANCE
-6. Rebuild Backlinks (full rebuild)
-7. Sync Related Rems from Backlinks
-8. Standardize Rem Names (domain-specific)
-9. Sync to FSRS Review Schedule
-10. Fix Multi-Pair Relations
-11. Sync Renamed Rems to Schedule
-
-Select tasks to run (comma-separated or 'all' or 'validate'):
-```
+User can select individual tasks, all tasks, or validation-only subset.
 
 ### Mode Behaviors
 
-**--validate**: Run validation tasks only
-**--check-only**: Run all tasks with dry-run flags
-**--fix-all**: Run all tasks with execution flags
-- **Order**: Validate → fix rem_ids → fix multi-pair → rebuild graph → sync
+Different execution modes available:
+- Validation-only mode runs checks without modifications
+- Check-only mode runs all tasks in dry-run mode
+- Fix-all mode applies all fixes automatically
+- Execution order follows dependency graph: validation first, then basic fixes, then advanced maintenance
 
 ### Summary Report
 
-After completion, show:
-```
-Maintenance Summary:
-────────────────────
-✓ Validation: X issues found
-✓ Basic Fixes: Y changes applied
-✓ Advanced Maintenance: Z files updated
-
-Recommendations:
-• Run /kb-init --repair-all if major issues found
-• Review validation reports for manual fixes
-• Run Task 6 (rebuild backlinks) if major graph changes detected
-```
+After completion, present structured summary showing:
+- Validation results with issue counts
+- Basic fixes applied with change counts
+- Advanced maintenance operations with file update counts
+- Recommendations for follow-up actions based on findings
 
 ## Notes
 
