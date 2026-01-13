@@ -6,7 +6,7 @@ Detects and fixes unquoted colons and special characters in YAML frontmatter
 that break parsing.
 
 Usage:
-    python validate-yaml-frontmatter.py [--fix] [--path DIRECTORY]
+    source venv/bin/activate && source venv/bin/activate && python validate-yaml-frontmatter.py [--fix] [--path DIRECTORY]
 
 Options:
     --fix      Automatically fix detected errors

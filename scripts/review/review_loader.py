@@ -76,7 +76,7 @@ class ReviewLoader:
         if not self.schedule_path.exists():
             raise FileNotFoundError(
                 f"Schedule file not found: {self.schedule_path}. "
-                f"Run `python3 scripts/scan-and-populate-rems.py` first."
+                f"Run `source venv/bin/activate && python3 scripts/scan-and-populate-rems.py` first."
             )
 
         with open(self.schedule_path, "r", encoding="utf-8") as f:

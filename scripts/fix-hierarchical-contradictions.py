@@ -15,7 +15,7 @@ Contradiction types handled:
 - used_in/uses: Context-dependent resolution
 
 Usage:
-    python scripts/fix-hierarchical-contradictions.py [options]
+    source venv/bin/activate && source venv/bin/activate && python scripts/fix-hierarchical-contradictions.py [options]
 
 Options:
     --dry-run           Preview changes without writing

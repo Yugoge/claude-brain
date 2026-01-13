@@ -7,7 +7,7 @@ Story: 1.12 - Optimize Archival Token Consumption
 Target: 70% reduction (1000 → 300 tokens)
 
 Usage:
-    python scripts/update-backlinks-incremental.py concept-id-1 concept-id-2 ...
+    source venv/bin/activate && source venv/bin/activate && python scripts/update-backlinks-incremental.py concept-id-1 concept-id-2 ...
 """
 
 import json

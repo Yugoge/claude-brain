@@ -19,7 +19,7 @@ We only write each node's outgoing edges to avoid duplicates.
 The backlinks.json maintains bidirectionality, not individual Rem files.
 
 Usage:
-    python scripts/knowledge-graph/sync-related-rems-from-backlinks.py [--dry-run] [--verbose]
+    source venv/bin/activate && source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-from-backlinks.py [--dry-run] [--verbose]
 
 Requirements:
     - Up-to-date knowledge-base/_index/backlinks.json
@@ -27,10 +27,10 @@ Requirements:
 
 Examples:
     # Preview changes
-    python scripts/knowledge-graph/sync-related-rems-from-backlinks.py --dry-run --verbose
+    source venv/bin/activate && source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-from-backlinks.py --dry-run --verbose
 
     # Apply changes
-    python scripts/knowledge-graph/sync-related-rems-from-backlinks.py --verbose
+    source venv/bin/activate && source venv/bin/activate && python scripts/knowledge-graph/sync-related-rems-from-backlinks.py --verbose
 """
 
 import json

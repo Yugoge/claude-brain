@@ -6,10 +6,10 @@ Scans a domain directory for all Rem files and outputs them in JSON format
 for use by workflow orchestrator and other archival tools.
 
 Usage:
-    python scripts/archival/list_rems_in_domain.py --domain-path <path> --output <file>
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/list_rems_in_domain.py --domain-path <path> --output <file>
 
 Examples:
-    python scripts/archival/list_rems_in_domain.py \
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/list_rems_in_domain.py \
         --domain-path "path/to/domain" \
         --output rems.json
 """

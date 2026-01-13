@@ -6,7 +6,7 @@ This script solves Bug 2: workflow_orchestrator.py only generates partial metada
 Main agent provides complete session metadata, this script merges with enriched Rems.
 
 Usage:
-    python scripts/archival/construct_enriched_rems.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/construct_enriched_rems.py \\
         --enriched-rems enriched_rems.json \\
         --session-id "topic-slug-2025-11-24" \\
         --title "Session Title" \\

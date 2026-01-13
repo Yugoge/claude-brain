@@ -7,13 +7,13 @@ Handles special characters like parentheses, quotes, and brackets.
 
 Usage:
     # From file
-    python escape-json-args.py < input.json
+    source venv/bin/activate && source venv/bin/activate && python escape-json-args.py < input.json
 
     # From stdin
-    echo '["Text (with parens)"]' | python escape-json-args.py
+    echo '["Text (with parens)"]' | source venv/bin/activate && python escape-json-args.py
 
     # In bash commands
-    --mistakes "$(python escape-json-args.py < mistakes.json)"
+    --mistakes "$(source venv/bin/activate && python escape-json-args.py < mistakes.json)"
 
 Why needed:
     Bash interprets parentheses as subshell operators even in single quotes
@@ -52,7 +52,7 @@ def main():
 
         if not input_data:
             print("Error: No input provided", file=sys.stderr)
-            print("Usage: echo '[]' | python escape-json-args.py", file=sys.stderr)
+            print("Usage: echo '[]' | source venv/bin/activate && python escape-json-args.py", file=sys.stderr)
             sys.exit(1)
 
         # Parse JSON

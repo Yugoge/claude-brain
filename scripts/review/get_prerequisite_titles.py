@@ -6,7 +6,7 @@ Extract prerequisite Rem titles from backlinks index.
 Used for contextual messages during review.
 
 Usage:
-    python scripts/review/get_prerequisite_titles.py <rem-id>
+    source venv/bin/activate && source venv/bin/activate && python scripts/review/get_prerequisite_titles.py <rem-id>
 
 Output: Comma-separated prerequisite titles or empty string
 """

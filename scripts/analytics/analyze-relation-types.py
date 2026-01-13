@@ -6,7 +6,7 @@ Analyzes all relation types used in knowledge base, comparing against
 official standard types. Useful for monitoring type consistency.
 
 Usage:
-    python scripts/analytics/analyze-relation-types.py [--format json|text] [--threshold N]
+    source venv/bin/activate && source venv/bin/activate && python scripts/analytics/analyze-relation-types.py [--format json|text] [--threshold N]
 
 Options:
     --format json|text    Output format (default: text)

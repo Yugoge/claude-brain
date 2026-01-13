@@ -760,16 +760,16 @@ def main():
         epilog="""
 Examples:
   # Generate full analytics
-  python generate-analytics.py
+  source venv/bin/activate && source venv/bin/activate && python generate-analytics.py
 
   # Filter by domain
-  python generate-analytics.py --domain finance
+  source venv/bin/activate && source venv/bin/activate && python generate-analytics.py --domain finance
 
   # Analyze last 7 days
-  python generate-analytics.py --period 7
+  source venv/bin/activate && source venv/bin/activate && python generate-analytics.py --period 7
 
   # Custom output location
-  python generate-analytics.py --output /tmp/analytics.json
+  source venv/bin/activate && source venv/bin/activate && python generate-analytics.py --output /tmp/analytics.json
         """
     )
 

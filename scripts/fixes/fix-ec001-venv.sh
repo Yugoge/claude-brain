@@ -44,7 +44,7 @@ fix_file() {
   local changes=0
 
   # Skip if file already has venv activation in most lines
-  local python_lines=$(grep -c "python3\|python " "$file" 2>/dev/null || echo "0")
+  local python_lines=$(grep -c "python3\|source venv/bin/activate && python " "$file" 2>/dev/null || echo "0")
   local venv_lines=$(grep -c "source.*venv.*activate.*python" "$file" 2>/dev/null || echo "0")
 
   if [ "$python_lines" -eq 0 ]; then
@@ -100,7 +100,7 @@ files_to_fix=$(find "$PROJECT_ROOT" \
   ! -path "*/.git/*" \
   ! -path "*/tests/edge-cases/*" \
   ! -path "*/knowledge-base/*" \
-  -exec grep -l "python3\|python " {} \; 2>/dev/null || echo "")
+  -exec grep -l "python3\|source venv/bin/activate && python " {} \; 2>/dev/null || echo "")
 
 total_files=$(echo "$files_to_fix" | wc -l)
 echo "Found $total_files files to check"

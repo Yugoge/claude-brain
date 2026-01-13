@@ -8,7 +8,7 @@ This script:
 3. Updates document structure to match /save standard format
 
 Usage:
-    python scripts/archival/normalize_conversation.py <file_path> \
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/normalize_conversation.py <file_path> \
         --id "topic-id" \
         --title "Topic Title" \
         --session-type "learn" \

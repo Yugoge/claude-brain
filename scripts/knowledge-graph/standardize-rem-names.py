@@ -3,7 +3,7 @@
 Standardize Rem naming conventions by renaming files and updating all references.
 
 Usage:
-    python3 scripts/standardize-rem-names.py --domain language/french [--dry-run] [--verbose]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/standardize-rem-names.py --domain language/french [--dry-run] [--verbose]
 """
 
 import argparse

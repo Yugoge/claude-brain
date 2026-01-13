@@ -6,14 +6,14 @@ Reads enriched Rems JSON and appends typed relations to the
 "## Related Rems" section of each Rem file.
 
 Usage:
-    python scripts/archival/add_typed_relations.py --enriched-rems <file>
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/add_typed_relations.py --enriched-rems <file>
 
 Examples:
     # Add relations from enriched_rems.json
-    python scripts/archival/add_typed_relations.py --enriched-rems enriched_rems.json
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/add_typed_relations.py --enriched-rems enriched_rems.json
 
     # Dry run (preview changes)
-    python scripts/archival/add_typed_relations.py --enriched-rems enriched_rems.json --dry-run
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/add_typed_relations.py --enriched-rems enriched_rems.json --dry-run
 """
 
 import json

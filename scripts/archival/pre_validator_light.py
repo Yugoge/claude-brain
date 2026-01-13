@@ -11,7 +11,7 @@ Does NOT validate frontmatter fields (subdomain, isced, created, source)
 because those are added during file creation (Step 16.1).
 
 Usage:
-    python scripts/archival/pre_validator_light.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/pre_validator_light.py \\
         --enriched-rems /tmp/enriched_rems_final.json \\
         --domain-path "domain-path"
 

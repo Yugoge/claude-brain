@@ -14,13 +14,13 @@ Features:
 
 Usage:
   # Extract metadata/TOC only
-  python scripts/extract-pdf-chunk.py file.pdf --mode toc
+  source venv/bin/activate && source venv/bin/activate && python scripts/extract-pdf-chunk.py file.pdf --mode toc
 
   # Extract specific pages (TEXT ONLY - fast, no images)
-  python scripts/extract-pdf-chunk.py file.pdf --mode pages --pages 1-10 --text-only
+  source venv/bin/activate && source venv/bin/activate && python scripts/extract-pdf-chunk.py file.pdf --mode pages --pages 1-10 --text-only
 
   # Extract by percentage (VISUAL - includes images, for Claude Read)
-  python scripts/extract-pdf-chunk.py file.pdf --mode percent --percent 0-10
+  source venv/bin/activate && source venv/bin/activate && python scripts/extract-pdf-chunk.py file.pdf --mode percent --percent 0-10
 
   # Text-only mode: ~50 tokens/page vs Visual mode: ~1500 tokens/page
 

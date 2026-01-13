@@ -6,7 +6,7 @@ Validate tutor-suggested relations against knowledge base index.
 Filter out invalid relations (non-existent concepts, invalid types).
 
 Usage:
-    python scripts/archival/validate_relations.py --relations-json '{...}' --domain-path "domain-path"
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/validate_relations.py --relations-json '{...}' --domain-path "domain-path"
 
 Returns:
     JSON with valid_relations and invalid_relations arrays

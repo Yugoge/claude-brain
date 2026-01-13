@@ -15,7 +15,7 @@ Executes:
   - Completion Report Display
 
 Usage:
-    python scripts/archival/save_post_processor.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/save_post_processor.py \\
       --enriched-rems /tmp/enriched_rems.json \\
       --archived-file chats/conversation-2025-11-21.md \\
       --session-type learn

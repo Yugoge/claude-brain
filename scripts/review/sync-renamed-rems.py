@@ -23,7 +23,7 @@ Integration:
     - Always creates backup before modifying
 
 Usage:
-    python3 scripts/review/sync-renamed-rems.py [options]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/sync-renamed-rems.py [options]
 
 Options:
     --dry-run           Preview changes without writing
@@ -32,13 +32,13 @@ Options:
 
 Examples:
     # Check for mismatches (dry-run)
-    python3 scripts/review/sync-renamed-rems.py --dry-run
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/sync-renamed-rems.py --dry-run
 
     # Execute sync (interactive)
-    python3 scripts/review/sync-renamed-rems.py
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/sync-renamed-rems.py
 
     # Auto-confirm sync
-    python3 scripts/review/sync-renamed-rems.py --yes
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/sync-renamed-rems.py --yes
 
 Git Context:
     Root cause commit: adfc1c1 (2025-11-10)

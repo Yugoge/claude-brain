@@ -3,7 +3,7 @@
 Helper script for review-master agent to update FSRS schedule after each review.
 
 Usage:
-    python scripts/review/update_review.py <concept_id> <rating>
+    source venv/bin/activate && source venv/bin/activate && python scripts/review/update_review.py <concept_id> <rating>
 
 Arguments:
     concept_id: Rem ID

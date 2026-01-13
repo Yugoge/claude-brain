@@ -9,7 +9,7 @@ Tests all components:
 - Integration with analytics
 
 Usage:
-    python scripts/test_insights_system.py
+    source venv/bin/activate && source venv/bin/activate && python scripts/test_insights_system.py
 """
 
 import json

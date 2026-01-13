@@ -5,10 +5,10 @@ Get Next Sequential Number for Rem Files
 Returns the next available sequential number (NNN) for a new Rem file in a directory.
 
 Usage:
-    python scripts/utilities/get-next-number.py --directory <path>
+    source venv/bin/activate && source venv/bin/activate && python scripts/utilities/get-next-number.py --directory <path>
 
 Example:
-    python scripts/utilities/get-next-number.py \
+    source venv/bin/activate && source venv/bin/activate && python scripts/utilities/get-next-number.py \
         --directory knowledge-base/02-arts-and-humanities/023-languages/0231-language-acquisition
 
 Output:

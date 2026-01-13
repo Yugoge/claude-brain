@@ -4,7 +4,7 @@ Materialize two-hop inferred links (A→B→C ⇒ A⇒C) into concept markdown f
 under the "Related Concepts" section as typed relations with rel: inferred.
 
 Usage:
-    python3 scripts/materialize-inferred-links.py [--dry-run] [--verbose]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/materialize-inferred-links.py [--dry-run] [--verbose]
 
 Notes:
     - Requires up-to-date knowledge-base/_index/backlinks.json

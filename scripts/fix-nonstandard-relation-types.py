@@ -6,7 +6,7 @@ Batch correction of existing non-standard relation types in knowledge base.
 Corrections are based on semantic equivalence to standard types.
 
 Usage:
-    python scripts/fix-nonstandard-relation-types.py [--dry-run] [--report]
+    source venv/bin/activate && source venv/bin/activate && python scripts/fix-nonstandard-relation-types.py [--dry-run] [--report]
 
 Options:
     --dry-run    Preview changes without writing to files

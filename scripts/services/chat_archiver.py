@@ -165,10 +165,10 @@ VALIDATION:
 
 Usage:
     # Called by /save command (extracts most recent conversation)
-    python scripts/services/chat_archiver.py
+    source venv/bin/activate && source venv/bin/activate && python scripts/services/chat_archiver.py
 
     # Manual extraction of specific session
-    python scripts/services/chat_archiver.py --session-id <UUID>
+    source venv/bin/activate && source venv/bin/activate && python scripts/services/chat_archiver.py --session-id <UUID>
 """
 
 import json

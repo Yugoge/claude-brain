@@ -4,7 +4,7 @@ Pre-flight Checker for /save Step 5.5
 Validates Step 3.5 execution before file creation.
 
 Usage:
-    python scripts/archival/preflight_checker.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/preflight_checker.py \\
         --enriched-rems enriched_rems.json \\
         --domain programming
 

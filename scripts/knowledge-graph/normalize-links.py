@@ -5,7 +5,7 @@ Markdown file links. Supports preserving typed relation suffixes like
 "[[id]] {rel: synonym}" by emitting "[Title](path) {rel: synonym}".
 
 Usage:
-    python3 scripts/normalize-links.py [--mode replace|annotate] [--dry-run] [--verbose]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/normalize-links.py [--mode replace|annotate] [--dry-run] [--verbose]
 
 Modes:
     replace  - Replace [[id]] with [Title](relative/path.md) (default)

@@ -11,7 +11,7 @@ Unified validation before creating Rem files. Checks:
 6. Source conversation file existence
 
 Usage:
-    python scripts/archival/pre_creation_validator.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/pre_creation_validator.py \\
         --concepts-json '{"concepts": [...]}' \\
         --domain-path "NNNN-domain-slug" \\
         --source-file "chats/YYYY-MM/conversation.md"

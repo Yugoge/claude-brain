@@ -4,9 +4,9 @@ Rem Format Checker - Fast validation of Rem frontmatter
 Checks format compliance without reading full file content
 
 Usage:
-    python scripts/check_rem_formats.py                    # Check all Rems
-    python scripts/check_rem_formats.py <file.md>          # Check specific file
-    python scripts/check_rem_formats.py --verbose          # Detailed output
+    source venv/bin/activate && source venv/bin/activate && python scripts/check_rem_formats.py                    # Check all Rems
+    source venv/bin/activate && source venv/bin/activate && python scripts/check_rem_formats.py <file.md>          # Check specific file
+    source venv/bin/activate && source venv/bin/activate && python scripts/check_rem_formats.py --verbose          # Detailed output
 """
 
 import sys

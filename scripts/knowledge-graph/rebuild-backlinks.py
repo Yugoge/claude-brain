@@ -6,7 +6,7 @@ Scans all Rems in knowledge-base/ and rebuilds bidirectional link index.
 Parses [[wikilink]] patterns and frontmatter to create comprehensive link graph.
 
 Usage:
-    python3 scripts/rebuild-backlinks.py [options]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/rebuild-backlinks.py [options]
 
 Options:
     --dry-run           Preview changes without writing
@@ -18,16 +18,16 @@ Options:
 
 Examples:
     # Standard rebuild with backup
-    python3 scripts/rebuild-backlinks.py
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/rebuild-backlinks.py
 
     # Preview without writing
-    python3 scripts/rebuild-backlinks.py --dry-run
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/rebuild-backlinks.py --dry-run
 
     # Verbose output for debugging
-    python3 scripts/rebuild-backlinks.py --verbose
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/rebuild-backlinks.py --verbose
 
     # Custom backup location
-    python3 scripts/rebuild-backlinks.py --backup-dir /backups
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/rebuild-backlinks.py --backup-dir /backups
 """
 
 import json

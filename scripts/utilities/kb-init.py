@@ -13,7 +13,7 @@ capabilities for the knowledge system, including:
 - Comprehensive reporting
 
 Usage:
-    python3 scripts/kb-init.py [options]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py [options]
     /kb-init [options]
 
 Options:
@@ -954,11 +954,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python3 scripts/kb-init.py                    # Interactive mode
-  python3 scripts/kb-init.py --dry-run          # Preview without changes
-  python3 scripts/kb-init.py --non-interactive  # Auto-repair mode
-  python3 scripts/kb-init.py --repair-all       # Repair all issues
-  python3 scripts/kb-init.py --verbose          # Detailed output
+  source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py                    # Interactive mode
+  source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py --dry-run          # Preview without changes
+  source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py --non-interactive  # Auto-repair mode
+  source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py --repair-all       # Repair all issues
+  source venv/bin/activate && source venv/bin/activate && python3 scripts/kb-init.py --verbose          # Detailed output
         """
     )
 

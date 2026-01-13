@@ -6,7 +6,7 @@ This script creates a complete Rem file following the ultra-minimal template (10
 with all required sections including Conversation Source bidirectional link.
 
 Usage:
-    python create-rem-file.py \\
+    source venv/bin/activate && source venv/bin/activate && python create-rem-file.py \\
         --rem-id "concept-slug" \\
         --title "Concept Title" \\
         --isced "NN-broad/NNN-narrow/NNNN-detailed" \\

@@ -661,7 +661,7 @@ Next: /review
 
 **DO**: Analyze conversation directly, extract from ACTUAL content, use ultra-minimal template (100-120 tokens/Rem), show previews, wait for approval, run post-processing, use kebab-case filenames, respect user instructions.
 
-**DON'T**: Use `python -c`/heredocs (use scripts), invoke conversation-archiver subagent, hallucinate, create without approval, skip previews, extract wrong amounts (3-7 typical), skip post-processing, archive trivial/duplicate conversations.
+**DON'T**: Use `source venv/bin/activate && python -c`/heredocs (use scripts), invoke conversation-archiver subagent, hallucinate, create without approval, skip previews, extract wrong amounts (3-7 typical), skip post-processing, archive trivial/duplicate conversations.
 
 ## Success Criteria
 

@@ -732,7 +732,7 @@ Would you like to do a focused review session on these?
   - **Multiple Choice**: Recognition, initial concept discrimination
   - **Short Answer**: Conceptual understanding (default for theoretical content)
 - **Format changes during review journey**: First review uses content-appropriate format (formulas→Cloze, vocab→Cloze, calculations→Problem-Solving), later reviews may switch for variety
-- **Clustering Debug Tool**: Run `python scripts/review/debug_clustering.py` to visualize how Rems are clustered by typed relations (shows associative learning effectiveness)
+- **Clustering Debug Tool**: Run `source venv/bin/activate && python scripts/review/debug_clustering.py` to visualize how Rems are clustered by typed relations (shows associative learning effectiveness)
 - Review-master agent uses `scripts/review/review_scheduler.py` (ReviewScheduler class)
 - Import pattern: `sys.path.append('scripts/review')` then `from review_scheduler import ReviewScheduler`
 - Call `scheduler.schedule_review(concept, rating)` after each review

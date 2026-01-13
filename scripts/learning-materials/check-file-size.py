@@ -9,8 +9,8 @@ for handling large files to avoid API 413 errors.
 NEW: Content-type detection for PDFs to distinguish image-heavy vs text-heavy.
 
 Usage:
-  python scripts/check-file-size.py <file-path> [--threshold-mb 5]
-  python scripts/check-file-size.py <file-path> --analyze-content
+  source venv/bin/activate && source venv/bin/activate && python scripts/check-file-size.py <file-path> [--threshold-mb 5]
+  source venv/bin/activate && source venv/bin/activate && python scripts/check-file-size.py <file-path> --analyze-content
 
 Exit codes:
   0 - File is safe to read fully

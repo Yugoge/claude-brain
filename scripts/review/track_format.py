@@ -6,7 +6,7 @@ Append question format to session history for diversity tracking.
 Root cause fix: commit 3ed6b6f - stateless architecture requires external state
 
 Usage:
-    python scripts/review/track_format.py <format>
+    source venv/bin/activate && source venv/bin/activate && python scripts/review/track_format.py <format>
 
     format: short-answer | multiple-choice | cloze | problem-solving
 

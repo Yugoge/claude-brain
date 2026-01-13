@@ -6,8 +6,8 @@ Load typed relations from backlinks index for a specific Rem.
 Prioritize relations by pedagogical value.
 
 Usage:
-    python scripts/review/get_linked_rems.py <rem-id>
-    python scripts/review/get_linked_rems.py <rem-id> --priority prerequisites
+    source venv/bin/activate && source venv/bin/activate && python scripts/review/get_linked_rems.py <rem-id>
+    source venv/bin/activate && source venv/bin/activate && python scripts/review/get_linked_rems.py <rem-id> --priority prerequisites
 
 Output: JSON with linked Rems sorted by priority
 """

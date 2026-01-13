@@ -81,14 +81,14 @@ knowledge-system/
 ## Script Usage Requirements
 
 **MANDATORY**: You MUST use existing scripts for ALL operations.
-**FORBIDDEN**: NEVER write inline Python code using `python3 -c "..."` or heredocs.
+**FORBIDDEN**: NEVER write inline Python code using `source venv/bin/activate && python3 -c "..."` or heredocs.
 
 **All functionality is already implemented in scripts**:
 - ✅ ALWAYS use scripts from `scripts/` directory
 - ✅ ALWAYS import properly: `sys.path.append('scripts')`
 - ❌ NEVER write inline Python calculations
 - ❌ NEVER create temporary Python files
-- ❌ NEVER use `python3 -c` for logic
+- ❌ NEVER use `source venv/bin/activate && python3 -c` for logic
 
 **Violation of this rule is considered a CRITICAL ERROR.**
 

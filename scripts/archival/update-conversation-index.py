@@ -5,7 +5,7 @@ Conversation Index Auto-Updater
 Automatically adds new conversation to chats/index.json and updates metadata.
 
 Usage:
-    python scripts/archival/update-conversation-index.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/update-conversation-index.py \\
         --id "conversation-id" \\
         --title "Conversation Title" \\
         --date "2025-11-07" \\

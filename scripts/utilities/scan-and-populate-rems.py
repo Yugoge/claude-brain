@@ -8,7 +8,7 @@ and adds them to .review/schedule.json with initial FSRS state.
 This script addresses Phase 3 requirement: Review ALL Rems, not just concepts/.
 
 Usage:
-    python3 scripts/scan-and-populate-rems.py [options]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/scan-and-populate-rems.py [options]
 
 Options:
     --domain DOMAIN       Only add Rems from specific domain
@@ -20,16 +20,16 @@ Options:
 
 Examples:
     # Add all Rems using FSRS
-    python3 scripts/scan-and-populate-rems.py
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/scan-and-populate-rems.py
 
     # Preview only
-    python3 scripts/scan-and-populate-rems.py --dry-run
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/scan-and-populate-rems.py --dry-run
 
     # Add only finance Rems
-    python3 scripts/scan-and-populate-rems.py --domain finance
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/scan-and-populate-rems.py --domain finance
 
     # Force re-add all Rems
-    python3 scripts/scan-and-populate-rems.py --force
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/scan-and-populate-rems.py --force
 """
 
 import json

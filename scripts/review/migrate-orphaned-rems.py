@@ -19,7 +19,7 @@ Solution:
     5. Create backup before modifying
 
 Usage:
-    python3 scripts/review/migrate-orphaned-rems.py [options]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/migrate-orphaned-rems.py [options]
 
 Options:
     --dry-run           Preview changes without writing
@@ -29,13 +29,13 @@ Options:
 
 Examples:
     # Preview migration
-    python3 scripts/review/migrate-orphaned-rems.py --dry-run
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/migrate-orphaned-rems.py --dry-run
 
     # Execute migration (interactive)
-    python3 scripts/review/migrate-orphaned-rems.py
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/migrate-orphaned-rems.py
 
     # Auto-confirm migration
-    python3 scripts/review/migrate-orphaned-rems.py --yes
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/migrate-orphaned-rems.py --yes
 
 Git Context:
     Root cause commit: adfc1c1 (2025-11-10)

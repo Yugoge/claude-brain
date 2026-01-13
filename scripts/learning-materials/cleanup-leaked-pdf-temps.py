@@ -13,9 +13,9 @@ Safety Features:
 - Reports all actions taken
 
 Usage:
-    python3 cleanup-leaked-pdf-temps.py              # Interactive
-    python3 cleanup-leaked-pdf-temps.py --force      # No confirmation
-    python3 cleanup-leaked-pdf-temps.py --dry-run    # Show only, don't delete
+    source venv/bin/activate && source venv/bin/activate && python3 cleanup-leaked-pdf-temps.py              # Interactive
+    source venv/bin/activate && source venv/bin/activate && python3 cleanup-leaked-pdf-temps.py --force      # No confirmation
+    source venv/bin/activate && source venv/bin/activate && python3 cleanup-leaked-pdf-temps.py --dry-run    # Show only, don't delete
 """
 
 import os

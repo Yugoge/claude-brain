@@ -20,7 +20,7 @@ Enforcement Gates:
   - Token limit: Blocks if >150k tokens
 
 Usage:
-    python scripts/archival/save_orchestrator.py [topic-name | --all]
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/save_orchestrator.py [topic-name | --all]
 
 Output:
     - Filtered archived conversation (chats/YYYY-MM/conversation-YYYY-MM-DD.md)

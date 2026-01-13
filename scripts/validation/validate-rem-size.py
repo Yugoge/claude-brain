@@ -8,7 +8,7 @@ Checks that all Rems comply with Story 1.10 minimal format standards:
 - Reports violations and provides remediation guidance
 
 Usage:
-    python3 scripts/validate-rem-size.py [path]
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/validate-rem-size.py [path]
 
     If no path provided, scans entire knowledge-base/ directory
 """

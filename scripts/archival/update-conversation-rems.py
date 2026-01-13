@@ -10,10 +10,10 @@ The "## Rems Extracted" section is placed at the TOP of the conversation,
 right after the title and metadata, making it immediately visible without scrolling.
 
 Usage:
-    python update-conversation-rems.py <conversation_file> <rem_file_1> [rem_file_2 ...]
+    source venv/bin/activate && source venv/bin/activate && python update-conversation-rems.py <conversation_file> <rem_file_1> [rem_file_2 ...]
 
 Example:
-    python update-conversation-rems.py \
+    source venv/bin/activate && source venv/bin/activate && python update-conversation-rems.py \
         chats/2025-11/conversation.md \
         knowledge-base/04-business.../001-concept.md \
         knowledge-base/04-business.../002-concept.md

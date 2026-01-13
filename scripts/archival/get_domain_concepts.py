@@ -5,7 +5,7 @@ Get Domain Concepts from Backlinks Index
 Extract all concepts in a specific ISCED domain for KB context injection.
 
 Usage:
-    python scripts/archival/get_domain_concepts.py --domain-path "domain-path"
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/get_domain_concepts.py --domain-path "domain-path"
 
 Returns JSON array of concepts for tutor consultation context.
 """

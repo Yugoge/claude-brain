@@ -3,8 +3,8 @@
 Generate standalone analytics dashboard HTML file with embedded data
 
 Usage:
-    python scripts/analytics/generate-dashboard-html.py
-    python scripts/analytics/generate-dashboard-html.py --output custom-dashboard.html
+    source venv/bin/activate && source venv/bin/activate && python scripts/analytics/generate-dashboard-html.py
+    source venv/bin/activate && source venv/bin/activate && python scripts/analytics/generate-dashboard-html.py --output custom-dashboard.html
 """
 
 import json

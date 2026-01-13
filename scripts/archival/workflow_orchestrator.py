@@ -4,7 +4,7 @@ Workflow Orchestrator for /save Step 3.5
 Enforces Domain Tutor Enrichment execution.
 
 Usage:
-    python scripts/archival/workflow_orchestrator.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/workflow_orchestrator.py \\
         --domain programming \\
         --isced-path "06.../0611-computer-use" \\
         --candidate-rems candidate_rems.json

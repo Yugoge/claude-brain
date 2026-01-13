@@ -36,7 +36,7 @@ cd knowledge-system
 
 2. **Set up Python environment**:
 ```bash
-python3 -m venv venv
+source venv/bin/activate && source venv/bin/activate && python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
@@ -311,17 +311,17 @@ Most maintenance is automated via hooks. For manual operations:
 
 ```bash
 # Rebuild bidirectional links with typed relations
-python3 scripts/knowledge-graph/rebuild-backlinks.py
+source venv/bin/activate && source venv/bin/activate && python3 scripts/knowledge-graph/rebuild-backlinks.py
 
 # Convert [[wikilinks]] to clickable file links
-python3 scripts/knowledge-graph/normalize-links.py --mode replace
+source venv/bin/activate && source venv/bin/activate && python3 scripts/knowledge-graph/normalize-links.py --mode replace
 
 # Add typed relation between concepts (with auto-reciprocal)
-python3 scripts/knowledge-graph/add-relation.py \
+source venv/bin/activate && source venv/bin/activate && python3 scripts/knowledge-graph/add-relation.py \
   --from call-option --to put-option --type antonym
 
 # Materialize two-hop inferred links (preview first!)
-python3 scripts/knowledge-graph/materialize-inferred-links.py --dry-run
+source venv/bin/activate && source venv/bin/activate && python3 scripts/knowledge-graph/materialize-inferred-links.py --dry-run
 ```
 
 All scripts support:
@@ -380,7 +380,7 @@ The system automatically handles large files using smart chunking:
 - Continue with `/learn` command to resume
 
 ### "Broken links detected"
-- Run `python3 scripts/knowledge-graph/rebuild-backlinks.py`
+- Run `source venv/bin/activate && python3 scripts/knowledge-graph/rebuild-backlinks.py`
 - Check `knowledge-base/_index/backlinks.json`
 
 ### "No concepts due for review"

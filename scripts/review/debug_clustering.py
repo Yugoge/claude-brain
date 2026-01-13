@@ -6,9 +6,9 @@ Analyzes how Rems are clustered in review sessions using the
 graph clustering algorithm from review_loader.py.
 
 Usage:
-    python3 scripts/review/debug_clustering.py              # Today's due Rems
-    python3 scripts/review/debug_clustering.py --date 2025-11-22  # Specific date
-    python3 scripts/review/debug_clustering.py --all        # All Rems (ignores schedule)
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/debug_clustering.py              # Today's due Rems
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/debug_clustering.py --date 2025-11-22  # Specific date
+    source venv/bin/activate && source venv/bin/activate && python3 scripts/review/debug_clustering.py --all        # All Rems (ignores schedule)
 
 Output:
     - Cluster visualization with typed relations

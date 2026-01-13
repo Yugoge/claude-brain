@@ -8,9 +8,9 @@ knowledge graph visualizations to GitHub Pages.
 It's called by deploy-to-github.sh for operations that are easier in Python.
 
 Usage:
-    python scripts/github/deploy_pages.py check-repo <username> <repo>
-    python scripts/github/deploy_pages.py create-repo <username> <repo>
-    python scripts/github/deploy_pages.py enable-pages <username> <repo>
+    source venv/bin/activate && source venv/bin/activate && python scripts/github/deploy_pages.py check-repo <username> <repo>
+    source venv/bin/activate && source venv/bin/activate && python scripts/github/deploy_pages.py create-repo <username> <repo>
+    source venv/bin/activate && source venv/bin/activate && python scripts/github/deploy_pages.py enable-pages <username> <repo>
 """
 
 import os

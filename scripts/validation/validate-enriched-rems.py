@@ -3,7 +3,7 @@
 Validate enriched_rems.json before passing to save_post_processor.py
 
 Usage:
-    python scripts/validation/validate-enriched-rems.py <enriched_rems.json>
+    source venv/bin/activate && source venv/bin/activate && python scripts/validation/validate-enriched-rems.py <enriched_rems.json>
 
 Exit codes:
     0 = Valid

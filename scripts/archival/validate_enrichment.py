@@ -6,7 +6,7 @@ Validates that domain tutor enrichment was properly executed
 for domains where it's mandatory.
 
 Usage:
-    python scripts/archival/validate_enrichment.py \\
+    source venv/bin/activate && source venv/bin/activate && python scripts/archival/validate_enrichment.py \\
         --enriched-rems enriched_rems.json \\
         --domain finance
 
