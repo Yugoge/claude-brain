@@ -162,7 +162,12 @@ The main agent will provide:
 **Step 1: Read Context Files**
 
 1. **Read the Rem file** (use path from `rem_data.path`)
-2. **Read conversation file** (if `rem_data.conversation_source` provided)
+2. **Read conversation file with fallback** (if `rem_data.conversation_source` provided)
+   - **Primary method**: Use Read tool to read full conversation
+   - **Fallback (if Read fails due to line limit)**: Use search-based extraction
+     - Run: `source venv/bin/activate && python scripts/review/extract_conversation_context.py <conversation_path>`
+     - Script returns JSON with: user_questions, key_topics, summary
+     - Use extracted context for question generation (still provides valuable learning context)
    - Conversation provides original learning context
    - Helps generate contextually-aware questions
    - Critical for explanation mode (understand user's original learning journey)
@@ -376,12 +381,13 @@ Use MCP memory tools to check for previous struggles:
 ## Important Rules
 
 1. **ALWAYS read Rem file first** - Never guess from title
-2. **Return ONLY JSON** - No conversational text
-3. **Keep consultations brief** - ~250 tokens max
-4. **Base questions on actual Rem content** - Not general knowledge
-5. **Provide clear assessment criteria** - Help main agent grade accurately
-6. **Adapt to FSRS difficulty** - Adjust question complexity
-7. **One primary question** - Not a lecture
+2. **Try Read first, fallback to search** - For conversation files >2000 lines, use extraction script
+3. **Return ONLY JSON** - No conversational text
+4. **Keep consultations brief** - ~250 tokens max
+5. **Base questions on actual Rem content** - Not general knowledge
+6. **Provide clear assessment criteria** - Help main agent grade accurately
+7. **Adapt to FSRS difficulty** - Adjust question complexity
+8. **One primary question** - Not a lecture
 
 ---
 
@@ -404,3 +410,19 @@ Use MCP memory tools to check for previous struggles:
 - `docs/architecture/agent-classification.md` - Consultant agent pattern
 - `/review` command - Your client (main agent)
 - Finance-tutor agent - Reference implementation for JSON consultations
+
+---
+
+## Conversation File Reading Strategy (Root Cause Fix)
+
+**Root Cause** (commit c11f968): Conversation source feature added without fallback for large files. Read tool has 2000 line limit, but real-world conversations often exceed this (e.g., 2605 lines, 82KB).
+
+**Solution**: Two-tier reading strategy
+1. **Try Read first** - Works for most conversations (<2000 lines)
+2. **Fallback to search-based extraction** - When Read fails:
+   - Use `scripts/review/extract_conversation_context.py`
+   - Extracts: user questions, key topics, summary
+   - Fast (<3 seconds for 82KB files)
+   - Maintains review question quality without full conversation
+
+**Why this works**: Review questions only need learning context (what user asked, key topics discussed), not full conversation transcript. Search-based extraction provides sufficient context for quality question generation.
