@@ -165,7 +165,7 @@ The main agent will provide:
 2. **Read conversation file with fallback** (if `rem_data.conversation_source` provided)
    - **Primary method**: Use Read tool to read full conversation
    - **Fallback (if Read fails due to line limit)**: Use search-based extraction
-     - Run: `source venv/bin/activate && python scripts/review/extract_conversation_context.py <conversation_path>`
+     - Run: `source ~/.claude/venv/bin/activate && python3 scripts/review/extract_conversation_context.py <conversation_path>`
      - Script returns JSON with: user_questions, key_topics, summary
      - Use extracted context for question generation (still provides valuable learning context)
    - Conversation provides original learning context
@@ -243,6 +243,77 @@ When user is confused and needs help:
 2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), 1 correct + 3 distractors
 3. **Cloze Deletion** (8/10 effectiveness) - Fill-in-blank for formulas/terms, use {blank} markers
 4. **Problem-Solving** (8.5/10 effectiveness) - Application tasks (calculations/coding/translations)
+
+### High-Distractor Design Principles (Multiple Choice Format)
+
+**Root Cause** (commit 3ed6b6f): Question diversity enhanced without distractor quality guidelines, resulting in too-easy questions.
+
+**CRITICAL**: Distractors must require deep understanding to eliminate, not superficial pattern matching.
+
+**Principle 1: Plausible Confusion**
+- Use common misconceptions from the domain (e.g., confusing call/put payoffs, pre/post-expiry behavior)
+- Reference related-but-different concepts (e.g., theta vs gamma when testing delta)
+- Include technically correct statements that answer a different question
+- **Bad**: "The moon is made of cheese" (obviously wrong)
+- **Good**: "Pre-expiry projection uses constant time value" (plausible misconception about theta decay)
+
+**Principle 2: Semantic Similarity**
+- Distractors should use domain terminology correctly
+- Maintain grammatical consistency with the stem
+- Match the complexity level of the correct answer
+- **Bad**: Random jargon or nonsense phrases
+- **Good**: "Intrinsic value remains constant during time projection" (uses correct terms, wrong concept)
+
+**Principle 3: Conceptual Depth Required**
+- Eliminating distractors requires understanding WHY they're wrong, not just recognizing keywords
+- Test understanding of causal relationships, not memorized facts
+- Force distinction between similar concepts (e.g., pre-expiry decay vs post-expiry transformation)
+- **Bad**: Distractors use completely different terminology from Rem content
+- **Good**: Distractors test boundaries between related concepts (e.g., what changes before vs after expiry)
+
+**Principle 4: No Obvious Outliers**
+- All options should be similar in length and structure
+- Avoid absolutes in distractors that signal wrongness ("always", "never", "impossible")
+- Avoid giveaway patterns (e.g., "all of the above", "none of the above")
+- **Bad**: Three short options + one paragraph-length option
+- **Good**: All options similar length, similar structure, similar specificity
+
+**Principle 5: Domain-Appropriate Difficulty**
+- For finance/medicine/law: Use case-based scenarios requiring application
+- For programming: Use code snippets with subtle bugs or logic errors
+- For language: Use contextually similar words/phrases with different meanings
+- Match distractor sophistication to FSRS difficulty score (harder concepts need subtler distractors)
+
+**Validation Checklist**:
+- [ ] Can a user eliminate distractors without understanding the core concept?
+- [ ] Do distractors test common misconceptions documented in Rem content?
+- [ ] Would an expert need to think carefully to distinguish correct answer?
+- [ ] Are all options plausible to someone with partial understanding?
+- [ ] Do distractors avoid obvious grammatical/structural giveaways?
+
+**Example Structure** (Format demonstration - NOT domain-specific content):
+
+**Poor MCQ Structure**:
+```
+Q: [Generic question about Rem topic]?
+A) [Correct answer from Rem Core Memory Points] ✓
+B) [Completely unrelated nonsense]
+C) [Obviously wrong statement]
+D) [Another obvious outlier]
+```
+**Issues**: B/C/D use different terminology, obviously wrong, no plausible confusion
+
+**High-Quality MCQ Structure**:
+```
+Q: [Specific scenario requiring application of Rem concept]?
+A) [Correct answer with domain terminology] ✓
+B) [Plausible misconception using same terminology]
+C) [Technically correct but answering different question]
+D) [Common confusion between related concepts]
+```
+**Why**: All options use domain terminology, require conceptual understanding to distinguish, test boundaries between related ideas
+
+**Application**: Read Rem file → extract Core Memory Points → generate domain-appropriate distractors following principles 1-5 above
 
 **Selection Guidelines**:
 

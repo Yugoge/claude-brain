@@ -473,6 +473,20 @@ END EXPLANATION_LOOP
 
 #### 9. Provide Feedback and Ask for Self-Rating
 
+**⚠️ CRITICAL - Hints Display Logic** (Root Cause Fix: commit 3ed6b6f):
+
+**NEVER show hints_if_struggling in correct-answer feedback**:
+- Hints are ONLY for struggling users (Quality 1-2)
+- Showing hints after correct answers reduces difficulty artificially
+- User complained: "你给我提示了哥" (You gave me hints, bro)
+
+**Hints Display Rules**:
+1. **User answered CORRECTLY** (Quality 3-4) → NO hints displayed, proceed directly to rating
+2. **User answered INCORRECTLY or struggling** (Quality 1-2) → Show hints progressively
+3. **User explicitly requests help** → Show hints regardless of answer quality
+
+---
+
 **[OPTIONAL] Deep Dive Consultation**
 
 If user asks deep question (trigger signals):
@@ -539,9 +553,11 @@ Use Task tool:
 
 **If response is strong** (Quality 3-4):
 ```
-{Positive feedback}
+{Positive feedback acknowledging correct answer}
 
 {Rating request in appropriate language - see below}
+
+⚠️ CRITICAL: DO NOT include hints_if_struggling here - user answered correctly
 ```
 
 **Rating Request** (compose in appropriate language):
@@ -575,9 +591,11 @@ Compose the rating question and option labels yourself using natural phrasing fo
 
 {Provide first hint from hints_if_struggling array}
 
-[If still struggling, provide additional hints]
+[If still struggling, provide additional hints progressively from hints_if_struggling]
 
 {Rating request in appropriate language - use same format as above}
+
+✅ Hints are appropriate here - user is struggling (Quality 1-2)
 ```
 
 **User Self-Rating**: User provides rating (1-4)
