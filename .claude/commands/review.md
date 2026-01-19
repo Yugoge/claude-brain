@@ -166,6 +166,15 @@ Load session tracking from run_review.py JSON output:
 
 **Rationale**: Prevents main agent from seeing Rem content and bypassing expert consultation ("feeling smart" and skipping review-master).
 
+**Expected Tool Usage Pattern** (Root Cause Fix: commit 9f5bd86):
+
+Review-master MUST demonstrate file reading via tool logs:
+1. **Read tool call on Rem file** - Always required, no exceptions
+2. **Read tool call on conversation file** - Required when conversation_source is not null
+3. **Fallback to extract_conversation_context.py** - If Read fails due to line limit (>2000 lines)
+
+**Validation**: Check tool logs after consultation. If review-master did not read files, consultation is invalid.
+
 **Fallback strategy**:
 - If review-master unavailable → Ask direct recall question: "What do you remember about the concept at {path}?"
 - If JSON invalid → Use minimal guidance (ask for free recall, no hints)

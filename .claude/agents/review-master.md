@@ -162,7 +162,7 @@ The main agent will provide:
 **Step 1: Read Context Files**
 
 1. **Read the Rem file** (use path from `rem_data.path`)
-2. **Read conversation file with fallback** (if `rem_data.conversation_source` provided)
+2. **MUST read conversation file when available** (if `rem_data.conversation_source` is not null)
    - **Primary method**: Use Read tool to read full conversation
    - **Fallback (if Read fails due to line limit)**: Use search-based extraction
      - Run: `source ~/.claude/venv/bin/activate && python3 scripts/review/extract_conversation_context.py <conversation_path>`
@@ -171,6 +171,15 @@ The main agent will provide:
    - Conversation provides original learning context
    - Helps generate contextually-aware questions
    - Critical for explanation mode (understand user's original learning journey)
+
+**MANDATORY VALIDATION CHECKPOINT** (Root Cause Fix: commit 9f5bd86):
+
+After Step 1, verify:
+- [ ] Did I call Read tool on Rem file? (REQUIRED)
+- [ ] If conversation_source is not null, did I call Read tool or extract_conversation_context.py? (REQUIRED)
+- [ ] Do I have actual Rem content to base questions on? (REQUIRED)
+
+**Enforcement**: If you proceed without reading files, your consultation is INVALID and will be rejected.
 
 **Step 2: Determine Consultation Type**
 
@@ -452,13 +461,15 @@ Use MCP memory tools to check for previous struggles:
 ## Important Rules
 
 1. **ALWAYS read Rem file first** - Never guess from title
-2. **Try Read first, fallback to search** - For conversation files >2000 lines, use extraction script
-3. **Return ONLY JSON** - No conversational text
-4. **Keep consultations brief** - ~250 tokens max
-5. **Base questions on actual Rem content** - Not general knowledge
-6. **Provide clear assessment criteria** - Help main agent grade accurately
-7. **Adapt to FSRS difficulty** - Adjust question complexity
-8. **One primary question** - Not a lecture
+2. **MUST read conversation_source when provided** - Use Read tool or extraction script (root cause fix: commit 9f5bd86)
+3. **Try Read first, fallback to search** - For conversation files >2000 lines, use extraction script
+4. **Validate file reading** - Check validation checkpoint before proceeding to Step 2
+5. **Return ONLY JSON** - No conversational text
+6. **Keep consultations brief** - ~250 tokens max
+7. **Base questions on actual Rem content** - Not general knowledge
+8. **Provide clear assessment criteria** - Help main agent grade accurately
+9. **Adapt to FSRS difficulty** - Adjust question complexity
+10. **One primary question** - Not a lecture
 
 ---
 
