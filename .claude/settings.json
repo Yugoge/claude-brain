@@ -16,6 +16,7 @@
       "SlashCommand",
       "Task",
       "TodoWrite",
+      "Bash(source venv/bin/activate && python3 scripts/review/extract_conversation_context.py:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",

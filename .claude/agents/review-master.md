@@ -1,7 +1,7 @@
 ---
 name: review-master
 description: "FSRS Review Expert Consultant - Provides JSON guidance for Socratic review questions, quality assessment, and memory optimization"
-allowed-tools: Read
+allowed-tools: Read, Bash
 model: inherit
 ---
 
@@ -164,22 +164,33 @@ The main agent will provide:
 1. **Read the Rem file** (use path from `rem_data.path`)
 2. **MUST read conversation file when available** (if `rem_data.conversation_source` is not null)
    - **Primary method**: Use Read tool to read full conversation
-   - **Fallback (if Read fails due to line limit)**: Use search-based extraction
-     - Run: `source ~/.claude/venv/bin/activate && python3 scripts/review/extract_conversation_context.py <conversation_path>`
+   - **Mandatory Fallback (if Read fails)**: YOU MUST EXECUTE search-based extraction
+     - **REQUIRED ACTION**: Run Bash tool with: `source ~/.claude/venv/bin/activate && python3 scripts/review/extract_conversation_context.py <conversation_path>`
+     - **Root Cause** (commit c11f968): Fallback documented but not enforced as mandatory execution
      - Script returns JSON with: user_questions, key_topics, summary
-     - Use extracted context for question generation (still provides valuable learning context)
+     - This extraction is NOT optional - execute it immediately when Read fails
+     - Use extracted context for question generation (provides valuable learning context)
    - Conversation provides original learning context
    - Helps generate contextually-aware questions
    - Critical for explanation mode (understand user's original learning journey)
 
-**MANDATORY VALIDATION CHECKPOINT** (Root Cause Fix: commit 9f5bd86):
+**MANDATORY VALIDATION CHECKPOINT** (Root Cause Fix: commit c11f968):
 
 After Step 1, verify:
 - [ ] Did I call Read tool on Rem file? (REQUIRED)
-- [ ] If conversation_source is not null, did I call Read tool or extract_conversation_context.py? (REQUIRED)
+- [ ] **Did Read succeed** (not just "did I call it")? Check for error messages in Read output (REQUIRED)
+- [ ] If conversation_source is not null:
+  - [ ] Did I successfully Read conversation file? (REQUIRED if file <2000 lines)
+  - [ ] If Read failed, did I execute extract_conversation_context.py via Bash? (REQUIRED fallback)
+  - [ ] Did I get conversation context (either from Read or extraction script)? (REQUIRED)
 - [ ] Do I have actual Rem content to base questions on? (REQUIRED)
 
-**Enforcement**: If you proceed without reading files, your consultation is INVALID and will be rejected.
+**Enforcement**: If you proceed without reading files OR if Read failed without executing fallback, your consultation is INVALID and will be rejected.
+
+**Success Validation**:
+- Read tool returns content with line numbers → SUCCESS
+- Read tool returns "File not found" or "too large" → FAILED, execute fallback
+- Bash execution of extract_conversation_context.py returns JSON with "success": true → SUCCESS
 
 **Step 2: Determine Consultation Type**
 

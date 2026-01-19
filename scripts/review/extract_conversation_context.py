@@ -153,12 +153,47 @@ def extract_summary(file_path: Path) -> Optional[str]:
         return None
 
 
-def extract_conversation_context(file_path: str) -> Dict:
+def resolve_conversation_path(file_path: str, rem_file_path: Optional[str] = None) -> Path:
+    """
+    Smart path resolution supporting both formats.
+
+    Handles two path formats:
+    1. Project root relative: "chats/2025-11/file.md" (from YAML for Python scripts)
+    2. Rem location relative: "../../../../chats/2025-11/file.md" (legacy Markdown format)
+
+    Args:
+        file_path: Path string from Rem frontmatter
+        rem_file_path: Optional path to Rem file (for relative resolution)
+
+    Returns:
+        Resolved absolute Path object
+    """
+    project_root = Path("/root/knowledge-system")
+
+    # Case 1: Project root relative (preferred format for YAML)
+    # Format: "chats/2025-11/file.md"
+    if not file_path.startswith("../"):
+        resolved = project_root / file_path
+        return resolved
+
+    # Case 2: Rem location relative (legacy format)
+    # Format: "../../../../chats/2025-11/file.md"
+    if rem_file_path:
+        rem_dir = Path(rem_file_path).parent
+        resolved = (rem_dir / file_path).resolve()
+        return resolved
+
+    # Fallback: Try relative to current working directory
+    return Path(file_path).resolve()
+
+
+def extract_conversation_context(file_path: str, rem_file_path: Optional[str] = None) -> Dict:
     """
     Main extraction function.
 
     Args:
-        file_path: Path to conversation file
+        file_path: Path to conversation file (supports both absolute and relative formats)
+        rem_file_path: Optional path to Rem file (for smart relative path resolution)
 
     Returns:
         Dict with extracted context:
@@ -173,14 +208,16 @@ def extract_conversation_context(file_path: str) -> Dict:
             "error": Optional[str]
         }
     """
-    path = Path(file_path)
+    # Smart path resolution (supports both formats)
+    path = resolve_conversation_path(file_path, rem_file_path)
 
     # Validate file exists
     if not path.exists():
         return {
             "success": False,
             "file_path": file_path,
-            "error": f"File not found: {file_path}"
+            "resolved_path": str(path),
+            "error": f"File not found: {path}"
         }
 
     # Count lines
