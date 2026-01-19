@@ -78,8 +78,8 @@ def resolve_source_path(rem_file: Path, source_path: str) -> Path:
     if Path(source_path).is_absolute():
         return Path(source_path)
 
-    # Resolve relative path from Rem file location
-    return (rem_file.parent / source_path).resolve()
+    # Resolve relative path from PROJECT_ROOT (new standard format)
+    return (PROJECT_ROOT / source_path).resolve()
 
 
 def find_alternative_path(conversation_path: Path) -> Optional[Path]:
