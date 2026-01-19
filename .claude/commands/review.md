@@ -199,6 +199,7 @@ Use Task tool:
   {
     \"rem_path\": \"{full_path_to_rem_file}\",
     \"rem_id\": \"{rem_id from blind mode JSON}\",
+    \"conversation_source\": \"{conversation_source from blind mode JSON (optional, null if not present)}\",
     \"session_context\": {
       \"total_rems\": {total},
       \"current_index\": {N},
@@ -393,6 +394,7 @@ EXPLANATION_LOOP:
     {
       \"rem_path\": \"{full_path_to_rem_file}\",
       \"rem_id\": \"{rem_id}\",
+      \"conversation_source\": \"{conversation_source from blind mode JSON (optional, null if not present)}\",
       \"session_context\": {
         \"consultation_type\": \"explanation\",
         \"failed_question\": \"{the question user couldn't answer}\",

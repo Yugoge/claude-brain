@@ -28,6 +28,63 @@ from datetime import datetime
 import subprocess
 import json
 from pathlib import Path
+import re
+
+# Extract specific field from YAML frontmatter
+# Root cause fix: schedule.json stores FSRS data, NOT Rem metadata
+# conversation_source must be read from Rem file frontmatter's 'source' field
+def extract_frontmatter_field(filepath: str, field: str) -> str:
+    """
+    Extract a field value from YAML frontmatter in a Markdown file.
+
+    Args:
+        filepath: Path to the Markdown file
+        field: Field name to extract (e.g., 'source', 'title')
+
+    Returns:
+        Field value as string, or None if not found
+
+    Handles:
+        - File not found → None
+        - Malformed frontmatter → None
+        - Missing field → None
+        - Multiple line values → first line only
+
+    Example frontmatter:
+        ---
+        rem_id: equity-derivatives-tkyer
+        title: TKYER Futures Spread Convention
+        source: ../../../../chats/2025-11/calibration.md
+        ---
+    """
+    try:
+        path = Path(filepath)
+        if not path.exists():
+            return None
+
+        content = path.read_text(encoding='utf-8')
+
+        # Match YAML frontmatter block (between --- delimiters)
+        frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*\n'
+        match = re.search(frontmatter_pattern, content, re.DOTALL | re.MULTILINE)
+
+        if not match:
+            return None
+
+        frontmatter = match.group(1)
+
+        # Extract field value (simple key: value format)
+        # Pattern: field_name: value (on its own line)
+        field_pattern = rf'^{re.escape(field)}:\s*(.+?)$'
+        field_match = re.search(field_pattern, frontmatter, re.MULTILINE)
+
+        if field_match:
+            return field_match.group(1).strip()
+
+        return None
+
+    except (IOError, UnicodeDecodeError):
+        return None
 
 # Resolve actual content path, preferring .md with .rem.md fallback
 # This prevents failures when some Rems still use the legacy .rem.md extension
@@ -200,7 +257,7 @@ for rem_id, rem_data in schedule_data.get('concepts', {}).items():
         'fsrs_state': rem_data.get('fsrs_state', {}),
         'created': rem_data.get('created'),
         'last_modified': rem_data.get('last_modified'),
-        'conversation_source': rem_data.get('source')  # Extract from schedule.json (optional field)
+        'conversation_source': extract_frontmatter_field(path, 'source')  # Read from Rem file frontmatter, not schedule.json
     }
     schedule.append(rem)
 
@@ -289,10 +346,13 @@ if format_history_file.exists():
 if blind_mode:
     # Blind mode: Only output minimal data (paths and IDs)
     # Main agent CANNOT see title/domain/fsrs_state to prevent bypassing review-master
+    # EXCEPTION: conversation_source is included (doesn't reveal Rem content, needed by review-master)
+    # Root cause fix: Blind mode was stripping conversation_source needed by review-master for context-aware questions
     blind_rems = [
         {
             'id': r['id'],
-            'path': r['path']
+            'path': r['path'],
+            'conversation_source': r.get('conversation_source')  # Optional field from schedule.json
         }
         for r in sorted_rems_limited
     ]

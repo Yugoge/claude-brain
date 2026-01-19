@@ -371,7 +371,7 @@ def create_initial_fsrs_state(rem_id: str, domain: str = "general", title: str =
     return entry
 
 
-def create_initial_sm2_state(rem_id: str, domain: str = "general", title: str = None, initial_date: Optional[str] = None) -> Dict:
+def create_initial_sm2_state(rem_id: str, domain: str = "general", title: str = None, initial_date: Optional[str] = None, source: Optional[str] = None) -> Dict:
     """Create initial SM-2 entry for a Rem (legacy support)."""
     if initial_date:
         next_review = datetime.strptime(initial_date, "%Y-%m-%d")
@@ -394,6 +394,9 @@ def create_initial_sm2_state(rem_id: str, domain: str = "general", title: str = 
         "last_modified": datetime.now(timezone.utc).strftime("%Y-%m-%d")
     }
 
+    # Add source field if provided (conversation path for review-master context)
+    if source:
+        entry["source"] = source
 
     return entry
 
@@ -532,10 +535,13 @@ def main():
 
         for domain, rem_id, file_path, frontmatter, title in new_rems:
             # title is already extracted from Markdown heading
+            # Extract source field from frontmatter (conversation path for review-master)
+            source = frontmatter.get('source')
+
             if args.algorithm == 'fsrs':
-                rem_entry = create_initial_fsrs_state(rem_id, domain, title, args.initial_date)
+                rem_entry = create_initial_fsrs_state(rem_id, domain, title, args.initial_date, source)
             else:
-                rem_entry = create_initial_sm2_state(rem_id, domain, title, args.initial_date)
+                rem_entry = create_initial_sm2_state(rem_id, domain, title, args.initial_date, source)
 
             schedule['concepts'][rem_id] = rem_entry
 
@@ -544,7 +550,8 @@ def main():
                     next_date = rem_entry['fsrs_state']['next_review']
                 else:
                     next_date = rem_entry['sm2_state']['next_review_date']
-                print(f"  ✅ Added {rem_id} (title: {title}, next review: {next_date})")
+                source_info = f", source: {source}" if source else ""
+                print(f"  ✅ Added {rem_id} (title: {title}, next review: {next_date}{source_info})")
 
     # Update EXISTING Rems (preserve FSRS state)
     if update_rems:
@@ -552,12 +559,21 @@ def main():
 
         for domain, rem_id, file_path, frontmatter, title, existing_entry in update_rems:
             # title is already extracted from Markdown heading
+            # Extract source field from frontmatter (conversation path for review-master)
+            source = frontmatter.get('source')
 
             # PRESERVE all FSRS state data
             # Only update metadata fields
             schedule['concepts'][rem_id]['domain'] = domain
             schedule['concepts'][rem_id]['title'] = title
             schedule['concepts'][rem_id]['last_modified'] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+            # Update source if present in frontmatter
+            if source:
+                schedule['concepts'][rem_id]['source'] = source
+            elif 'source' in schedule['concepts'][rem_id]:
+                # Remove source if no longer in frontmatter
+                del schedule['concepts'][rem_id]['source']
 
             # DO NOT TOUCH:
             # - fsrs_state (difficulty, stability, retrievability, interval, next_review, review_count)
@@ -569,10 +585,12 @@ def main():
                     next_date = existing_entry['fsrs_state']['next_review']
                     difficulty = existing_entry['fsrs_state']['difficulty']
                     review_count = existing_entry['fsrs_state']['review_count']
-                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date}, D: {difficulty:.2f}, reviews: {review_count})")
+                    source_info = f", source: {source}" if source else ""
+                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date}, D: {difficulty:.2f}, reviews: {review_count}{source_info})")
                 else:
                     next_date = existing_entry['sm2_state']['next_review_date']
-                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date})")
+                    source_info = f", source: {source}" if source else ""
+                    print(f"  ✅ Updated {rem_id} (title: {title}, next: {next_date}{source_info})")
 
     # Update metadata
     schedule['metadata']['concepts_due_today'] = len([
