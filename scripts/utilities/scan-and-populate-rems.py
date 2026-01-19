@@ -332,7 +332,7 @@ def find_all_rems(domain_filter: Optional[str] = None) -> List[tuple]:
     return rems
 
 
-def create_initial_fsrs_state(rem_id: str, domain: str = "general", title: str = None, initial_date: Optional[str] = None) -> Dict:
+def create_initial_fsrs_state(rem_id: str, domain: str = "general", title: str = None, initial_date: Optional[str] = None, source: Optional[str] = None) -> Dict:
     """Create initial FSRS entry for a Rem."""
     fsrs = FSRSAlgorithm()
 
@@ -364,6 +364,9 @@ def create_initial_fsrs_state(rem_id: str, domain: str = "general", title: str =
         "last_modified": datetime.now(timezone.utc).strftime("%Y-%m-%d")
     }
 
+    # Add source field if provided (conversation path for review-master context)
+    if source:
+        entry["source"] = source
 
     return entry
 

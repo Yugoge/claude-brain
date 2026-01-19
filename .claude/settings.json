@@ -234,6 +234,17 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-record-review-master-call.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
         "matcher": "Edit",
         "hooks": [
           {

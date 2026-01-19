@@ -1,8 +1,10 @@
 ---
 description: "Interactive review session using spaced repetition (FSRS algorithm)"
-allowed-tools: Read, Bash, Task, TodoWrite
+allowed-tools: Bash, Task, TodoWrite
 argument-hint: "[domain | [[rem-id]]]"
 ---
+
+**⚠️ CRITICAL PROHIBITION**: Main agent MUST NOT use Read tool on Rem files. Only review-master subagent may read Rem content.
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
 
@@ -85,8 +87,10 @@ Rating Scale (1-4):
 
 **⚠️ CRITICAL**: Loading incorrect Rems or skipping due dates = broken spaced repetition = memory decay.
 
+**⚠️ ENFORCEMENT**: Use `--blind` flag to prevent main agent from seeing Rem content (only paths and IDs).
+
 ```bash
-source venv/bin/activate && python scripts/review/run_review.py [args]
+source venv/bin/activate && python scripts/review/run_review.py --blind [args]
 ```
 
 This script now ALWAYS shows a comprehensive timeline first:
@@ -135,36 +139,11 @@ source venv/bin/activate && python scripts/review/run_review.py --format m --lan
 
 **Note**: Path resolution prefers `.md` and falls back to `.rem.md` when content still uses the legacy extension.
 
-### Step 2: Read Rem File Content
-
-**⚠️ CRITICAL**: Always read Rem file before consulting review-master or asking questions.
-
-**For each Rem in session**:
-
-```
-Use Read tool: {rem_path_from_run_review_json}
-```
-
-**Parse and validate**:
-- Frontmatter: `rem_id`, `title`, `domain`, `created`, **`source`** (conversation path)
-- Content sections: Core Memory Points, Usage Scenario, Related Rems
-- Check for missing/incomplete content
-
-**Extract conversation path** (commit 893dffd enhancement):
-```
-If Rem frontmatter contains 'source' field:
-  conversation_source = frontmatter['source']
-Else:
-  conversation_source = null
-```
-
-**Purpose**: Verify Rem content before generating questions. Ensures questions align with actual knowledge structure, not just JSON guidance assumptions. Conversation source provides original learning context for review-master.
-
-**Integration**: Pass Rem content AND conversation_source to review-master for context-aware question generation (Step 4).
+**Blind Mode Output**: When using `--blind`, the JSON output contains ONLY `id` and `path` for each Rem (no `title`, `domain`, `fsrs_state`). This prevents main agent from seeing content and bypassing review-master consultation.
 
 ---
 
-### Step 3: Conduct Review Session (Main Agent Dialogue Loop)
+### Step 2: Conduct Review Session (Main Agent Dialogue Loop)
 
 **⚠️ CRITICAL**: This is the core FSRS review workflow. Poor questioning = inaccurate self-ratings = suboptimal scheduling.
 
@@ -181,12 +160,16 @@ Load session tracking from run_review.py JSON output:
 
 **For each Rem in the session, follow this loop**:
 
-#### 4. Consult Review-Master for Guidance
+#### 3. Consult Review-Master for Guidance
+
+**⚠️ ARCHITECTURAL CHANGE**: Main agent does NOT read Rem files. Only review-master reads Rem content.
+
+**Rationale**: Prevents main agent from seeing Rem content and bypassing expert consultation ("feeling smart" and skipping review-master).
 
 **Fallback strategy**:
-- If review-master unavailable → Ask direct recall question: "What do you remember about {Rem title}?"
+- If review-master unavailable → Ask direct recall question: "What do you remember about the concept at {path}?"
 - If JSON invalid → Use minimal guidance (ask for free recall, no hints)
-- If consultation fails → Proceed with basic review (show Rem content after user attempts recall)
+- If consultation fails → Proceed with basic review (ask user to recall, then end)
 
 ```
 Use Task tool:
@@ -196,27 +179,26 @@ Use Task tool:
 - prompt: "
   You are a consultant providing JSON guidance for FSRS review.
 
-  Review this Rem and provide Socratic question guidance:
+  **CRITICAL**: You MUST read the Rem file yourself using the Read tool.
+  Main agent does NOT have access to Rem content (blind mode enforcement).
+
+  **Step 1**: Read Rem file at path: {full_path_to_rem_file}
+
+  **Step 2**: Extract from Rem file:
+  - Frontmatter: rem_id, title, domain, created, source (conversation path)
+  - Content sections: Core Memory Points, Usage Scenario, Related Rems
+
+  **Step 3**: Provide Socratic question guidance based on Rem content.
 
   **IMPORTANT INSTRUCTION**:
   - Check format_preference field FIRST
   - If format_preference is NOT null → Use that format exclusively, ignore all diversity/variety logic
   - If format_preference is null → Use adaptive format selection with variety
 
+  **Session Context**:
   {
-    \"rem_data\": {
-      \"id\": \"{rem_id}\",
-      \"title\": \"{rem_title}\",
-      \"path\": \"{full_path_to_rem_file}\",
-      \"domain\": \"{domain}\",
-      \"conversation_source\": \"{conversation_source or null}\",
-      \"fsrs_state\": {
-        \"difficulty\": {difficulty},
-        \"stability\": {stability},
-        \"retrievability\": {retrievability},
-        \"review_count\": {review_count}
-      }
-    },
+    \"rem_path\": \"{full_path_to_rem_file}\",
+    \"rem_id\": \"{rem_id from blind mode JSON}\",
     \"session_context\": {
       \"total_rems\": {total},
       \"current_index\": {N},
@@ -247,7 +229,7 @@ Use Task tool:
   - Applies to primary_question, hints, follow_ups, context_scenario
   - Rem content (Core Memory Points) remains unchanged
 
-  Return JSON guidance as specified in your instructions.
+  Return JSON guidance as specified in your instructions (include title, domain, fsrs_state read from file).
   "
 ```
 
@@ -293,7 +275,7 @@ source venv/bin/activate && python scripts/review/track_format.py {question_form
 
 This updates `.review/format_history.json` with the format used. Next Rem will load updated history via run_review.py.
 
-#### 5. Present Question to User (First-Person Voice)
+#### 4. Present Question to User (First-Person Voice)
 
 **Adapt presentation based on question_format**:
 
@@ -350,11 +332,11 @@ Let's review: {rem_title}
 - ❌ Never third-person: "The review-master asks..."
 - ❌ No meta-commentary: "I'm consulting the agent..."
 
-#### 6. Listen to User Response
+#### 5. Listen to User Response
 
 Wait for user to answer the question.
 
-#### 7. Evaluate Response Quality
+#### 6. Evaluate Response Quality
 
 **Compare user response to quality_assessment_guide from JSON**:
 
@@ -368,7 +350,7 @@ Wait for user to answer the question.
 - Rating 2: Matches rating_2_indicators from JSON
 - Rating 1: Matches rating_1_indicators from JSON
 
-#### 8. Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
+#### 7. Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
 
 **⚠️ CRITICAL**: Detect user confusion and provide explanation BEFORE proceeding to rating.
 
@@ -404,17 +386,13 @@ EXPLANATION_LOOP:
   - prompt: "
     You are a consultant providing explanation guidance.
 
+    **CRITICAL**: Read the Rem file yourself using Read tool at: {full_path_to_rem_file}
+
     User is confused during review. Provide re-teaching guidance.
 
     {
-      \"rem_data\": {
-        \"id\": \"{rem_id}\",
-        \"title\": \"{rem_title}\",
-        \"path\": \"{full_path_to_rem_file}\",
-        \"conversation_source\": \"{conversation_source or null}\",
-        \"domain\": \"{domain}\",
-        \"fsrs_state\": {...}
-      },
+      \"rem_path\": \"{full_path_to_rem_file}\",
+      \"rem_id\": \"{rem_id}\",
       \"session_context\": {
         \"consultation_type\": \"explanation\",
         \"failed_question\": \"{the question user couldn't answer}\",
@@ -467,11 +445,11 @@ END EXPLANATION_LOOP
 - User explicitly requests to skip this Rem
 - No maximum iteration limit (keep teaching until user understands)
 
-**After successful explanation loop**: Proceed to Step 9 (rating) with the final answer quality.
+**After successful explanation loop**: Proceed to Step 8 (rating) with the final answer quality.
 
-**If no confusion detected**: Skip explanation loop, proceed directly to Step 9.
+**If no confusion detected**: Skip explanation loop, proceed directly to Step 8.
 
-#### 9. Provide Feedback and Ask for Self-Rating
+#### 8. Provide Feedback and Ask for Self-Rating
 
 **⚠️ CRITICAL - Hints Display Logic** (Root Cause Fix: commit 3ed6b6f):
 
@@ -602,7 +580,7 @@ Compose the rating question and option labels yourself using natural phrasing fo
 
 **If user disputes your assessment**: Accept their rating (FSRS adapts to user feedback)
 
-#### 10. Update FSRS Schedule
+#### 9. Update FSRS Schedule
 
 **⚠️ CRITICAL**: Incorrect schedule updates = broken FSRS algorithm = review intervals too long/short.
 
@@ -633,14 +611,14 @@ FSRS Update:
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
-#### 11. Move to Next Rem
+#### 10. Move to Next Rem
 
 **Progress indicator**:
 ```
 [{N}/{total}] {N} reviewed, {remaining} remaining
 ```
 
-**Repeat steps 4-11 for all Rems in session.**
+**Repeat steps 3-10 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop

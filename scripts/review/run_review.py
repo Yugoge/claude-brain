@@ -5,6 +5,7 @@ Run review session with comprehensive timeline view.
 Usage:
     source venv/bin/activate && python scripts/review/run_review.py              # Default: show timeline + due Rems
     source venv/bin/activate && python scripts/review/run_review.py --timeline   # Show timeline only (no filtering)
+    source venv/bin/activate && python scripts/review/run_review.py --blind      # Blind mode (minimal output, only paths/IDs)
     source venv/bin/activate && python scripts/review/run_review.py --days 14    # Timeline with 14-day lookahead
     source venv/bin/activate && python scripts/review/run_review.py --format m   # Force multiple-choice format
     source venv/bin/activate && python scripts/review/run_review.py --lang zh    # Force Chinese dialogue
@@ -13,6 +14,9 @@ Usage:
 
 Format codes: m=multiple-choice, c=cloze, s=short-answer, p=problem-solving
 Language codes: zh=Chinese, en=English, fr=French
+
+Blind mode: Outputs only Rem ID and path (no title/domain/fsrs_state). Used by main agent to prevent
+bypassing review-master subagent consultation. Only review-master should see full Rem data.
 """
 import sys
 sys.path.append('scripts/review')
@@ -109,6 +113,7 @@ args = sys.argv[1:] if len(sys.argv) > 1 else []
 
 # Check for special flags
 timeline_only = '--timeline' in args
+blind_mode = '--blind' in args  # Minimal output for main agent (only paths/IDs)
 future_days = 7  # Default lookahead
 format_preference = None
 lang_preference = None
@@ -163,8 +168,8 @@ if '--lang' in args:
         print("Error: --lang must be followed by a language code (zh, en, fr)")
         sys.exit(1)
 
-# Remove timeline flag from args for loader
-args = [a for a in args if a != '--timeline']
+# Remove special flags from args for loader
+args = [a for a in args if a not in ['--timeline', '--blind']]
 
 criteria = loader.parse_arguments(args)
 
@@ -194,7 +199,8 @@ for rem_id, rem_data in schedule_data.get('concepts', {}).items():
         'path': path,
         'fsrs_state': rem_data.get('fsrs_state', {}),
         'created': rem_data.get('created'),
-        'last_modified': rem_data.get('last_modified')
+        'last_modified': rem_data.get('last_modified'),
+        'conversation_source': rem_data.get('source')  # Extract from schedule.json (optional field)
     }
     schedule.append(rem)
 
@@ -280,16 +286,41 @@ if format_history_file.exists():
         format_history = []
 
 # Output JSON for agent to use
-output = {
-    'mode': criteria['mode'],
-    'total': total_rems,
-    'showing': len(sorted_rems_limited),
-    'has_more': has_more,
-    'rems': sorted_rems_limited,
-    'by_domain': {k: len(v) for k, v in by_domain.items()},
-    'format_history': format_history,  # Track formats for variety
-    'format_preference': format_preference,  # User-requested format override
-    'lang_preference': lang_preference  # User-requested language override
-}
+if blind_mode:
+    # Blind mode: Only output minimal data (paths and IDs)
+    # Main agent CANNOT see title/domain/fsrs_state to prevent bypassing review-master
+    blind_rems = [
+        {
+            'id': r['id'],
+            'path': r['path']
+        }
+        for r in sorted_rems_limited
+    ]
+    output = {
+        'mode': criteria['mode'],
+        'total': total_rems,
+        'showing': len(sorted_rems_limited),
+        'has_more': has_more,
+        'rems': blind_rems,
+        'format_history': format_history,
+        'format_preference': format_preference,
+        'lang_preference': lang_preference,
+        'blind': True  # Flag indicating blind mode active
+    }
+else:
+    # Full mode: Output all data (for review-master subagent)
+    output = {
+        'mode': criteria['mode'],
+        'total': total_rems,
+        'showing': len(sorted_rems_limited),
+        'has_more': has_more,
+        'rems': sorted_rems_limited,
+        'by_domain': {k: len(v) for k, v in by_domain.items()},
+        'format_history': format_history,
+        'format_preference': format_preference,
+        'lang_preference': lang_preference,
+        'blind': False
+    }
+
 print(f"\n--- DATA ---")
 print(json.dumps(output, indent=2))
