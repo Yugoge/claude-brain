@@ -183,7 +183,7 @@ Review-master MUST demonstrate file reading via tool logs:
 ```
 Use Task tool:
 - subagent_type: "review-master"
-- model: "haiku"  # Fast model for JSON consultation
+- model: "sonnet"  # Sonnet for reliable MCQ quality
 - description: "Get Socratic question guidance for Rem {N}/{total}"
 - prompt: "
   You are a consultant providing JSON guidance for FSRS review.
@@ -232,6 +232,11 @@ Use Task tool:
   - Use adaptive format selection based on content type
   - Consider recent_formats for variety (avoid 3+ consecutive same format)
   - Mix formats based on content characteristics AND diversity
+
+  **⛔ MCQ RULE (if format=multiple-choice)**:
+  - EXACTLY 1 correct answer + 3 WRONG answers
+  - Before returning, verify: Would a domain expert say ONLY ONE option is correct?
+  - If multiple options could be valid → REDESIGN the question
 
   Use lang_preference if provided:
   - If lang_preference is not null, generate ALL dialogue in that language
@@ -391,7 +396,7 @@ EXPLANATION_LOOP:
 
   Use Task tool:
   - subagent_type: "review-master"
-  - model: "haiku"
+  - model: "sonnet"
   - description: "Get explanation for confused user"
   - prompt: "
     You are a consultant providing explanation guidance.
@@ -490,7 +495,7 @@ Then consult analyst (Three-Party Architecture):
 ```
 Use Task tool:
 - subagent_type: "analyst"
-- model: "haiku"
+- model: "sonnet"
 - description: "Research deep question during review"
 - prompt: "
   ⚠️ CRITICAL: Return ONLY valid JSON. NO markdown.

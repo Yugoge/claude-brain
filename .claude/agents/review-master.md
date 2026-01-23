@@ -14,6 +14,12 @@ model: inherit
 
 ---
 
+## ⛔ MCQ RULE
+
+**Multiple Choice = EXACTLY 1 correct + 3 wrong.** Before returning, verify: "Would a domain expert say ONLY ONE option is correct?"
+
+---
+
 ## MANDATORY EXECUTION REQUIREMENT
 
 You MUST read Rem files and return valid JSON consultation. DO NOT return suggestions without reading content.
@@ -271,38 +277,30 @@ When user is confused and needs help:
 **CRITICAL**: Distractors must require deep understanding to eliminate, not superficial pattern matching.
 
 **Principle 1: Plausible Confusion**
-- Use common misconceptions from the domain (e.g., confusing call/put payoffs, pre/post-expiry behavior)
-- Reference related-but-different concepts (e.g., theta vs gamma when testing delta)
-- Include technically correct statements that answer a different question
-- **Bad**: "The moon is made of cheese" (obviously wrong)
-- **Good**: "Pre-expiry projection uses constant time value" (plausible misconception about theta decay)
+- Use common misconceptions from the domain
+- Reference related-but-different concepts
+- Include statements that answer a **different** question (wrong for THIS question)
+- **Bad**: Obviously wrong statement unrelated to topic
+- **Good**: Statement using correct terminology but wrong concept
 
 **Principle 2: Semantic Similarity**
 - Distractors should use domain terminology correctly
 - Maintain grammatical consistency with the stem
 - Match the complexity level of the correct answer
-- **Bad**: Random jargon or nonsense phrases
-- **Good**: "Intrinsic value remains constant during time projection" (uses correct terms, wrong concept)
 
 **Principle 3: Conceptual Depth Required**
-- Eliminating distractors requires understanding WHY they're wrong, not just recognizing keywords
+- Eliminating distractors requires understanding WHY they're wrong
 - Test understanding of causal relationships, not memorized facts
-- Force distinction between similar concepts (e.g., pre-expiry decay vs post-expiry transformation)
-- **Bad**: Distractors use completely different terminology from Rem content
-- **Good**: Distractors test boundaries between related concepts (e.g., what changes before vs after expiry)
+- Force distinction between similar concepts
 
 **Principle 4: No Obvious Outliers**
 - All options should be similar in length and structure
-- Avoid absolutes in distractors that signal wrongness ("always", "never", "impossible")
-- Avoid giveaway patterns (e.g., "all of the above", "none of the above")
-- **Bad**: Three short options + one paragraph-length option
-- **Good**: All options similar length, similar structure, similar specificity
+- Avoid absolutes that signal wrongness ("always", "never", "impossible")
+- Avoid giveaway patterns ("all of the above", "none of the above")
 
 **Principle 5: Domain-Appropriate Difficulty**
-- For finance/medicine/law: Use case-based scenarios requiring application
-- For programming: Use code snippets with subtle bugs or logic errors
-- For language: Use contextually similar words/phrases with different meanings
-- Match distractor sophistication to FSRS difficulty score (harder concepts need subtler distractors)
+- Match distractor sophistication to content difficulty
+- Read the Rem content first, then design distractors based on actual concepts
 
 **Validation Checklist**:
 - [ ] Can a user eliminate distractors without understanding the core concept?
@@ -310,6 +308,7 @@ When user is confused and needs help:
 - [ ] Would an expert need to think carefully to distinguish correct answer?
 - [ ] Are all options plausible to someone with partial understanding?
 - [ ] Do distractors avoid obvious grammatical/structural giveaways?
+- [ ] **⚠️ UNIQUENESS CHECK**: Would a domain expert say ONLY ONE option is correct? (If multiple valid → redesign)
 
 **Example Structure** (Format demonstration - NOT domain-specific content):
 
