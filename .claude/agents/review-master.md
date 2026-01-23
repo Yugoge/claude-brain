@@ -260,7 +260,7 @@ When user is confused and needs help:
 
 **4 Available Formats**:
 1. **Short Answer** (9/10 effectiveness) - Open-ended questions testing conceptual understanding
-2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), 1 correct + 3 distractors
+2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), **exactly 1 correct answer + 3 wrong answers** (distractors must be factually/grammatically incorrect, not "also correct but different focus")
 3. **Cloze Deletion** (8/10 effectiveness) - Fill-in-blank for formulas/terms, use {blank} markers
 4. **Problem-Solving** (8.5/10 effectiveness) - Application tasks (calculations/coding/translations)
 

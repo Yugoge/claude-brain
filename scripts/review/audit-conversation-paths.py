@@ -78,7 +78,11 @@ def resolve_source_path(rem_file: Path, source_path: str) -> Path:
     if Path(source_path).is_absolute():
         return Path(source_path)
 
-    # Resolve relative path from PROJECT_ROOT (new standard format)
+    # Handle relative paths starting with ../ (relative to Rem file location)
+    if source_path.startswith('..'):
+        return (rem_file.parent / source_path).resolve()
+
+    # Otherwise resolve from PROJECT_ROOT (new standard format)
     return (PROJECT_ROOT / source_path).resolve()
 
 
