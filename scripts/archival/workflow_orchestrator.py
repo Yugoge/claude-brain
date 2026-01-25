@@ -316,6 +316,14 @@ def main():
     tutor_group.add_argument('--tutor-response', help='Tutor JSON response file (legacy)')
     tutor_group.add_argument('--tutor-response-json', help='Inline tutor JSON response (preferred)')
 
+    # Automation mode
+    parser.add_argument('--auto-mode', action='store_true',
+                        help='Automated mode: output prompt for main agent to call Task tool, then exit. Main agent should merge results.')
+
+    # Quiet mode
+    parser.add_argument('--quiet', action='store_true',
+                        help='Suppress non-critical output')
+
     args = parser.parse_args()
 
     try:
@@ -324,12 +332,14 @@ def main():
             file_path=args.candidate_rems,
             json_string=args.candidate_rems_json
         )
-        print(f"✓ Loaded {len(candidate_rems)} candidate Rems", file=sys.stderr)
+        if not args.quiet:
+            print(f"✓ Loaded {len(candidate_rems)} candidate Rems", file=sys.stderr)
 
         # Load existing concepts
         backlinks = load_backlinks()
         existing_concepts = extract_domain_concepts(backlinks, args.isced_path)
-        print(f"✓ Found {len(existing_concepts)} existing concepts in {args.isced_path}", file=sys.stderr)
+        if not args.quiet:
+            print(f"✓ Found {len(existing_concepts)} existing concepts in {args.isced_path}", file=sys.stderr)
 
         # Build tutor prompt
         tutor_prompt = build_tutor_prompt(args.domain, existing_concepts, candidate_rems)
@@ -338,11 +348,13 @@ def main():
             # Manual mode: use provided tutor response (from file or inline JSON)
             if args.tutor_response_json:
                 tutor_json = json.loads(args.tutor_response_json)
-                print(f"✓ Loaded tutor response from inline JSON", file=sys.stderr)
+                if not args.quiet:
+                    print(f"✓ Loaded tutor response from inline JSON", file=sys.stderr)
             else:
                 with open(args.tutor_response, 'r', encoding='utf-8') as f:
                     tutor_json = json.load(f)
-                print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
+                if not args.quiet:
+                    print(f"✓ Loaded tutor response from {args.tutor_response}", file=sys.stderr)
 
             # Validate tutor response IDs (includes both existing and candidate IDs)
             existing_ids = [c["rem_id"] for c in existing_concepts]
@@ -359,25 +371,34 @@ def main():
                 print("\n⚠️  Tutor must use EXACT IDs from the provided lists.", file=sys.stderr)
                 return 1
 
-            print(f"✓ Tutor response validated (all IDs match)", file=sys.stderr)
+            if not args.quiet:
+                print(f"✓ Tutor response validated (all IDs match)", file=sys.stderr)
         else:
             # Automated mode: output prompt for main agent to call Task tool
-            print("\n📋 TUTOR PROMPT (pass to Task tool):\n", file=sys.stderr)
-            print(tutor_prompt, file=sys.stderr)
-            print("\n⚠️  Main agent: Call Task tool with above prompt, save response to tutor_response.json", file=sys.stderr)
-            print("Then re-run with: --tutor-response tutor_response.json\n", file=sys.stderr)
+            if args.auto_mode:
+                # Output prompt in machine-readable format for automation
+                print(tutor_prompt)
+            else:
+                # Interactive mode: show instructions
+                print("\n📋 TUTOR PROMPT (pass to Task tool):\n", file=sys.stderr)
+                print(tutor_prompt, file=sys.stderr)
+                print("\n⚠️  Main agent: Call Task tool with above prompt, save response to tutor_response.json", file=sys.stderr)
+                print("Then re-run with: --tutor-response tutor_response.json\n", file=sys.stderr)
             return 0
 
         # Merge tutor suggestions
         enriched_rems = merge_tutor_suggestions(candidate_rems, tutor_json)
-        print(f"✓ Enriched {len(enriched_rems)} Rems with typed_relations", file=sys.stderr)
+        if not args.quiet:
+            print(f"✓ Enriched {len(enriched_rems)} Rems with typed_relations", file=sys.stderr)
 
         # Count relations added
         total_relations = sum(len(r.get("typed_relations", [])) for r in enriched_rems)
-        print(f"✓ Total typed_relations added: {total_relations}", file=sys.stderr)
+        if not args.quiet:
+            print(f"✓ Total typed_relations added: {total_relations}", file=sys.stderr)
 
         # STEP 3.6: Validate hierarchical consistency
-        print("\n🔍 Validating hierarchical consistency...", file=sys.stderr)
+        if not args.quiet:
+            print("\n🔍 Validating hierarchical consistency...", file=sys.stderr)
         from archival.validate_hierarchical_consistency import (
             build_relation_map, validate_proposed_relations, detect_cycles
         )
@@ -420,12 +441,15 @@ def main():
 
             # Recalculate total after cleanup
             total_relations = sum(len(r.get("typed_relations", [])) for r in enriched_rems)
-            print(f"✓ Cleaned relations count: {total_relations}", file=sys.stderr)
+            if not args.quiet:
+                print(f"✓ Cleaned relations count: {total_relations}", file=sys.stderr)
         else:
-            print(f"✅ Validation passed: No contradictions detected", file=sys.stderr)
+            if not args.quiet:
+                print(f"✅ Validation passed: No contradictions detected", file=sys.stderr)
 
         # Auto-generate missing output_path values
-        print("  Auto-generating missing output paths...", file=sys.stderr)
+        if not args.quiet:
+            print("  Auto-generating missing output paths...", file=sys.stderr)
         enriched_rems = auto_generate_output_paths(enriched_rems, args.isced_path)
 
         # Build complete output structure (with session_metadata wrapper)
@@ -444,7 +468,8 @@ def main():
         with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-        print(f"✅ Saved enriched Rems to: {args.output}", file=sys.stderr)
+        if not args.quiet:
+            print(f"✅ Saved enriched Rems to: {args.output}", file=sys.stderr)
         return 0
 
     except Exception as e:

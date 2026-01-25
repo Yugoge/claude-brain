@@ -221,11 +221,34 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
 
     # Sub-step 2: Update conversation index
     print("  Updating conversation index...", file=sys.stderr)
+
+    # Extract conversation ID from filename (e.g., "conversation-2026-01-25.md" -> "conversation-2026-01-25")
+    conversation_id = conversation_path.stem
+
+    # Extract date from conversation path (YYYY-MM-DD format)
+    # Try to extract from filename first
+    date_match = re.search(r'(\d{4}-\d{2}-\d{2})', conversation_path.name)
+    conversation_date = date_match.group(1) if date_match else datetime.now().strftime('%Y-%m-%d')
+
+    # Count turns in conversation file (approximate from number of "## " sections)
+    try:
+        conv_content = conversation_path.read_text(encoding='utf-8')
+        turns = len(re.findall(r'^## ', conv_content, re.MULTILINE))
+    except:
+        turns = 0
+
     result = subprocess.run(
         [
             'python3', 'scripts/archival/update-conversation-index.py',
-            str(conversation_path),
-            '--concepts', json.dumps([metadata.get('subdomain', '')] + rem_ids[:3])
+            '--id', conversation_id,
+            '--title', metadata.get('title', 'Untitled Conversation'),
+            '--date', conversation_date,
+            '--file', str(conversation_path),
+            '--agent', metadata.get('agent', 'main'),
+            '--domain', metadata.get('domain', 'unknown'),
+            '--session-type', metadata.get('session_type', 'learn'),
+            '--turns', str(turns),
+            '--rems', str(len(rem_ids))
         ],
         cwd=ROOT,
         capture_output=True,
