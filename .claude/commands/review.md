@@ -234,9 +234,10 @@ Use Task tool:
   - Mix formats based on content characteristics AND diversity
 
   **⛔ MCQ RULE (if format=multiple-choice)**:
-  - EXACTLY 1 correct answer + 3 WRONG answers
-  - Before returning, verify: Would a domain expert say ONLY ONE option is correct?
-  - If multiple options could be valid → REDESIGN the question
+  - EXACTLY 1 correct answer + 3 FACTUALLY or GRAMMATICALLY INCORRECT statements
+  - "Wrong" means the statement itself contains factual errors or grammar mistakes (NOT just "wrong answer to this question but valid sentence")
+  - Before returning, verify ISOLATION TEST: Would a domain expert, seeing each option WITHOUT the question, identify 3 as WRONG STATEMENTS?
+  - If multiple options are factually/grammatically correct → REDESIGN the question
 
   Use lang_preference if provided:
   - If lang_preference is not null, generate ALL dialogue in that language

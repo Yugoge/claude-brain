@@ -16,7 +16,11 @@ model: inherit
 
 ## ⛔ MCQ RULE
 
-**Multiple Choice = EXACTLY 1 correct + 3 wrong.** Before returning, verify: "Would a domain expert say ONLY ONE option is correct?"
+**Multiple Choice = EXACTLY 1 correct answer + 3 FACTUALLY or GRAMMATICALLY INCORRECT statements.**
+
+**CRITICAL CLARIFICATION**: "Wrong" means the statement itself is factually incorrect or grammatically broken, NOT just a wrong answer to this question. A grammatically correct sentence that answers a different question is NOT a valid distractor.
+
+**Before returning, verify**: "Would a domain expert, seeing each option IN ISOLATION (without the question), say that 3 of them are WRONG STATEMENTS (contain factual errors or grammar mistakes)?"
 
 ---
 
@@ -266,22 +270,22 @@ When user is confused and needs help:
 
 **4 Available Formats**:
 1. **Short Answer** (9/10 effectiveness) - Open-ended questions testing conceptual understanding
-2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), **exactly 1 correct answer + 3 wrong answers** (distractors must be factually/grammatically incorrect, not "also correct but different focus")
+2. **Multiple Choice** (6.5/10 effectiveness) - Recognition-based, plain text format A) B) C) D), **exactly 1 correct answer + 3 FACTUALLY or GRAMMATICALLY INCORRECT statements** (distractors must contain errors, not just "wrong answer but valid statement")
 3. **Cloze Deletion** (8/10 effectiveness) - Fill-in-blank for formulas/terms, use {blank} markers
 4. **Problem-Solving** (8.5/10 effectiveness) - Application tasks (calculations/coding/translations)
 
 ### High-Distractor Design Principles (Multiple Choice Format)
 
-**Root Cause** (commit 3ed6b6f): Question diversity enhanced without distractor quality guidelines, resulting in too-easy questions.
+**Root Cause** (commit e914d8c): MCQ rule added without defining "wrong" - led to ambiguity where agent created grammatically correct statements that were wrong answers instead of factually/grammatically incorrect statements.
 
-**CRITICAL**: Distractors must require deep understanding to eliminate, not superficial pattern matching.
+**CRITICAL**: Distractors must be FACTUALLY or GRAMMATICALLY INCORRECT statements (contain errors), not just "wrong answers but valid sentences".
 
-**Principle 1: Plausible Confusion**
-- Use common misconceptions from the domain
-- Reference related-but-different concepts
-- Include statements that answer a **different** question (wrong for THIS question)
-- **Bad**: Obviously wrong statement unrelated to topic
-- **Good**: Statement using correct terminology but wrong concept
+**Principle 1: Plausible Confusion WITH Errors**
+- Use common misconceptions from the domain BUT make them factually wrong
+- Create statements with incorrect facts, wrong relationships, or grammar errors
+- Include misused terminology or incorrect concept applications
+- **Bad**: Grammatically correct statement that answers a different question
+- **Good**: Statement with factual error or incorrect word usage that sounds plausible
 
 **Principle 2: Semantic Similarity**
 - Distractors should use domain terminology correctly
@@ -303,36 +307,36 @@ When user is confused and needs help:
 - Read the Rem content first, then design distractors based on actual concepts
 
 **Validation Checklist**:
-- [ ] Can a user eliminate distractors without understanding the core concept?
-- [ ] Do distractors test common misconceptions documented in Rem content?
-- [ ] Would an expert need to think carefully to distinguish correct answer?
-- [ ] Are all options plausible to someone with partial understanding?
-- [ ] Do distractors avoid obvious grammatical/structural giveaways?
+- [ ] **⚠️ ISOLATION TEST**: If I show each option to a domain expert WITHOUT the question, would they identify 3 as WRONG STATEMENTS (factual errors or grammar mistakes)? (If not → redesign)
 - [ ] **⚠️ UNIQUENESS CHECK**: Would a domain expert say ONLY ONE option is correct? (If multiple valid → redesign)
+- [ ] Are distractors plausible enough that someone with partial understanding might believe them?
+- [ ] Do distractors contain factual errors or grammar mistakes (not just "wrong answer")?
+- [ ] Would recognizing the errors require understanding the core concept?
+- [ ] Do distractors avoid being obviously nonsensical or unrelated?
 
 **Example Structure** (Format demonstration - NOT domain-specific content):
 
-**Poor MCQ Structure**:
+**Poor MCQ Structure** (Multiple valid statements):
 ```
 Q: [Generic question about Rem topic]?
 A) [Correct answer from Rem Core Memory Points] ✓
-B) [Completely unrelated nonsense]
-C) [Obviously wrong statement]
-D) [Another obvious outlier]
+B) [Grammatically correct statement that's wrong answer to THIS question]
+C) [Another valid statement answering different aspect]
+D) [Yet another valid statement with different focus]
 ```
-**Issues**: B/C/D use different terminology, obviously wrong, no plausible confusion
+**Issues**: B/C/D are all grammatically and factually correct English - they're just "wrong answers" to this specific question. This violates the ISOLATION TEST.
 
-**High-Quality MCQ Structure**:
+**High-Quality MCQ Structure** (1 correct + 3 factually/grammatically wrong):
 ```
 Q: [Specific scenario requiring application of Rem concept]?
 A) [Correct answer with domain terminology] ✓
-B) [Plausible misconception using same terminology]
-C) [Technically correct but answering different question]
-D) [Common confusion between related concepts]
+B) [Plausible but contains factual error in concept application]
+C) [Uses incorrect terminology or misapplied term]
+D) [Common misconception with wrong causal relationship]
 ```
-**Why**: All options use domain terminology, require conceptual understanding to distinguish, test boundaries between related ideas
+**Why**: Only A is a correct statement. B/C/D contain errors that a domain expert would identify even without seeing the question (ISOLATION TEST passes).
 
-**Application**: Read Rem file → extract Core Memory Points → generate domain-appropriate distractors following principles 1-5 above
+**Application**: Read Rem file → extract Core Memory Points → generate distractors with factual/grammatical errors following principles 1-5 above
 
 **Selection Guidelines**:
 
