@@ -115,7 +115,9 @@
       "mcp__memory-server__delete_relations",
       "mcp__memory-server__open_nodes",
       "mcp__happy__change_title",
-      "mcp__playwright__*"
+      "mcp__playwright__*",
+      "Bash(scripts/playwright-stealth-wrapper.sh:*)",
+      "Bash(scripts/test-playwright-ice.sh:*)"
     ],
     "deny": [
       "Bash(rm -rf /:*)",
