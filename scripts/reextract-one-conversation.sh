@@ -1,11 +1,11 @@
 #!/bin/bash
 # Re-extract a single conversation using chat_archiver
-# Usage: ./reextract_one_conversation.sh <conv_id>
+# Usage: ./reextract_one_conversation.sh <conv_id> [index_file]
 
 set -e
 
 CONV_ID="$1"
-INDEX_FILE="chats/index.json"
+INDEX_FILE="${2:-chats/index.json}"
 
 if [ -z "$CONV_ID" ]; then
     echo "Usage: $0 <conversation_id>"

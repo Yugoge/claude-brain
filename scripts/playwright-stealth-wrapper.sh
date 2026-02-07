@@ -8,16 +8,16 @@
 #   2. Adding anti-detection Chrome arguments
 #   3. Hiding webdriver markers
 #
-# Usage: ./scripts/playwright-stealth-wrapper.sh
+# Usage: ./scripts/playwright-stealth-wrapper.sh [display_num] [screen_res] [output_dir] [browser]
 #
 
 set -euo pipefail
 
-# Configuration
-DISPLAY_NUM=99
-SCREEN_RES="1920x1080x24"
-OUTPUT_DIR=".playwright-mcp"
-BROWSER="chrome"
+# Configuration (with defaults)
+DISPLAY_NUM="${1:-99}"
+SCREEN_RES="${2:-1920x1080x24}"
+OUTPUT_DIR="${3:-.playwright-mcp}"
+BROWSER="${4:-chrome}"
 
 # Anti-detection Chrome arguments
 CHROME_ARGS=(

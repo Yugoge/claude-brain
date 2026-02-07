@@ -58,7 +58,7 @@ The following bidirectional relations were correctly preserved as they represent
 
 ### Scripts Created
 1. **fix-hierarchical-contradictions.py** - Full-featured version with extensive analysis
-2. **fix-hierarchical-contradictions-v2.py** - Streamlined version with aggressive fixing
+2. **fix-hierarchical-relation-contradictions.py** - Streamlined version with aggressive fixing
 
 ### Key Features
 - Automatic backup creation before modifications
@@ -118,5 +118,5 @@ This fix improves:
 ---
 
 Generated: 2025-12-05 17:12 UTC
-Script: fix-hierarchical-contradictions-v2.py
+Script: fix-hierarchical-relation-contradictions.py
 Total execution time: < 1 second

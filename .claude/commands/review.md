@@ -473,7 +473,7 @@ END EXPLANATION_LOOP
 **NEVER show hints_if_struggling in correct-answer feedback**:
 - Hints are ONLY for struggling users (Quality 1-2)
 - Showing hints after correct answers reduces difficulty artificially
-- User complained: "你给我提示了哥" (You gave me hints, bro)
+- User complained about receiving unwanted hints
 
 **Hints Display Rules**:
 1. **User answered CORRECTLY** (Quality 3-4) → NO hints displayed, proceed directly to rating
