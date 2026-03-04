@@ -22,6 +22,7 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+*.log
 *.bak
 
 # System files

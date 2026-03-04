@@ -1,7 +1,7 @@
 Knowledge System Initialization Report
 ==================================================
 
-Generated: 2026-03-04 15:36:36
+Generated: 2026-03-04 15:48:27
 
 SECTIONS:
 
@@ -13,9 +13,6 @@ DIRECTORIES:
     "knowledge-base/_index/",
     "knowledge-base/_templates/",
     "learning-materials/",
-    "learning-materials/finance/",
-    "learning-materials/programming/",
-    "learning-materials/language/",
     ".review/",
     ".review/backups/",
     "chats/",
@@ -128,5 +125,17 @@ PERMISSIONS:
   "fixed": [],
   "missing": []
 }
+
+GITHUB_GRAPH:
+{
+  "checked": true,
+  "repo_exists": true,
+  "created": true,
+  "pages_enabled": false,
+  "url": "https://github.com/Yugoge/knowledge-system-jade-graph"
+}
+
+REPAIRS:
+  - Created GitHub graph repo: https://github.com/Yugoge/knowledge-system-jade-graph
 
 STATUS: FULLY READY
