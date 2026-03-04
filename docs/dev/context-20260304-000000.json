@@ -1,0 +1,81 @@
+{
+  "request_id": "dev-20260304-000000",
+  "timestamp": "2026-03-04T00:00:00Z",
+  "requirement": {
+    "original": "为什么会缺失？从root/knowledge-system复制粘贴，并修复root/knowledge-system的kb-init全套工作流因为那里才是唯一正确来源",
+    "clarified": "1) Copy taxonomy from /root/knowledge-system to /root/knowledge-system-jade. 2) Fix kb-init.py in /root/knowledge-system to auto-repair taxonomy when missing (not just report). 3) Fix false-negative dependency detection for pillow and python-pptx. 4) Sync fixed kb-init.py to knowledge-system-jade.",
+    "what": "Fix kb-init taxonomy repair + copy taxonomy + sync kb-init between repos",
+    "why": "kb-init validates taxonomy but never creates it; pillow/pptx detection uses wrong import names",
+    "where": [
+      "/root/knowledge-system/scripts/utilities/kb-init.py",
+      "/root/knowledge-system/knowledge-base/_taxonomy/",
+      "/root/knowledge-system-jade/scripts/utilities/kb-init.py",
+      "/root/knowledge-system-jade/knowledge-base/_taxonomy/"
+    ],
+    "scope": {
+      "included": [
+        "Copy _taxonomy tree from knowledge-system to knowledge-system-jade",
+        "Fix validate_taxonomy() to auto-create dirs+index files when missing (--repair-all)",
+        "Fix dependency check: pillow->PIL, python-pptx->pptx",
+        "Sync fixed kb-init.py to knowledge-system-jade"
+      ],
+      "excluded": [
+        "Personal Rem data in knowledge-base/",
+        "Other scripts not related to kb-init"
+      ]
+    },
+    "success_criteria": [
+      "knowledge-system-jade/knowledge-base/_taxonomy/ has all 14 ISCED components",
+      "kb-init --repair-all auto-creates taxonomy dirs+index files when missing",
+      "kb-init correctly detects pillow and python-pptx as installed",
+      "Both repos have identical kb-init.py",
+      "kb-init exits with code 0 (no warnings) in knowledge-system-jade"
+    ]
+  },
+  "root_cause_analysis": {
+    "symptom": "kb-init reports 14 missing taxonomy components and 2 false-negative missing dependencies",
+    "root_cause_1": "validate_taxonomy() has comment 'For now, just report missing taxonomy components - In the future, could add template-based creation' — repair branch never implemented",
+    "root_cause_2": "Dependency checker uses package.replace('-', '_') which gives 'python_pptx' (wrong) and 'pillow' (wrong import); correct imports are 'pptx' and 'PIL'",
+    "root_cause_3": "knowledge-system-jade was created from public framework repo; taxonomy was gitignored in source public repo and never seeded",
+    "source_of_truth": "/root/knowledge-system",
+    "affected_files": [
+      "scripts/utilities/kb-init.py (lines 601-648: validate_taxonomy function)",
+      "scripts/utilities/kb-init.py (lines 800-832: validate_dependencies function)"
+    ]
+  },
+  "context": {
+    "taxonomy_source": "/root/knowledge-system/knowledge-base/_taxonomy/",
+    "taxonomy_dest": "/root/knowledge-system-jade/knowledge-base/_taxonomy/",
+    "taxonomy_structure": {
+      "root_files": ["index.md", "INDEX.md", "isced-index.md", "README.md"],
+      "subdirs": [
+        "00-generic-programmes-and-qualifications",
+        "01-education",
+        "02-arts-and-humanities",
+        "03-social-sciences-journalism-and-information",
+        "04-business-administration-and-law",
+        "05-natural-sciences-mathematics-and-statistics",
+        "06-information-and-communication-technologies-icts",
+        "07-engineering-manufacturing-and-construction",
+        "08-agriculture-forestry-fisheries-and-veterinary",
+        "09-health-and-welfare",
+        "10-services"
+      ]
+    },
+    "dependency_fix_map": {
+      "pillow": "PIL",
+      "python-pptx": "pptx"
+    },
+    "kb_init_path_source": "/root/knowledge-system/scripts/utilities/kb-init.py",
+    "kb_init_path_jade": "/root/knowledge-system-jade/scripts/utilities/kb-init.py",
+    "validate_taxonomy_lines": "601-648",
+    "validate_dependencies_lines": "800-832"
+  },
+  "development_approach": {
+    "step_1": "Copy _taxonomy tree: cp -r /root/knowledge-system/knowledge-base/_taxonomy/ /root/knowledge-system-jade/knowledge-base/_taxonomy/",
+    "step_2": "Fix validate_taxonomy() in /root/knowledge-system/scripts/utilities/kb-init.py: when --repair-all or --non-interactive, create missing dirs with index.md placeholder instead of just reporting",
+    "step_3": "Fix validate_dependencies(): add IMPORT_NAME_MAP dict for packages whose import name differs from pip name (pillow->PIL, python-pptx->pptx)",
+    "step_4": "Copy fixed kb-init.py to knowledge-system-jade: cp /root/knowledge-system/scripts/utilities/kb-init.py /root/knowledge-system-jade/scripts/utilities/kb-init.py",
+    "step_5": "Verify: run kb-init --non-interactive --repair-all in both repos, confirm exit 0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "conversations": {},
+  "metadata": {
+    "last_updated": null,
+    "total_conversations": 0,
+    "total_turns": 0,
+    "total_concepts_extracted": 0,
+    "total_rems_extracted": 0,
+    "by_domain": {},
+    "by_agent": {},
+    "by_month": {}
+  }
+}
