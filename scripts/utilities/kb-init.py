@@ -602,7 +602,8 @@ def validate_taxonomy(
     dry_run: bool = False,
     non_interactive: bool = False,
     verbose: bool = False,
-    report: Optional[InitReport] = None
+    report: Optional[InitReport] = None,
+    repair_all: bool = False
 ) -> Dict[str, List[str]]:
     """Validate ISCED-F 2013 taxonomy structure completeness."""
     status = {"valid": [], "missing": [], "created": []}
@@ -625,11 +626,28 @@ def validate_taxonomy(
                 print(f"     Would create: {path_str}")
                 continue
 
-            # For now, just report missing taxonomy components
-            # In the future, could add template-based creation
-            issue = f"Missing taxonomy component: {path_str}"
-            if report:
-                report.add_issue(issue)
+            if repair_all or non_interactive:
+                # Auto-create missing taxonomy component
+                if is_file:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(f"# {description}\n\nThis file is part of the ISCED-F 2013 taxonomy system.\n")
+                    print(f"  ✅ Created: {path_str}")
+                    status["created"].append(path_str)
+                    if report:
+                        report.add_repair(f"Created taxonomy component: {path_str}")
+                else:
+                    path.mkdir(parents=True, exist_ok=True)
+                    index_file = path / "index.md"
+                    if not index_file.exists():
+                        index_file.write_text(f"# {description}\n\nISCED-F 2013 taxonomy category.\n")
+                    print(f"  ✅ Created: {path_str}")
+                    status["created"].append(path_str)
+                    if report:
+                        report.add_repair(f"Created taxonomy directory: {path_str}")
+            else:
+                issue = f"Missing taxonomy component: {path_str}"
+                if report:
+                    report.add_issue(issue)
 
     # Summary
     total = len(REQUIRED_TAXONOMY)
@@ -812,8 +830,15 @@ def validate_dependencies(verbose: bool = False) -> Dict[str, List[str]]:
             if line.strip() and not line.startswith("#")
         ]
 
+    # Map pip package names to actual import names
+    IMPORT_NAME_MAP = {
+        "pillow": "PIL",
+        "python-pptx": "pptx",
+        "python_pptx": "pptx",
+    }
+
     for package in packages:
-        package_import_name = package.replace("-", "_")
+        package_import_name = IMPORT_NAME_MAP.get(package.lower(), package.replace("-", "_"))
         try:
             spec = importlib.util.find_spec(package_import_name)
             if spec is not None:
@@ -902,7 +927,7 @@ def kb_init(
 
     # Phase 3: Taxonomy System
     print("\n📚 Validating taxonomy structure...")
-    taxonomy_status = validate_taxonomy(dry_run, non_interactive, verbose, report)
+    taxonomy_status = validate_taxonomy(dry_run, non_interactive, verbose, report, repair_all)
     report.add_section("taxonomy", taxonomy_status)
 
     # Phase 4: Agent Files

@@ -41,6 +41,9 @@ Thumbs.db
 venv/
 env/
 
+# Environment variables
+.env
+
 # Knowledge Base Configuration
 # IMPORTANT: knowledge-base/.taxonomy.json MUST BE TRACKED
 # This file contains the UNESCO ISCED and Dewey Decimal taxonomy mappings
