@@ -224,29 +224,36 @@ def auto_generate_output_paths(enriched_rems, isced_path):
 
     Args:
         enriched_rems: List of Rems (may have missing output_path)
-        isced_path: ISCED path for directory
+        isced_path: ISCED path for directory (must NOT include 'knowledge-base/' prefix)
 
     Returns: Rems with output_path populated
     """
     import subprocess
 
+    # Strip accidental 'knowledge-base/' prefix from isced_path to avoid double nesting
+    clean_isced = isced_path.removeprefix('knowledge-base/')
+    dir_path = f"knowledge-base/{clean_isced}"
+
+    # Get the base number once from disk, then increment in-memory for each Rem in this batch
+    result = subprocess.run(
+        ['python3', 'scripts/utilities/get-next-number.py', '--directory', dir_path],
+        capture_output=True,
+        text=True,
+        cwd=ROOT
+    )
+
+    if result.returncode != 0:
+        print(f"  ⚠️  Failed to get next number: {result.stderr}", file=sys.stderr)
+        return enriched_rems
+
+    next_num_int = int(result.stdout.strip())
+
     for rem in enriched_rems:
         if not rem.get('output_path'):
-            # Get next available number
-            result = subprocess.run(
-                ['python3', 'scripts/utilities/get-next-number.py', '--directory', f'knowledge-base/{isced_path}'],
-                capture_output=True,
-                text=True,
-                cwd=ROOT
-            )
-
-            if result.returncode == 0:
-                next_num = result.stdout.strip()
-                rem['output_path'] = f"knowledge-base/{isced_path}/{next_num}-{rem['rem_id']}.md"
-                print(f"  ✓ Generated output_path: {rem['rem_id']} → {next_num}", file=sys.stderr)
-            else:
-                print(f"  ⚠️  Failed to generate number for {rem['rem_id']}: {result.stderr}", file=sys.stderr)
-                # Leave output_path empty - will be caught by validation
+            next_num = f"{next_num_int:03d}"
+            rem['output_path'] = f"{dir_path}/{next_num}-{rem['rem_id']}.md"
+            print(f"  ✓ Generated output_path: {rem['rem_id']} → {next_num}", file=sys.stderr)
+            next_num_int += 1
 
     return enriched_rems
 
