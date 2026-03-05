@@ -52,3 +52,6 @@ orchestrator_metadata.json
 .playwright-mcp/
 session-env/
 systemd/
+
+# Force-include .claude directory (hooks, commands, etc.)
+!.claude/

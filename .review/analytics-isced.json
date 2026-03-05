@@ -1,0 +1,220 @@
+{
+  "metadata": {
+    "generated_at": "2026-03-05T01:03:17.120656",
+    "period_days": 30,
+    "classification": "ISCED"
+  },
+  "summary": {
+    "total_concepts": 4,
+    "total_domains": 1,
+    "review_adherence": 0,
+    "avg_velocity": 6.7,
+    "total_hours": 0.6
+  },
+  "retention_by_domain": {
+    "0414-marketing-and-advertising": {
+      "curve": [
+        {
+          "day": 0,
+          "retention": 100.0,
+          "date": "2026-03-05T01:03:17.119976"
+        },
+        {
+          "day": 1,
+          "retention": 72.5,
+          "date": "2026-03-06T01:03:17.120007"
+        },
+        {
+          "day": 2,
+          "retention": 52.5,
+          "date": "2026-03-07T01:03:17.120019"
+        },
+        {
+          "day": 3,
+          "retention": 38.1,
+          "date": "2026-03-08T01:03:17.120029"
+        },
+        {
+          "day": 4,
+          "retention": 27.6,
+          "date": "2026-03-09T01:03:17.120039"
+        },
+        {
+          "day": 5,
+          "retention": 20.0,
+          "date": "2026-03-10T01:03:17.120049"
+        },
+        {
+          "day": 6,
+          "retention": 14.5,
+          "date": "2026-03-11T01:03:17.120059"
+        },
+        {
+          "day": 7,
+          "retention": 10.5,
+          "date": "2026-03-12T01:03:17.120067"
+        },
+        {
+          "day": 8,
+          "retention": 7.6,
+          "date": "2026-03-13T01:03:17.120074"
+        },
+        {
+          "day": 9,
+          "retention": 5.5,
+          "date": "2026-03-14T01:03:17.120095"
+        },
+        {
+          "day": 10,
+          "retention": 4.0,
+          "date": "2026-03-15T01:03:17.120105"
+        },
+        {
+          "day": 11,
+          "retention": 2.9,
+          "date": "2026-03-16T01:03:17.120116"
+        },
+        {
+          "day": 12,
+          "retention": 2.1,
+          "date": "2026-03-17T01:03:17.120126"
+        },
+        {
+          "day": 13,
+          "retention": 1.5,
+          "date": "2026-03-18T01:03:17.120136"
+        },
+        {
+          "day": 14,
+          "retention": 1.1,
+          "date": "2026-03-19T01:03:17.120144"
+        },
+        {
+          "day": 15,
+          "retention": 0.8,
+          "date": "2026-03-20T01:03:17.120151"
+        },
+        {
+          "day": 16,
+          "retention": 0.6,
+          "date": "2026-03-21T01:03:17.120158"
+        },
+        {
+          "day": 17,
+          "retention": 0.4,
+          "date": "2026-03-22T01:03:17.120166"
+        },
+        {
+          "day": 18,
+          "retention": 0.3,
+          "date": "2026-03-23T01:03:17.120173"
+        },
+        {
+          "day": 19,
+          "retention": 0.2,
+          "date": "2026-03-24T01:03:17.120180"
+        },
+        {
+          "day": 20,
+          "retention": 0.2,
+          "date": "2026-03-25T01:03:17.120187"
+        },
+        {
+          "day": 21,
+          "retention": 0.1,
+          "date": "2026-03-26T01:03:17.120194"
+        },
+        {
+          "day": 22,
+          "retention": 0.1,
+          "date": "2026-03-27T01:03:17.120201"
+        },
+        {
+          "day": 23,
+          "retention": 0.1,
+          "date": "2026-03-28T01:03:17.120208"
+        },
+        {
+          "day": 24,
+          "retention": 0.0,
+          "date": "2026-03-29T01:03:17.120223"
+        },
+        {
+          "day": 25,
+          "retention": 0.0,
+          "date": "2026-03-30T01:03:17.120230"
+        },
+        {
+          "day": 26,
+          "retention": 0.0,
+          "date": "2026-03-31T01:03:17.120238"
+        },
+        {
+          "day": 27,
+          "retention": 0.0,
+          "date": "2026-04-01T01:03:17.120245"
+        },
+        {
+          "day": 28,
+          "retention": 0.0,
+          "date": "2026-04-02T01:03:17.120256"
+        },
+        {
+          "day": 29,
+          "retention": 0.0,
+          "date": "2026-04-03T01:03:17.120264"
+        },
+        {
+          "day": 30,
+          "retention": 0.0,
+          "date": "2026-04-04T01:03:17.120271"
+        }
+      ],
+      "conceptCount": 4,
+      "currentRetention": 100.0,
+      "domainName": "Marketing And Advertising (0414)"
+    }
+  },
+  "velocity_by_domain": {
+    "uncategorized": {
+      "velocity": 15.0,
+      "reviewsCompleted": 2,
+      "hoursInvested": 0.1,
+      "domainName": "Uncategorized",
+      "benchmark": "fast"
+    },
+    "0414-marketing-and-advertising": {
+      "velocity": 4.0,
+      "reviewsCompleted": 2,
+      "hoursInvested": 0.5,
+      "domainName": "Marketing And Advertising (0414)",
+      "benchmark": "slow"
+    }
+  },
+  "mastery_by_domain": {
+    "0414-marketing-and-advertising": {
+      "averageMastery": 10.8,
+      "conceptCount": 4,
+      "distribution": {
+        "novice": 4,
+        "learning": 0,
+        "competent": 0,
+        "expert": 0
+      },
+      "domainName": "Marketing And Advertising (0414)"
+    }
+  },
+  "adherence_by_domain": {},
+  "time_distribution": {
+    "totalHours": 0.27,
+    "byDomain": {
+      "Uncategorized": 0.27
+    }
+  },
+  "streak_tracking": {
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "totalActiveDays": 1,
+    "lastActivity": "2026-03-05"
+  }
+}

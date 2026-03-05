@@ -1,0 +1,6 @@
+{
+  "version": "2.0.0",
+  "default_algorithm": "fsrs",
+  "description": "FSRS-based spaced repetition schedule for all Rems",
+  "concepts": {}
+}

@@ -29,16 +29,7 @@
       ]
     },
     "luxury-branding-china-western-vs-chinese-luxury-logic": {
-      "typed_links_to": [
-        {
-          "to": "luxury-branding-china-branding-definition-historical-vs-modern",
-          "type": "depends_on"
-        },
-        {
-          "to": "luxury-branding-china-mianzi-brand-equity",
-          "type": "has_example"
-        }
-      ],
+      "typed_links_to": [],
       "typed_linked_from": [
         {
           "from": "luxury-branding-china-branding-definition-historical-vs-modern",
@@ -55,14 +46,6 @@
         {
           "to": "luxury-branding-china-western-vs-chinese-luxury-logic",
           "type": "example_of"
-        },
-        {
-          "to": "luxury-branding-china-branding-definition-historical-vs-modern",
-          "type": "depends_on"
-        },
-        {
-          "to": "luxury-branding-china-cartier-china-strategy",
-          "type": "used_in"
         }
       ],
       "typed_linked_from": [

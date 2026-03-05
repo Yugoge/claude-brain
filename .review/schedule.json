@@ -2,5 +2,87 @@
   "version": "2.0.0",
   "default_algorithm": "fsrs",
   "description": "FSRS-based spaced repetition schedule for all Rems",
-  "concepts": {}
+  "concepts": {
+    "luxury-branding-china-mianzi-brand-equity": {
+      "id": "luxury-branding-china-mianzi-brand-equity",
+      "domain": "04-business-administration-and-law/041-business-and-administration/0414-marketing-and-advertising",
+      "title": "Mianzi (面子) as Brand Equity Driver in China",
+      "active_algorithm": "fsrs",
+      "fsrs_state": {
+        "difficulty": 1.0651,
+        "stability": 3.1262,
+        "retrievability": 1.0,
+        "interval": 3,
+        "next_review": "2026-03-06",
+        "last_review": null,
+        "review_count": 0
+      },
+      "created": "2026-03-05",
+      "last_modified": "2026-03-05",
+      "source": "../../../../chats/2026-03/cartier-china-branding-2026-03-05.md"
+    },
+    "luxury-branding-china-cartier-china-strategy": {
+      "id": "luxury-branding-china-cartier-china-strategy",
+      "domain": "04-business-administration-and-law/041-business-and-administration/0414-marketing-and-advertising",
+      "title": "Cartier China Market Strategy",
+      "active_algorithm": "fsrs",
+      "fsrs_state": {
+        "difficulty": 1.0651,
+        "stability": 3.1262,
+        "retrievability": 1.0,
+        "interval": 3,
+        "next_review": "2026-03-06",
+        "last_review": null,
+        "review_count": 0
+      },
+      "created": "2026-03-05",
+      "last_modified": "2026-03-05",
+      "source": "../../../../chats/2026-03/cartier-china-branding-2026-03-05.md"
+    },
+    "luxury-branding-china-branding-definition-historical-vs-modern": {
+      "id": "luxury-branding-china-branding-definition-historical-vs-modern",
+      "domain": "04-business-administration-and-law/041-business-and-administration/0414-marketing-and-advertising",
+      "title": "Branding: Historical Origins vs Modern Definition",
+      "active_algorithm": "fsrs",
+      "fsrs_state": {
+        "difficulty": 1.0651,
+        "stability": 3.1262,
+        "retrievability": 1.0,
+        "interval": 3,
+        "next_review": "2026-03-06",
+        "last_review": null,
+        "review_count": 0
+      },
+      "created": "2026-03-05",
+      "last_modified": "2026-03-05",
+      "source": "../../../../chats/2026-03/cartier-china-branding-2026-03-05.md"
+    },
+    "luxury-branding-china-western-vs-chinese-luxury-logic": {
+      "id": "luxury-branding-china-western-vs-chinese-luxury-logic",
+      "domain": "04-business-administration-and-law/041-business-and-administration/0414-marketing-and-advertising",
+      "title": "Western vs Chinese Luxury Branding Logic",
+      "active_algorithm": "fsrs",
+      "fsrs_state": {
+        "difficulty": 1.0651,
+        "stability": 3.1262,
+        "retrievability": 1.0,
+        "interval": 3,
+        "next_review": "2026-03-06",
+        "last_review": null,
+        "review_count": 0
+      },
+      "created": "2026-03-05",
+      "last_modified": "2026-03-05",
+      "source": "../../../../chats/2026-03/cartier-china-branding-2026-03-05.md"
+    }
+  },
+  "metadata": {
+    "last_review": null,
+    "total_reviews": 0,
+    "concepts_due_today": 0,
+    "algorithm_counts": {
+      "fsrs": 4,
+      "sm2": 0
+    }
+  }
 }

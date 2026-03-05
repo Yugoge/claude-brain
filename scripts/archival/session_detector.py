@@ -146,7 +146,12 @@ class SessionDetector:
         # Lazy loading - only read if file exists
         if not self.history_file.exists():
             self.confidence_score = self.calculate_confidence(conversation_turns)
-            return self.session_type, self.rems_reviewed, self.confidence_score
+            return DetectionResult(
+                session_type=self.session_type,
+                rems_reviewed=self.rems_reviewed,
+                confidence=self.confidence_score,
+                metadata={'history_file_exists': False}
+            )
 
         try:
             with open(self.history_file) as f:
