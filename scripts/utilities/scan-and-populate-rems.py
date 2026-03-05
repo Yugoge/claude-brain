@@ -104,6 +104,10 @@ def load_schedule() -> Dict:
         schedule["default_algorithm"] = "fsrs"
         schedule["fsrs_defaults"] = FSRS_DEFAULTS
 
+    # Ensure metadata key always exists (may be missing in older/partial schedule files)
+    if "metadata" not in schedule:
+        schedule["metadata"] = default_schedule["metadata"]
+
     return schedule
 
 
