@@ -20,8 +20,17 @@ Thumbs.db
 .idea/
 *.sublime-*
 
+# Large binary files are tracked (no LFS installed, direct tracking)
+# Note: Files >100MB may require Git LFS in the future
+
+# But always track progress and metadata
+!learning-materials/**/*.progress.md
+!learning-materials/**/*.md
+!learning-materials/.index.json
+
 # Temporary files
 *.tmp
+*.log
 *.bak
 
 # System files
@@ -31,9 +40,6 @@ Thumbs.db
 # Python Virtual Environment
 venv/
 env/
-
-# Environment variables
-.env
 
 # Knowledge Base Configuration
 # IMPORTANT: knowledge-base/.taxonomy.json MUST BE TRACKED
@@ -46,6 +52,51 @@ env/
 .mcp/memory/
 orchestrator_metadata.json
 *.backup-*
+
+# ============================================
+# PUBLIC REPOSITORY EXCLUSIONS
+# ============================================
+# The following directories contain private data and internal documentation
+# They should NOT be synced to public repositories
+
+# Private Documentation (use architecture/ in root instead)
+docs/
+
+# Personal Learning Materials (your private files)
+learning-materials/
+
+# Extracted Knowledge Base (your personal knowledge)
+knowledge-base/
+
+# Review System Data (FSRS scheduling, personal progress)
+.review/
+
+# Conversation Archives (your learning sessions)
+chats/
+
+# Analytics and Progress Data (for public repo)
+analytics-dashboard.html
+knowledge-graph.html
+enriched_rems.json
+
+# Test directories
+tests/
+chats-test/
+
+# Logs and temporary processing files
+logs/
+tmp/
+*.log
+.classification.log
+.format-updates.log
+
+# INCLUDE EXCEPTIONS (force-track these even if parent directory is ignored)
+# System configuration and templates are safe to share
+!learning-materials/_templates/
+!knowledge-base/_templates/
+!knowledge-base/_taxonomy/
+!chats/_templates/
+!.claude/
 
 # Playwright MCP
 .playwright-mcp/
