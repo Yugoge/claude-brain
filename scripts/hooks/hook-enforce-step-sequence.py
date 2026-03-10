@@ -57,7 +57,13 @@ def main():
     else:
         # Subsequent call: enforce sequence rules
         if len(last_todos) != len(new_todos):
-            # Count mismatch handled by hook-enforce-todo-count; skip
+            # Count mismatch handled by hook-enforce-todo-count; skip validation
+            # But reset baseline so next correct-count call can be tracked
+            try:
+                state['last_todos'] = new_todos
+                bookmark_path.write_text(json.dumps(state))
+            except Exception:
+                pass
             sys.exit(0)
 
         prev_completed = {i for i, t in enumerate(last_todos) if t.get('status') == 'completed'}
