@@ -150,6 +150,18 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-checklist-userprompt.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
@@ -167,12 +179,6 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-pre-command-review-check.py",
-            "stdin_json": true,
-            "on_error": "warn"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-checklist-injection.py",
             "stdin_json": true,
             "on_error": "warn"
           }
@@ -238,6 +244,16 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-todo-state-tracker.py",
             "stdin_json": true,
             "on_error": "ignore"
+          },
+          {
+            "type": "command",
+            "stdin_json": true,
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-todo-count.py"
+          },
+          {
+            "type": "command",
+            "stdin_json": true,
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-step-sequence.py"
           }
         ]
       },

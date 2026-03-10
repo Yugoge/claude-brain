@@ -37,13 +37,19 @@ def main():
     project_dir = Path(os.environ.get('CLAUDE_PROJECT_DIR', os.getcwd()))
     bookmark_path = project_dir / '.claude' / f'workflow-{session_id}.json'
 
-    # If tool is TodoWrite or TodoRead → acknowledge and allow
-    if tool_name in ('TodoWrite', 'TodoRead'):
+    # ToolSearch: allow through so agent can load TodoRead — but don't set flag
+    if tool_name == 'ToolSearch':
+        sys.exit(0)
+
+    # TodoWrite → acknowledge and allow
+    # (Stop hook enforces todo count >= blocking_count, so reducing todos is caught at session end)
+    if tool_name == 'TodoWrite':
         if bookmark_path.exists():
             try:
                 state = json.loads(bookmark_path.read_text())
                 if not state.get('todo_acknowledged', False):
                     state['todo_acknowledged'] = True
+                    state.pop('lock_reason', None)  # clear violation reason on unlock
                     bookmark_path.write_text(json.dumps(state))
             except Exception:
                 pass
@@ -62,13 +68,28 @@ def main():
     if state.get('todo_acknowledged', False):
         sys.exit(0)
 
-    # Not acknowledged → block
+    # Not acknowledged → block with reason-specific message
     cmd_name = state.get('command', '?')
-    sys.stderr.write(
-        f'\n⚠️  CHECKLIST NOT STARTED: /{cmd_name} workflow is active.\n'
-        f'You must call TodoWrite FIRST before using any other tools.\n'
-        f'Initialize the checklist: mark Step 1 as in_progress, then proceed.\n'
-    )
+    lock_reason = state.get('lock_reason', 'not_started')
+
+    if lock_reason == 'sequence_violation':
+        sys.stderr.write(
+            f'\n🚫 STEP SKIPPING DETECTED: /{cmd_name} workflow is locked.\n'
+            f'You attempted to skip or reorder steps.\n'
+            f'Call TodoWrite to fix the sequence — complete steps one at a time, in order.\n'
+        )
+    elif lock_reason == 'count_mismatch':
+        sys.stderr.write(
+            f'\n🚫 STEP COUNT VIOLATION: /{cmd_name} workflow is locked.\n'
+            f'TodoWrite was called with the wrong number of steps.\n'
+            f'Call TodoWrite with the complete canonical step list.\n'
+        )
+    else:
+        sys.stderr.write(
+            f'\n⚠️  CHECKLIST NOT STARTED: /{cmd_name} workflow is active.\n'
+            f'Call TodoWrite to initialize the checklist before using other tools.\n'
+            f'The workflow has pre-generated steps — use TodoWrite to mark Step 1 as in_progress.\n'
+        )
     sys.exit(2)
 
 
