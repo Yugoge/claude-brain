@@ -75,6 +75,14 @@ def get_todos():
     ]
 
 
+
+
+def get_blocking_count() -> int:
+    """
+    All 11 maintenance tasks are automated - must complete before stopping.
+    """
+    return 11
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

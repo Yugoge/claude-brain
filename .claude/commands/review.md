@@ -2,6 +2,7 @@
 description: "Interactive review session using spaced repetition (FSRS algorithm)"
 allowed-tools: Bash, Task, TodoWrite
 argument-hint: "[domain | [[rem-id]]]"
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL PROHIBITION**: Main agent MUST NOT use Read tool on Rem files. Only review-master subagent may read Rem content.

@@ -2,6 +2,7 @@
 description: "Run knowledge base maintenance tasks"
 allowed-tools: Bash, Read, TodoWrite
 argument-hint: "[--check-only | --fix-all | --validate]"
+disable-model-invocation: true
 ---
 
 # Knowledge Base Maintenance

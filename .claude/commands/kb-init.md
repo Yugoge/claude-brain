@@ -2,6 +2,7 @@
 description: "Initialize or reinitialize the knowledge system"
 allowed-tools: Bash, Read, TodoWrite
 argument-hint: "[--dry-run | --non-interactive | --verbose | --repair-all]"
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Load todos from `scripts/todo/kb-init.py` at start:

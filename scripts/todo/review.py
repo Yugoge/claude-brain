@@ -32,6 +32,14 @@ def get_todos():
 ]
 
 
+
+
+def get_blocking_count() -> int:
+    """
+    Step 1 (load Rems) is required setup before interactive review dialogue.
+    """
+    return 1
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

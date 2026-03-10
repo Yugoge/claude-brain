@@ -2,6 +2,7 @@
 description: "Interactive learning with Socratic dialogue"
 allowed-tools: Read, Bash, Write, Task, TodoWrite
 argument-hint: "[file-path]"
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

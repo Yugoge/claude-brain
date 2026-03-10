@@ -3,6 +3,7 @@ description: "Save learning session by extracting Rems, archiving conversation, 
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task, TodoWrite
 argument-hint: "[topic-name | --all]"
 model: inherit
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

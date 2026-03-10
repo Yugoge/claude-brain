@@ -1,6 +1,7 @@
 ---
 description: "Clear all memories (nuclear option with confirmation)"
 allowed-tools: mcp__memory-server__delete_entities, TodoWrite
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

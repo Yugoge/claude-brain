@@ -1,3 +1,8 @@
+---
+description: "commands Index"
+disable-model-invocation: true
+---
+
 # commands Index
 
 Auto-generated folder inventory. Last updated: 2026-01-08 16:25:00

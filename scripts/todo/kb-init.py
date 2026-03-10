@@ -67,6 +67,14 @@ def get_todos():
     ]
 
 
+
+
+def get_blocking_count() -> int:
+    """
+    All 10 checks are automated initialization and validation tasks.
+    """
+    return 10
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

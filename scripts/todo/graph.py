@@ -47,6 +47,14 @@ def get_todos():
     ]
 
 
+
+
+def get_blocking_count() -> int:
+    """
+    All 6 steps are automated graph generation and deployment.
+    """
+    return 6
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

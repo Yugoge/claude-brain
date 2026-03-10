@@ -55,3 +55,6 @@ systemd/
 
 # Force-include .claude directory (hooks, commands, etc.)
 !.claude/
+
+# Workflow state (transient, per-session)
+.claude/workflow-current.json

@@ -73,6 +73,14 @@ def get_todos():
     ]
 
 
+
+
+def get_blocking_count() -> int:
+    """
+    Steps 0-7 are pre-processing and extraction before user confirmation at Step 8.
+    """
+    return 8
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

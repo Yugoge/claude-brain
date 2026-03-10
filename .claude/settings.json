@@ -150,24 +150,17 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "PreToolUse": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-user-input.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-precheck-workflow.py",
             "stdin_json": true,
-            "on_error": "warn"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-review-reminder.py",
             "on_error": "ignore"
           }
         ]
-      }
-    ],
-    "PreToolUse": [
+      },
       {
         "matcher": "SlashCommand",
         "hooks": [
@@ -238,6 +231,17 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-todo-state-tracker.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
         "matcher": "Task",
         "hooks": [
           {
@@ -307,6 +311,12 @@
     "Stop": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-workflow.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          },
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-stop.py",

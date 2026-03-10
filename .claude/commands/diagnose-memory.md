@@ -2,6 +2,7 @@
 description: "Diagnose MCP memory server issues"
 allowed-tools: Bash
 argument-hint: "[--health | --storage | --errors | --all]"
+disable-model-invocation: true
 ---
 
 # MCP Memory Diagnostic Tool
