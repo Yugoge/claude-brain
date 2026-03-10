@@ -102,7 +102,7 @@ def main():
         bookmark = workflow_bookmark_path(session_id)
         try:
             bookmark.parent.mkdir(parents=True, exist_ok=True)
-            bookmark.write_text(json.dumps({'command': cmd_name}))
+            bookmark.write_text(json.dumps({'command': cmd_name, 'todo_acknowledged': False}))
         except Exception:
             pass
 
