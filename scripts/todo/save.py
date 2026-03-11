@@ -15,71 +15,58 @@ def get_todos():
         list[dict]: Todo items with content, activeForm, status
     """
     return [
-        {
-            "content": "Step 0: Initialize Workflow Checklist",
-            "activeForm": "Initializing workflow checklist",
-            "status": "pending"
-        },
-        {
-            "content": "Step 1: Pre-Processing (Batch Execution)",
-            "activeForm": "Running pre-processing orchestrator",
-            "status": "pending"
-        },
-        {
-            "content": "Step 2: Domain Classification & ISCED Path",
-            "activeForm": "Classifying domain",
-            "status": "pending"
-        },
-        {
-            "content": "Step 3: Extract Concepts",
-            "activeForm": "Extracting concepts",
-            "status": "pending"
-        },
-        {
-            "content": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
-            "activeForm": "Analyzing user learning and Rem updates",
-            "status": "pending"
-        },
-        {
-            "content": "Step 5: Enrich with Typed Relations (MANDATORY)",
-            "activeForm": "Enriching with typed relations",
-            "status": "pending"
-        },
-        {
-            "content": "Step 6: Rem Extraction Transparency",
-            "activeForm": "Presenting extracted Rems",
-            "status": "pending"
-        },
-        {
-            "content": "Step 7: Generate Preview",
-            "activeForm": "Generating preview",
-            "status": "pending"
-        },
-        {
-            "content": "Step 8: User Confirmation",
-            "activeForm": "Awaiting user confirmation",
-            "status": "pending"
-        },
-        {
-            "content": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
-            "activeForm": "Updating learning material progress",
-            "status": "pending"
-        },
-        {
-            "content": "Step 10: Execute Post-Processing (Batch Execution)",
-            "activeForm": "Running post-processing orchestrator",
-            "status": "pending"
-        }
-    ]
+    {
+        "content": "Step 1: Pre-Processing (Batch Execution)",
+        "activeForm": "Step 1: Pre-Processing (Batch Execution)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 2: Domain Classification & ISCED Path (AI + Subagent)",
+        "activeForm": "Step 2: Domain Classification & ISCED Path (AI + Subagent)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 3: Extract Concepts (AI-driven, no file creation)",
+        "activeForm": "Step 3: Extract Concepts (AI-driven, no file creation)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
+        "activeForm": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 5: Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
+        "activeForm": "Step 5: Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 6: Rem Extraction Transparency",
+        "activeForm": "Step 6: Rem Extraction Transparency",
+        "status": "pending"
+    },
+    {
+        "content": "Step 7: Generate Preview",
+        "activeForm": "Step 7: Generate Preview",
+        "status": "pending"
+    },
+    {
+        "content": "Step 8: User Confirmation",
+        "activeForm": "Step 8: User Confirmation",
+        "status": "pending"
+    },
+    {
+        "content": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
+        "activeForm": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
+        "status": "pending"
+    },
+    {
+        "content": "Step 10: Execute Automated Post-Processing",
+        "activeForm": "Step 10: Execute Automated Post-Processing",
+        "status": "pending"
+    }
+]
 
-
-
-
-def get_blocking_count() -> int:
-    """
-    Steps 0-7 are pre-processing and extraction before user confirmation at Step 8.
-    """
-    return 8
 
 if __name__ == "__main__":
     # CLI: print todos as formatted list

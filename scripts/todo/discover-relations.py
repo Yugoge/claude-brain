@@ -59,12 +59,6 @@ def get_todos():
 
 
 
-def get_blocking_count() -> int:
-    """
-    Steps 1-5 are automated loading/consultation before user preview at Step 5.
-    """
-    return 5
-
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

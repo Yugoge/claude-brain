@@ -29,12 +29,6 @@ def get_todos():
 
 
 
-def get_blocking_count() -> int:
-    """
-    Steps 1-4 are setup/consultation phases before interactive dialogue at Step 5.
-    """
-    return 4
-
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

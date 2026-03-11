@@ -150,18 +150,6 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-checklist-userprompt.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "hooks": [
