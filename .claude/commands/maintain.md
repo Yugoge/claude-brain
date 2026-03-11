@@ -28,14 +28,6 @@ Run in interactive mode to select specific tasks, or use mode flags for automate
 
 ## Implementation
 
-**IMPORTANT**: Load todos from `scripts/todo/maintain.py` at start:
-
-```bash
-source venv/bin/activate && python scripts/todo/maintain.py
-```
-
-Use output to create TodoWrite with all 9 tasks. Mark each task as in_progress before starting, completed after finishing.
-
 ### Task Execution Order (Logical Flow)
 
 Tasks are ordered from validation → basic fixes → advanced maintenance.

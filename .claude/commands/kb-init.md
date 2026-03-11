@@ -5,14 +5,6 @@ argument-hint: "[--dry-run | --non-interactive | --verbose | --repair-all]"
 disable-model-invocation: true
 ---
 
-**⚠️ CRITICAL**: Load todos from `scripts/todo/kb-init.py` at start:
-
-```bash
-source venv/bin/activate && python scripts/todo/kb-init.py
-```
-
-Use output to create TodoWrite with all 10 checks. Mark each check as in_progress before starting, completed immediately after.
-
 # Knowledge Base Init Command
 
 Initialize or reinitialize the knowledge system for first-time use or after major changes.
