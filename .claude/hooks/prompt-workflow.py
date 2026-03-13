@@ -41,6 +41,26 @@ def workflow_bookmark_path(session_id: str) -> Path:
     return PROJECT_DIR / '.claude' / f'workflow-{session_id}.json'
 
 
+def read_command_spec(cmd_name: str) -> str:
+    """Read the command .md file, stripping YAML frontmatter. Project-level overrides global."""
+    for search_path in [
+        PROJECT_DIR / '.claude' / 'commands' / f'{cmd_name}.md',
+        Path.home() / '.claude' / 'commands' / f'{cmd_name}.md',
+    ]:
+        if search_path.exists():
+            try:
+                content = search_path.read_text()
+                # Strip YAML frontmatter (--- ... ---)
+                if content.startswith('---'):
+                    end = content.find('\n---', 3)
+                    if end != -1:
+                        content = content[end + 4:].lstrip('\n')
+                return content.strip()
+            except Exception:
+                pass
+    return ''
+
+
 def run_todo_script(cmd_name: str) -> list:
     todo_script = PROJECT_DIR / 'scripts' / 'todo' / f'{cmd_name}.py'
     if not todo_script.exists():
@@ -108,8 +128,33 @@ def build_completion_template(todos: list) -> str:
     return json.dumps(result, ensure_ascii=False, separators=(",", ": "))
 
 
+def build_sequence_fix_call(last_todos: list) -> str:
+    """For sequence violations: compute correct next state from last_todos (pre-violation state)."""
+    if not last_todos:
+        return ''
+    try:
+        result = [t.copy() for t in last_todos]
+        in_progress_idx = next(
+            (i for i, t in enumerate(result) if t.get('status') == 'in_progress'), None
+        )
+        if in_progress_idx is not None:
+            result[in_progress_idx]['status'] = 'completed'
+            for t in result[in_progress_idx + 1:]:
+                if t.get('status') == 'pending':
+                    t['status'] = 'in_progress'
+                    break
+        else:
+            for t in result:
+                if t.get('status') == 'pending':
+                    t['status'] = 'in_progress'
+                    break
+        return json.dumps(result, ensure_ascii=False, separators=(",", ": "))
+    except Exception:
+        return ''
+
+
 def format_progress(todos: list, lock_reason: str = '', canonical: list = None,
-                    todo_acknowledged: bool = False) -> str:
+                    todo_acknowledged: bool = False, last_todos: list = None) -> str:
     """Phase B: show current progress. JSON template only shown before first successful TodoWrite."""
     total = len(todos)
     completed = sum(1 for t in todos if t.get('status') == 'completed')
@@ -127,12 +172,23 @@ def format_progress(todos: list, lock_reason: str = '', canonical: list = None,
         return '\n'.join(lines)
 
     if lock_reason == 'sequence_violation':
-        current = in_progress["content"] if in_progress else "current step"
+        # Use last_todos (pre-violation state) to show the correct step, not the violating state.
+        if last_todos:
+            real_in_progress = next(
+                (t for t in last_todos if t.get('status') == 'in_progress'), None
+            )
+            current = real_in_progress["content"] if real_in_progress else "current step"
+            fix_json = build_sequence_fix_call(last_todos)
+        else:
+            current = in_progress["content"] if in_progress else "current step"
+            fix_json = ''
         lines = [
             f'WORKFLOW LOCKED (sequence_violation): Steps were skipped or completed out of order.',
             f'REQUIRED: complete "{current}" first, then advance ONE step at a time.',
             f'Call TodoWrite to fix the sequence.',
         ]
+        if fix_json:
+            lines += ['', 'Call TodoWrite with this exact todos array:', '', fix_json]
         return '\n'.join(lines)
 
     lines = [f'ACTIVE WORKFLOW: {completed}/{total} steps completed.']
@@ -146,13 +202,17 @@ def format_progress(todos: list, lock_reason: str = '', canonical: list = None,
 
     # Show JSON template only until the agent has successfully called TodoWrite once
     if not todo_acknowledged:
+        lines.append('')
+        lines.append('WRONG: TodoWrite(todos="[...]")   <- string, WILL BE REJECTED')
+        lines.append('RIGHT: TodoWrite(todos=[...])     <- array, this is correct')
+        lines.append('If schema errors persist, call ToolSearch("select:TodoWrite") to load the exact parameter schema.')
+        lines.append('')
         if in_progress:
-            lines.append(f'Complete the work above, THEN call TodoWrite — copy the JSON below EXACTLY into the todos parameter (do NOT retype or reformat):')
+            lines.append('Complete the work above, THEN call TodoWrite with this array (pass as array, NOT string):')
             lines.append('')
             lines.append(build_completion_template(todos))
         else:
-            lines.append('')
-            lines.append('Call TodoWrite NOW — copy the JSON below EXACTLY into the todos parameter (do NOT retype or reformat):')
+            lines.append('Call TodoWrite NOW with this array (pass as array, NOT string):')
             lines.append(build_next_todowrite_call(todos, mark_first_inprogress=False))
 
     return '\n'.join(lines)
@@ -178,6 +238,7 @@ def main():
                     lock_reason = ''
                     canonical = []
                     todo_acknowledged = False
+                    last_todos = []
                     bookmark = workflow_bookmark_path(session_id)
                     if bookmark.exists():
                         try:
@@ -189,11 +250,15 @@ def main():
                                 bookmark_cmd = state.get('command', '')
                                 if bookmark_cmd:
                                     canonical = run_todo_script(bookmark_cmd)
+                            # For sequence_violation: last_todos holds pre-violation state
+                            if lock_reason == 'sequence_violation':
+                                last_todos = state.get('last_todos', [])
                         except Exception:
                             pass
 
                     print(format_progress(todos, lock_reason=lock_reason, canonical=canonical,
-                                          todo_acknowledged=todo_acknowledged))
+                                          todo_acknowledged=todo_acknowledged,
+                                          last_todos=last_todos))
                 except Exception:
                     pass
             sys.exit(0)
@@ -220,11 +285,19 @@ def main():
         lines = [
             f'CHECKLIST PRE-INITIALIZED for /{cmd_name.upper()}:',
             f'Your workflow checklist ({len(todos)} steps) has been created.',
-            f'FIRST ACTION: copy the JSON below EXACTLY into the TodoWrite todos parameter (do NOT retype or reformat):',
-            f'(you MUST pass ALL {len(todos)} items every TodoWrite call):',
+            f'',
+            f'WRONG: TodoWrite(todos="[...]")   ← string, WILL BE REJECTED',
+            f'RIGHT: TodoWrite(todos=[...])     ← array, this is correct',
+            f'',
+            f'Each item: {{"content": "...", "activeForm": "...", "status": "pending|in_progress|completed"}}',
+            f'FIRST ACTION: call TodoWrite with the todos array below (pass as array, NOT as string):',
+            f'(you MUST pass ALL {len(todos)} items every TodoWrite call)',
             '',
             first_call,
         ]
+        spec = read_command_spec(cmd_name)
+        if spec:
+            lines += ['', f'--- /{cmd_name} COMMAND SPECIFICATION ---', '', spec]
         print('\n'.join(lines))
 
     except Exception:

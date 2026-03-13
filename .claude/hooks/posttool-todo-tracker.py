@@ -90,17 +90,24 @@ def main():
                 pass
         else:
             # Write updated todos back so Phase B reads current state
-            try:
-                todos_file.parent.mkdir(parents=True, exist_ok=True)
-                todos_file.write_text(json.dumps(todos, ensure_ascii=False))
-            except Exception:
-                pass
-            # Mark todo_acknowledged=True so Phase B suppresses the JSON template
-            try:
-                bookmark_state['todo_acknowledged'] = True
-                bookmark_path.write_text(json.dumps(bookmark_state, ensure_ascii=False))
-            except Exception:
-                pass
+            # BUT only if count matches canonical — prevents corrupting file with bad data
+            # when agent submits wrong number of steps (count hook will handle the error)
+            canonical = run_todo_script(cmd_name, project_dir) if cmd_name != '?' else []
+            blocking_count = len(canonical) if canonical else 0
+            count_ok = blocking_count == 0 or len(todos) >= blocking_count
+            if count_ok:
+                try:
+                    todos_file.parent.mkdir(parents=True, exist_ok=True)
+                    todos_file.write_text(json.dumps(todos, ensure_ascii=False))
+                except Exception:
+                    pass
+                # Only mark todo_acknowledged=True when count is correct
+                # If count is wrong, count hook will set todo_acknowledged=False + lock_reason
+                try:
+                    bookmark_state['todo_acknowledged'] = True
+                    bookmark_path.write_text(json.dumps(bookmark_state, ensure_ascii=False))
+                except Exception:
+                    pass
 
         # Get blocking_count fresh from todo script — never from cache
         canonical = run_todo_script(cmd_name, project_dir) if cmd_name != '?' else []

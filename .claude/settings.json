@@ -145,7 +145,20 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-start.py",
+            "stdin_json": true,
             "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-info.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-git-init.sh"
           }
         ]
       }
@@ -155,31 +168,69 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-precheck-workflow.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-pre-command-review-check.py",
             "stdin_json": true,
             "on_error": "ignore"
           }
         ]
       },
       {
-        "matcher": "SlashCommand",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-pre-command-review-check.py",
-            "stdin_json": true,
-            "on_error": "warn"
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
         "hooks": [
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-subagent-checklist.py",
             "stdin_json": true,
-            "on_error": "warn"
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-bash.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-detect-inline-python.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-protect-index-files.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-check-read-size.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-workflow-gate.py",
+            "stdin_json": true,
+            "on_error": "ignore"
           }
         ]
       },
@@ -188,65 +239,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-bash.py",
-            "stdin_json": true,
-            "on_error": "warn"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-detect-inline-python.py",
-            "stdin_json": true,
-            "on_error": "warn"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-protect-index-files.py",
-            "stdin_json": true,
-            "on_error": "warn"
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-check-read-size.py",
-            "stdin_json": true,
-            "on_error": "warn"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-bash-safety.sh",
+            "stdin_json": true
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "TodoWrite",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-todo-state-tracker.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          },
-          {
-            "type": "command",
-            "stdin_json": true,
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-todo-count.py"
-          },
-          {
-            "type": "command",
-            "stdin_json": true,
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-step-sequence.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
         "hooks": [
           {
             "type": "command",
@@ -257,7 +257,6 @@
         ]
       },
       {
-        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
@@ -268,23 +267,53 @@
         ]
       },
       {
-        "matcher": "Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/smart-checkpoint.sh",
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__memory-server__.*",
         "hooks": [
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-memory-health.py",
             "stdin_json": true,
             "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-tracker.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-count.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-sequence.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-git-checkpoint.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash\\(git commit.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-git-warn.sh"
           }
         ]
       }
@@ -307,25 +336,28 @@
         ]
       }
     ],
-    "PreCompact": [
-      {
-        "hooks": []
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-enforce-workflow.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-stop.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-workflow-enforce.py",
             "stdin_json": true,
             "on_error": "ignore"
           },
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-session-stop.py",
-            "stdin_json": true,
-            "on_error": "ignore"
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-git-commit.sh"
           }
         ]
       }
@@ -335,7 +367,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$(date -u +%Y-%m-%dT%H:%M:%SZ) SessionEnd\" >> ~/.claude/session.log",
+            "command": "echo \"$(date -u +%Y-%m-%dT%H:%M:%SZ) SessionEnd\" >> ~/.claude/session.log"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prompt-workflow.py",
+            "stdin_json": true,
             "on_error": "ignore"
           }
         ]

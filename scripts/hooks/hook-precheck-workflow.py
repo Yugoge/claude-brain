@@ -26,6 +26,29 @@ import sys
 from pathlib import Path
 
 
+def official_todos_path(session_id: str) -> Path:
+    return Path.home() / '.claude' / 'todos' / f'{session_id}-agent-{session_id}.json'
+
+
+def build_next_todowrite_call(session_id: str) -> str:
+    """Read todos file and return ready-to-use JSON for the next TodoWrite call."""
+    try:
+        todos_file = official_todos_path(session_id)
+        if not todos_file.exists():
+            return ''
+        todos = json.loads(todos_file.read_text())
+        result = [t.copy() for t in todos]
+        has_inprogress = any(t.get('status') == 'in_progress' for t in result)
+        if not has_inprogress:
+            for t in result:
+                if t.get('status') == 'pending':
+                    t['status'] = 'in_progress'
+                    break
+        return json.dumps(result, ensure_ascii=False, separators=(',', ': '))
+    except Exception:
+        return ''
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -72,23 +95,31 @@ def main():
     cmd_name = state.get('command', '?')
     lock_reason = state.get('lock_reason', 'not_started')
 
+    next_json = build_next_todowrite_call(session_id)
+    json_hint = (
+        f'\nCall TodoWrite with this exact todos array:\n{next_json}\n'
+        if next_json else ''
+    )
+
     if lock_reason == 'sequence_violation':
         sys.stderr.write(
             f'\n🚫 STEP SKIPPING DETECTED: /{cmd_name} workflow is locked.\n'
             f'You attempted to skip or reorder steps.\n'
             f'Call TodoWrite to fix the sequence — complete steps one at a time, in order.\n'
+            + json_hint
         )
     elif lock_reason == 'count_mismatch':
         sys.stderr.write(
             f'\n🚫 STEP COUNT VIOLATION: /{cmd_name} workflow is locked.\n'
             f'TodoWrite was called with the wrong number of steps.\n'
             f'Call TodoWrite with the complete canonical step list.\n'
+            + json_hint
         )
     else:
         sys.stderr.write(
             f'\n⚠️  CHECKLIST NOT STARTED: /{cmd_name} workflow is active.\n'
             f'Call TodoWrite to initialize the checklist before using other tools.\n'
-            f'The workflow has pre-generated steps — use TodoWrite to mark Step 1 as in_progress.\n'
+            + json_hint
         )
     sys.exit(2)
 
