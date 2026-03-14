@@ -1,8 +1,8 @@
----
 description: "Discover and add typed relations to existing Rems"
 allowed-tools: Read, Edit, Bash, Task, TodoWrite
 argument-hint: "<rem-id | --domain domain-path>"
 model: inherit
+disable-model-invocation: true
 ---
 
 # Discover Relations Command
@@ -11,22 +11,6 @@ Retrospectively discover typed relations for existing Rems using domain tutor.
 
 
 
-
-
-### Step 0: Initialize Workflow Checklist
-
-**Load todos from**: `scripts/todo/discover-relations.py`
-
-Execute via venv:
-```bash
-source venv/bin/activate && python scripts/todo/discover-relations.py
-```
-
-Use output to create TodoWrite with all workflow steps.
-
-**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
-
----
 
 
 ## Usage

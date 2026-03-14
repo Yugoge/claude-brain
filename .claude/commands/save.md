@@ -1,8 +1,8 @@
----
 description: "Save learning session by extracting Rems, archiving conversation, and maintaining graph"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task, TodoWrite
 argument-hint: "[topic-name | --all]"
 model: inherit
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
@@ -13,22 +13,6 @@ Save learning sessions by extracting valuable Rems as ultra-minimal knowledge Re
 
 
 
-
-
-### Step 0: Initialize Workflow Checklist
-
-**Load todos from**: `scripts/todo/save.py`
-
-Execute via venv:
-```bash
-source venv/bin/activate && python scripts/todo/save.py
-```
-
-Use output to create TodoWrite with all workflow steps.
-
-**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
-
----
 
 
 ## Usage

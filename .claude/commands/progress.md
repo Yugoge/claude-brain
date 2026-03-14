@@ -2,6 +2,7 @@
 description: "View learning progress across all materials or specific domains"
 allowed-tools: Bash, Read, TodoWrite
 argument-hint: "[domain | file-path]"
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

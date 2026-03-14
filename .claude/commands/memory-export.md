@@ -1,6 +1,7 @@
 ---
 description: "Export memories to external file formats (JSON, CSV)"
 allowed-tools: Read, Write, mcp__memory-server__read_graph, TodoWrite
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

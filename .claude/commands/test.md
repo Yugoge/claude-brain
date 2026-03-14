@@ -1,3 +1,8 @@
+---
+description: "Test Command"
+disable-model-invocation: true
+---
+
 # Test Command
 
 Test validation workflow with edge case detection, systematic validation, and quality enforcement.

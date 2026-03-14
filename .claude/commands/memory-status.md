@@ -1,6 +1,7 @@
 ---
 description: "View current memory status and stored memories"
 allowed-tools: Read, mcp__memory-server__read_graph, mcp__memory-server__search_nodes, TodoWrite
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

@@ -47,6 +47,13 @@ def get_todos():
     ]
 
 
+
+def get_blocking_count() -> int:
+    """
+    Steps 1-4 (parse, generate data, graph, HTML) before preview.
+    """
+    return 4
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

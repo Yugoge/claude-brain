@@ -1,6 +1,7 @@
 ---
 description: "Remove specific memories by topic or name"
 allowed-tools: mcp__memory-server__search_nodes, mcp__memory-server__delete_entities, TodoWrite
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

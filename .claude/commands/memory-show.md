@@ -1,6 +1,7 @@
 ---
 description: "Display memories in a readable format with filtering options"
 allowed-tools: Read, mcp__memory-server__search_nodes, mcp__memory-server__open_nodes, TodoWrite
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.

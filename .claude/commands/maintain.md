@@ -2,6 +2,7 @@
 description: "Run knowledge base maintenance tasks"
 allowed-tools: Bash, Read, TodoWrite
 argument-hint: "[--check-only | --fix-all | --validate]"
+disable-model-invocation: true
 ---
 
 # Knowledge Base Maintenance
@@ -26,14 +27,6 @@ Automated maintenance for Rem files and knowledge graph.
 Run in interactive mode to select specific tasks, or use mode flags for automated execution.
 
 ## Implementation
-
-**IMPORTANT**: Load todos from `scripts/todo/maintain.py` at start:
-
-```bash
-source venv/bin/activate && python scripts/todo/maintain.py
-```
-
-Use output to create TodoWrite with all 9 tasks. Mark each task as in_progress before starting, completed after finishing.
 
 ### Task Execution Order (Logical Flow)
 

@@ -82,6 +82,14 @@ def get_todos():
 ]
 
 
+def get_blocking_count() -> int:
+    """
+    Steps 1-9 are setup/loading phases that must complete before user interaction.
+    Steps 10-13 are teaching/post-session phases.
+    """
+    return 9
+
+
 if __name__ == "__main__":
     # CLI: print todos as formatted list
     import json

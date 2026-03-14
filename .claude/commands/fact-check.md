@@ -3,6 +3,7 @@ description: "Analyze media bias and verify news claims using structural analysi
 allowed-tools: Task, Read, TodoWrite
 argument-hint: "<news-article-url-or-outlet-name>"
 model: inherit
+disable-model-invocation: true
 ---
 
 **⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
@@ -12,22 +13,6 @@ model: inherit
 Analyze media outlets and news articles for structural bias using evidence-based methodology.
 
 
-
-
-## Step 0: Initialize Workflow Checklist
-
-**Load todos from**: `scripts/todo/fact-check.py`
-
-Execute via venv:
-```bash
-source venv/bin/activate && python scripts/todo/fact-check.py
-```
-
-Use output to create TodoWrite with all workflow steps.
-
-**Rules**: Mark `in_progress` before each step, `completed` after. NEVER skip steps.
-
----
 
 
 ## Usage
