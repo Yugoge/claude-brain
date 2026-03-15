@@ -7,7 +7,7 @@ SUCCESS=0
 FAILED=()
 
 echo "▶️  [1/15] VIX Delta SPX Vega..."
-if bash scripts/reextract_one_conversation.sh "vix-spx-vega-2025-10-27"; then
+if bash scripts/reextract-one-conversation.sh "vix-spx-vega-2025-10-27"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-27)"
 else
@@ -16,7 +16,7 @@ else
 fi
 
 echo "▶️  [2/15] C# Learning..."
-if bash scripts/reextract_one_conversation.sh "csharp-learning-ba-python-2025-10-28"; then
+if bash scripts/reextract-one-conversation.sh "csharp-learning-ba-python-2025-10-28"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-28)"
 else
@@ -25,7 +25,7 @@ else
 fi
 
 echo "▶️  [3/15] French Review..."
-if bash scripts/reextract_one_conversation.sh "french-review-session-2025-10-28"; then
+if bash scripts/reextract-one-conversation.sh "french-review-session-2025-10-28"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-28)"
 else
@@ -34,7 +34,7 @@ else
 fi
 
 echo "▶️  [4/15] Risk Scenario..."
-if bash scripts/reextract_one_conversation.sh "risk-scenario-time-ladder-2025-10-28"; then
+if bash scripts/reextract-one-conversation.sh "risk-scenario-time-ladder-2025-10-28"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-28)"
 else
@@ -43,7 +43,7 @@ else
 fi
 
 echo "▶️  [5/15] Options Greeks..."
-if bash scripts/reextract_one_conversation.sh "options-greeks-time-scenario-2025-10-29"; then
+if bash scripts/reextract-one-conversation.sh "options-greeks-time-scenario-2025-10-29"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-29)"
 else
@@ -52,7 +52,7 @@ else
 fi
 
 echo "▶️  [6/15] C# Review..."
-if bash scripts/reextract_one_conversation.sh "csharp-review-early-exit-2025-10-30"; then
+if bash scripts/reextract-one-conversation.sh "csharp-review-early-exit-2025-10-30"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-30)"
 else
@@ -61,7 +61,7 @@ else
 fi
 
 echo "▶️  [7/15] Capital Market Pricing..."
-if bash scripts/reextract_one_conversation.sh "capital-market-pricing-paradigms-2025-10-30"; then
+if bash scripts/reextract-one-conversation.sh "capital-market-pricing-paradigms-2025-10-30"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-30)"
 else
@@ -70,7 +70,7 @@ else
 fi
 
 echo "▶️  [8/15] French 1453 Vocabulary..."
-if bash scripts/reextract_one_conversation.sh "french-1453-vocab-20251030"; then
+if bash scripts/reextract-one-conversation.sh "french-1453-vocab-20251030"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-10-30)"
 else
@@ -79,7 +79,7 @@ else
 fi
 
 echo "▶️  [9/15] Economic Growth..."
-if bash scripts/reextract_one_conversation.sh "desire-driven-growth-2025-11-02"; then
+if bash scripts/reextract-one-conversation.sh "desire-driven-growth-2025-11-02"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-02)"
 else
@@ -88,7 +88,7 @@ else
 fi
 
 echo "▶️  [10/15] French Grammar..."
-if bash scripts/reextract_one_conversation.sh "french-grammar-session-2025-11-03"; then
+if bash scripts/reextract-one-conversation.sh "french-grammar-session-2025-11-03"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-03)"
 else
@@ -97,7 +97,7 @@ else
 fi
 
 echo "▶️  [11/15] FX Delta..."
-if bash scripts/reextract_one_conversation.sh "fx-delta-currency-conventions-2025-11-03"; then
+if bash scripts/reextract-one-conversation.sh "fx-delta-currency-conventions-2025-11-03"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-03)"
 else
@@ -106,7 +106,7 @@ else
 fi
 
 echo "▶️  [12/15] FX Forward..."
-if bash scripts/reextract_one_conversation.sh "fx-forward-primary-depo-rate-2025-11-03"; then
+if bash scripts/reextract-one-conversation.sh "fx-forward-primary-depo-rate-2025-11-03"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-03)"
 else
@@ -115,7 +115,7 @@ else
 fi
 
 echo "▶️  [13/15] NDS FX Options..."
-if bash scripts/reextract_one_conversation.sh "nds-fx-options-payment-currency-2025-11-03"; then
+if bash scripts/reextract-one-conversation.sh "nds-fx-options-payment-currency-2025-11-03"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-03)"
 else
@@ -124,7 +124,7 @@ else
 fi
 
 echo "▶️  [14/15] Bloomberg OVDV..."
-if bash scripts/reextract_one_conversation.sh "bloomberg-ovdv-conversation-2025-11-04"; then
+if bash scripts/reextract-one-conversation.sh "bloomberg-ovdv-conversation-2025-11-04"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-04)"
 else
@@ -133,7 +133,7 @@ else
 fi
 
 echo "▶️  [15/15] EPAD JKM..."
-if bash scripts/reextract_one_conversation.sh "epad-jkm-energy-derivatives-2025-11-05"; then
+if bash scripts/reextract-one-conversation.sh "epad-jkm-energy-derivatives-2025-11-05"; then
     SUCCESS=$((SUCCESS + 1))
     echo "✅ Done (2025-11-05)"
 else

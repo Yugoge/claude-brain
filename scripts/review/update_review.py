@@ -68,10 +68,19 @@ def main():
     # Save back to schedule
     schedule['concepts'][concept_id] = updated_rem
 
+    # Atomic write: write to temp file, then rename
+    temp_path = None
     try:
-        with open(schedule_path, 'w', encoding='utf-8') as f:
+        import tempfile, os
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=str(schedule_path.parent), suffix='.tmp'
+        )
+        with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
             json.dump(schedule, f, indent=2, ensure_ascii=False)
+        os.rename(temp_path, str(schedule_path))
     except Exception as e:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)
         print(f"Error: Failed to save schedule: {e}", file=sys.stderr)
         sys.exit(1)
 
