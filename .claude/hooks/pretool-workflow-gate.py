@@ -124,10 +124,6 @@ def main():
     project_dir = Path(os.environ.get('CLAUDE_PROJECT_DIR', os.getcwd()))
     bookmark_path = project_dir / '.claude' / f'workflow-{session_id}.json'
 
-    # ToolSearch: allow through so agent can load TodoRead — but don't set flag
-    if tool_name == 'ToolSearch':
-        sys.exit(0)
-
     # TodoWrite → acknowledge and allow
     # (Stop hook enforces todo count >= blocking_count, so reducing todos is caught at session end)
     # Note: type errors (todos as string instead of array) are caught by Claude Code's schema
@@ -187,31 +183,25 @@ def main():
         if next_json else ''
     )
 
-    schema_hint = (
-        '\nWRONG: TodoWrite(todos="[...]")   <- string, WILL BE REJECTED'
-        '\nRIGHT: TodoWrite(todos=[...])     <- array, this is correct'
-        '\n(If schema errors persist, call ToolSearch("select:TodoWrite") to load the exact parameter schema.)\n'
-    )
-
     if lock_reason == 'sequence_violation':
         sys.stderr.write(
             f'\n🚫 STEP SKIPPING DETECTED: /{cmd_name} workflow is locked.\n'
             f'You attempted to skip or reorder steps.\n'
             f'Call TodoWrite to fix the sequence — complete steps one at a time, in order.\n'
-            + json_hint + schema_hint
+            + json_hint
         )
     elif lock_reason == 'count_mismatch':
         sys.stderr.write(
             f'\n🚫 STEP COUNT VIOLATION: /{cmd_name} workflow is locked.\n'
             f'TodoWrite was called with the wrong number of steps.\n'
             f'Call TodoWrite with the complete canonical step list.\n'
-            + json_hint + schema_hint
+            + json_hint
         )
     else:
         sys.stderr.write(
             f'\n⚠️  CHECKLIST NOT STARTED: /{cmd_name} workflow is active.\n'
             f'Call TodoWrite to initialize the checklist before using other tools.\n'
-            + json_hint + schema_hint
+            + json_hint
         )
     sys.exit(2)
 

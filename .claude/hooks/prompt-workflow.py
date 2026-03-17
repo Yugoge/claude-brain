@@ -203,10 +203,6 @@ def format_progress(todos: list, lock_reason: str = '', canonical: list = None,
     # Show JSON template only until the agent has successfully called TodoWrite once
     if not todo_acknowledged:
         lines.append('')
-        lines.append('WRONG: TodoWrite(todos="[...]")   <- string, WILL BE REJECTED')
-        lines.append('RIGHT: TodoWrite(todos=[...])     <- array, this is correct')
-        lines.append('If schema errors persist, call ToolSearch("select:TodoWrite") to load the exact parameter schema.')
-        lines.append('')
         if in_progress:
             lines.append('Complete the work above, THEN call TodoWrite with this array (pass as array, NOT string):')
             lines.append('')
@@ -286,11 +282,8 @@ def main():
             f'CHECKLIST PRE-INITIALIZED for /{cmd_name.upper()}:',
             f'Your workflow checklist ({len(todos)} steps) has been created.',
             f'',
-            f'WRONG: TodoWrite(todos="[...]")   ← string, WILL BE REJECTED',
-            f'RIGHT: TodoWrite(todos=[...])     ← array, this is correct',
-            f'',
             f'Each item: {{"content": "...", "activeForm": "...", "status": "pending|in_progress|completed"}}',
-            f'FIRST ACTION: call TodoWrite with the todos array below (pass as array, NOT as string):',
+            f'FIRST ACTION: call TodoWrite with the todos array below:',
             f'(you MUST pass ALL {len(todos)} items every TodoWrite call)',
             '',
             first_call,
