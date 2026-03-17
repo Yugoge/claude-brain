@@ -562,7 +562,7 @@ def backup_and_repair(path: Path, schema: Dict[str, Any], report: Optional[InitR
         rebuild_script = Path("scripts/knowledge-graph/rebuild-backlinks.py")
         if "backlinks" in str(path) and rebuild_script.exists():
             try:
-                subprocess.run(["python3", str(rebuild_script)], check=True)
+                subprocess.run([sys.executable, str(rebuild_script)], check=True)
                 if report:
                     report.add_repair(f"Rebuilt backlinks: {path}")
             except subprocess.CalledProcessError:

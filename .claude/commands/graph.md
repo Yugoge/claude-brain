@@ -1,4 +1,3 @@
----
 description: "Generate and deploy knowledge graph visualization and analytics dashboard to GitHub Pages"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, TodoWrite
 argument-hint: "[--period <days>] [--domain <domain>] [--deploy]"

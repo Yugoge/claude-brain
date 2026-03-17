@@ -167,14 +167,14 @@ class ReviewScheduler:
                 try:
                     fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
                     lock_file.close()
-                except:
-                    pass
+                except Exception as e:
+                    import logging; logging.warning(f"Failed to release lock: {e}")
                 # Remove lock file
                 try:
                     if lock_path.exists():
                         lock_path.unlink()
-                except:
-                    pass
+                except Exception as e:
+                    import logging; logging.warning(f"Failed to remove lock file: {e}")
 
     def update_and_save(
         self,

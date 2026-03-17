@@ -24,7 +24,7 @@ def main():
     try:
         # Read stdin JSON
         data = json.load(sys.stdin)
-        user_input = data.get('user_input', '')
+        user_input = data.get('prompt', '')  # Claude Code uses 'prompt', not 'user_input'
 
         # Check for destructive patterns
         if user_input and re.search(r'rm\s|-rf|rd\s|del\s', user_input, re.IGNORECASE):

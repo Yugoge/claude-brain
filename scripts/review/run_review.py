@@ -158,7 +158,7 @@ def resolve_content_path(domain: str, rem_id: str) -> str:
     return str(kb_root / domain / f"{rem_id}.md")
 
 # Ensure schedule populated
-subprocess.run(['python3', 'scripts/utilities/scan-and-populate-rems.py'], capture_output=True)
+subprocess.run([sys.executable, 'scripts/utilities/scan-and-populate-rems.py'], capture_output=True)
 
 # Initialize
 loader = ReviewLoader()
