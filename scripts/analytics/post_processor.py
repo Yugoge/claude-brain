@@ -84,7 +84,7 @@ class PostProcessor:
 
         try:
             result = subprocess.run(
-                ['python3', 'scripts/utilities/scan-and-populate-rems.py', '--verbose', '--yes'],
+                [sys.executable, 'scripts/utilities/scan-and-populate-rems.py', '--verbose', '--yes'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -205,7 +205,7 @@ class PostProcessor:
 
         try:
             result = subprocess.run(
-                ['python3', 'scripts/analytics/generate-analytics.py', '--period', str(period)],
+                [sys.executable, 'scripts/analytics/generate-analytics.py', '--period', str(period)],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -236,7 +236,7 @@ class PostProcessor:
         try:
             # Step 26.1: Generate graph data
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/generate-graph-data.py', '--force'],
+                [sys.executable, 'scripts/knowledge-graph/generate-graph-data.py', '--force'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -248,7 +248,7 @@ class PostProcessor:
 
             # Step 26.2: Generate HTML visualization
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/generate-visualization-html.py'],
+                [sys.executable, 'scripts/knowledge-graph/generate-visualization-html.py'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,

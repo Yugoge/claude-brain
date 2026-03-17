@@ -55,7 +55,6 @@ from rebuild_utils import (
 from utils.file_lock import FileLock
 
 # Constants
-ROOT = Path(__file__).parent.parent.parent
 KB_DIR = ROOT / "knowledge-base"
 IDX_DIR = KB_DIR / "_index"
 BACKLINKS_PATH = IDX_DIR / "backlinks.json"

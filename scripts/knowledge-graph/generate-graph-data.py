@@ -486,12 +486,8 @@ def load_conversation_index() -> dict:
             # Handle both formats: 'entries' (new) or 'conversations' (old)
             conversations = index.get('conversations', {})
 
-            # For now, we can't link conversations without metadata.extracted_concepts
-            # This would require parsing each conversation file to extract rem references
-            # TODO: Parse conversation files to extract [[rem_id]] references
-
-            # As a workaround, link by domain matching (very broad)
-            # This is temporary until we have proper concept extraction
+            # Links conversations by domain matching (broad fallback).
+            # Precise linking would require extracting [[rem_id]] refs from conversation files.
 
     return conversations_by_rem
 

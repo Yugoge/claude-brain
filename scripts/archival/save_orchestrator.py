@@ -86,7 +86,7 @@ def archive_conversation(include_subagents=True):
 
     print("📝 Step 1: Archiving conversation...", file=sys.stderr)
 
-    cmd = ["python3", str(ROOT / "scripts/services/chat_archiver.py")]
+    cmd = [sys.executable, str(ROOT / "scripts/services/chat_archiver.py")]
     if not include_subagents:
         cmd.append("--no-include-subagents")
 
@@ -506,10 +506,12 @@ def main():
             'completed_stages': [stage.name for stage in completed_stages]
         }
 
-        with open('/tmp/orchestrator_metadata.json', 'w') as f:
+        import tempfile
+        meta_path = Path(tempfile.gettempdir()) / 'orchestrator_metadata.json'
+        with open(meta_path, 'w') as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"\n✅ Steps 1-4 completed. Metadata saved to /tmp/orchestrator_metadata.json", file=sys.stderr)
+        print(f"\n✅ Steps 1-4 completed. Metadata saved to {meta_path}", file=sys.stderr)
         print("Next: Main agent performs Steps 2-9 with orchestrator enforcement", file=sys.stderr)
 
         return 0

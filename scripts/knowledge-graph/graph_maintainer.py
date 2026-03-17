@@ -100,7 +100,7 @@ class GraphMaintainer:
             print("  ⚠️  Incremental update failed, falling back to full rebuild", file=sys.stderr)
 
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/rebuild-backlinks.py', '--cleanup-backups', '5'],
+                [sys.executable, 'scripts/knowledge-graph/rebuild-backlinks.py', '--cleanup-backups', '5'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -175,7 +175,7 @@ class GraphMaintainer:
 
         try:
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/normalize-links.py', '--mode', 'replace', '--verbose'],
+                [sys.executable, 'scripts/knowledge-graph/normalize-links.py', '--mode', 'replace', '--verbose'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -213,7 +213,7 @@ class GraphMaintainer:
         try:
             # Dry-run first to check if there are inferences
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/materialize-inferred-links.py', '--dry-run', '--verbose'],
+                [sys.executable, 'scripts/knowledge-graph/materialize-inferred-links.py', '--dry-run', '--verbose'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,
@@ -245,7 +245,7 @@ class GraphMaintainer:
 
             # Materialize
             result = subprocess.run(
-                ['python3', 'scripts/knowledge-graph/materialize-inferred-links.py', '--verbose'],
+                [sys.executable, 'scripts/knowledge-graph/materialize-inferred-links.py', '--verbose'],
                 capture_output=True,
                 text=True,
                 cwd=self.kb_root,

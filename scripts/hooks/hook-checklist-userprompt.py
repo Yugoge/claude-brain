@@ -50,7 +50,7 @@ def run_todo_script(cmd_name: str) -> list:
         else:
             return []
     result = subprocess.run(
-        ['python3', str(todo_script)],
+        [sys.executable, str(todo_script)],
         capture_output=True, text=True, cwd=str(PROJECT_DIR)
     )
     if result.returncode != 0 or not result.stdout.strip():

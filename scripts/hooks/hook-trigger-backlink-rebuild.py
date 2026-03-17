@@ -35,7 +35,7 @@ def main():
             normalize_script = scripts_dir / 'normalize-links.py'
             if normalize_script.exists():
                 subprocess.run(
-                    ['python3', str(normalize_script), '--mode', 'replace'],
+                    [sys.executable, str(normalize_script), '--mode', 'replace'],
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
                     cwd=PROJECT_DIR
@@ -46,7 +46,7 @@ def main():
             rebuild_script = scripts_dir / 'rebuild-backlinks.py'
             if rebuild_script.exists():
                 subprocess.run(
-                    ['python3', str(rebuild_script), '--cleanup-backups', '1'],
+                    [sys.executable, str(rebuild_script), '--cleanup-backups', '1'],
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
                     cwd=PROJECT_DIR

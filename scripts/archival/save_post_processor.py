@@ -209,7 +209,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
     # Sub-step 1: Update backlinks
     print("  Updating backlinks...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/update-backlinks-incremental.py'] + rem_ids,
+        [sys.executable, 'scripts/knowledge-graph/update-backlinks-incremental.py'] + rem_ids,
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -262,7 +262,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
     # Sub-step 3: Normalize wikilinks
     print("  Normalizing wikilinks...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/normalize-links.py', '--mode', 'replace'],
+        [sys.executable, 'scripts/knowledge-graph/normalize-links.py', '--mode', 'replace'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -275,7 +275,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
     # Sub-step 4: Sync Related Rems from backlinks
     print("  Syncing Related Rems sections...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/sync-related-rems-from-backlinks.py', '--concept-ids'] + rem_ids,
+        [sys.executable, 'scripts/knowledge-graph/sync-related-rems-from-backlinks.py', '--concept-ids'] + rem_ids,
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -288,7 +288,7 @@ def update_knowledge_graph(rem_ids: List[str], conversation_path: Path, metadata
     # Sub-step 4.5: Fix bidirectional links (add missing reverses)
     print("  Fixing bidirectional links...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/fix-bidirectional-links.py'],
+        [sys.executable, 'scripts/fix-bidirectional-links.py'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -328,7 +328,7 @@ def materialize_inferred_links(prompt_user: bool = True):
     # Run dry-run first to show what would be materialized
     print("  Running dry-run preview...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/materialize-inferred-links.py', '--dry-run', '--verbose'],
+        [sys.executable, 'scripts/knowledge-graph/materialize-inferred-links.py', '--dry-run', '--verbose'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -358,7 +358,7 @@ def sync_to_fsrs():
     print("="*60, file=sys.stderr)
 
     result = subprocess.run(
-        ['python3', 'scripts/utilities/scan-and-populate-rems.py', '--yes'],
+        [sys.executable, 'scripts/utilities/scan-and-populate-rems.py', '--yes'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -422,7 +422,7 @@ def generate_analytics():
     domain = os.getenv('ANALYTICS_DOMAIN', None)
 
     # Sub-step 1: Analytics (ISCED format for dashboard)
-    analytics_cmd = ['python3', 'scripts/analytics/generate-analytics-isced.py', '--period', period]
+    analytics_cmd = [sys.executable, 'scripts/analytics/generate-analytics-isced.py', '--period', period]
     if domain:
         analytics_cmd.extend(['--domain', domain])
         print(f"  Generating ISCED analytics (domain={domain}, period={period} days)...", file=sys.stderr)
@@ -445,7 +445,7 @@ def generate_analytics():
     # Sub-step 2: Graph data
     print("  Generating graph data...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/generate-graph-data.py', '--force'],
+        [sys.executable, 'scripts/knowledge-graph/generate-graph-data.py', '--force'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -458,7 +458,7 @@ def generate_analytics():
     # Sub-step 3: Visualization
     print("  Generating visualization HTML...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/knowledge-graph/generate-visualization-html.py'],
+        [sys.executable, 'scripts/knowledge-graph/generate-visualization-html.py'],
         cwd=ROOT,
         capture_output=True,
         text=True
@@ -471,7 +471,7 @@ def generate_analytics():
     # Sub-step 4: Analytics Dashboard
     print("  Generating analytics dashboard HTML...", file=sys.stderr)
     result = subprocess.run(
-        ['python3', 'scripts/analytics/generate-dashboard-html.py'],
+        [sys.executable, 'scripts/analytics/generate-dashboard-html.py'],
         cwd=ROOT,
         capture_output=True,
         text=True

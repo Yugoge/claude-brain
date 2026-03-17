@@ -236,7 +236,7 @@ def auto_generate_output_paths(enriched_rems, isced_path):
 
     # Get the base number once from disk, then increment in-memory for each Rem in this batch
     result = subprocess.run(
-        ['python3', 'scripts/utilities/get-next-number.py', '--directory', dir_path],
+        [sys.executable, 'scripts/utilities/get-next-number.py', '--directory', dir_path],
         capture_output=True,
         text=True,
         cwd=ROOT
@@ -316,7 +316,8 @@ def main():
     input_group.add_argument('--candidate-rems', help='JSON file with candidate Rems (legacy)')
     input_group.add_argument('--candidate-rems-json', help='Inline JSON string with candidate Rems (preferred)')
 
-    parser.add_argument('--output', default='/tmp/enriched_rems.json', help='Output file path')
+    import tempfile as _tempfile
+    parser.add_argument('--output', default=str(Path(_tempfile.gettempdir()) / 'enriched_rems.json'), help='Output file path')
 
     # Tutor response modes (optional, mutually exclusive)
     tutor_group = parser.add_mutually_exclusive_group()
