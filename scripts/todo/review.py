@@ -32,6 +32,11 @@ def get_todos():
 ]
 
 
+def get_blocking_count() -> int:
+    """
+    Step 1 (Load Rems) must complete before dialogue starts.
+    """
+    return 1
 
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
----
 description: "Interactive review session using spaced repetition (FSRS algorithm)"
 allowed-tools: Bash, Task, TodoWrite
 argument-hint: "[domain | [[rem-id]]]"
@@ -12,7 +11,6 @@ disable-model-invocation: true
 # Review Command
 
 Start an interactive review session using spaced repetition (FSRS algorithm).
-
 
 
 

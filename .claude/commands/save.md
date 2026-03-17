@@ -1,4 +1,3 @@
----
 description: "Save learning session by extracting Rems, archiving conversation, and maintaining graph"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, Task, TodoWrite
 argument-hint: "[topic-name | --all]"
@@ -11,8 +10,6 @@ disable-model-invocation: true
 # Save Command
 
 Save learning sessions by extracting valuable Rems as ultra-minimal knowledge Rems, preserving the dialogue, and maintaining the knowledge graph.
-
-
 
 
 

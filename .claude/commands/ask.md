@@ -16,8 +16,6 @@ Ask any question with automatic web research and comprehensive answers using Thr
 
 
 
-
-
 ## Usage
 
 ```

@@ -56,6 +56,11 @@ def main():
 
     print(json.dumps(todos, indent=2, ensure_ascii=False))
 
+def get_blocking_count() -> int:
+    """
+    Steps 1-4 must complete before multi-turn dialogue starts.
+    """
+    return 4
 
 
 if __name__ == "__main__":

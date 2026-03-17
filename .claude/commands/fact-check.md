@@ -15,7 +15,6 @@ Analyze media outlets and news articles for structural bias using evidence-based
 
 
 
-
 ## Usage
 
 ```

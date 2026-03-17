@@ -163,88 +163,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-pre-command-review-check.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-subagent-checklist.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-safety-check-bash.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-detect-inline-python.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-protect-index-files.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-check-read-size.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-workflow-gate.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-bash-safety.sh",
-            "stdin_json": true
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "hooks": [
@@ -380,6 +298,28 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prompt-workflow.py",
             "stdin_json": true,
             "on_error": "ignore"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-workflow-gate.py",
+            "stdin_json": true,
+            "on_error": "ignore"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-bash-safety.sh",
+            "stdin_json": true
           }
         ]
       }

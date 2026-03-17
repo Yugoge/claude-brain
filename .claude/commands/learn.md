@@ -1,4 +1,3 @@
----
 description: "Interactive learning with Socratic dialogue"
 allowed-tools: Read, Bash, Write, Task, TodoWrite
 argument-hint: "[file-path]"
@@ -10,7 +9,6 @@ disable-model-invocation: true
 # Learn Command
 
 Start an interactive learning session with a material using Socratic dialogue.
-
 
 
 

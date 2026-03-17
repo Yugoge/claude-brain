@@ -27,6 +27,13 @@ def get_todos():
     ]
 
 
+def get_blocking_count() -> int:
+    """
+    Steps 1-5 must be completed before Claude can stop.
+    (Parse, Analyst Consult, Validate, Confidence Gate, First Response)
+    Step 6+ are dialogue/conclusion phases that don't need enforcement.
+    """
+    return 5
 
 
 if __name__ == "__main__":

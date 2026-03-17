@@ -1,4 +1,3 @@
----
 description: "Discover and add typed relations to existing Rems"
 allowed-tools: Read, Edit, Bash, Task, TodoWrite
 argument-hint: "<rem-id | --domain domain-path>"
@@ -9,7 +8,6 @@ disable-model-invocation: true
 # Discover Relations Command
 
 Retrospectively discover typed relations for existing Rems using domain tutor.
-
 
 
 
