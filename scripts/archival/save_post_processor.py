@@ -680,6 +680,13 @@ def main():
     # Pre-creation validation
     if not validate_before_creation(rems, metadata.get('domain'), metadata.get('isced_path')):
         print("\n❌ Validation failed - no changes made", file=sys.stderr)
+        # Emit machine-readable rejection notice to stdout so main agent can parse it
+        # Root cause fix: dev-20260318-101831 - prevent ghost paths from being referenced
+        rejected = [
+            {"rem_id": r.get("rem_id", "unknown"), "path": r.get("output_path", ""), "title": r.get("title", "")}
+            for r in rems
+        ]
+        print(json.dumps({"REJECTED_REMS": rejected, "reason": "validation_failed"}, ensure_ascii=False))
         return 1
 
     # Atomic file creation (Rems + conversation + updates + links)

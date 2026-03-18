@@ -485,11 +485,36 @@ The save_post_processor.py script automatically calls update_progress.py with:
 - ❌ NEVER bypass pipeline even if validation fails
 - ⚠️ ONLY execute after user approval
 
-**If post-processor fails**:
-1. Read error message carefully
-2. Fix data format (usually enriched_rems.json)
+**If post-processor fails** (exit code 1 = validation failed):
+
+**⛔ CRITICAL - Parse rejection notice from stdout**:
+```bash
+# Capture stdout separately from stderr
+postprocessor_output=$(source venv/bin/activate && python scripts/archival/save_post_processor.py \
+  --enriched-rems /tmp/enriched_rems_complete.json \
+  --archived-file "{from Step 1}" \
+  --session-type "{learn|ask|review}" 2>/dev/null)
+exit_code=$?
+```
+
+If exit_code is 1, parse `$postprocessor_output` for `REJECTED_REMS`:
+```
+⛔ VALIDATION FAILED — REJECTED REMS
+
+The following Rem paths were REJECTED by validation and DO NOT EXIST on disk:
+{for each rem in REJECTED_REMS}
+  - [{rem_id}] → {path}
+
+⚠️  DO NOT reference these paths in any future /review or knowledge sessions.
+    These concepts were NOT created. They are NOT in schedule.json.
+    If you recall these paths from this session's preview, DISCARD them.
+
+To proceed:
+1. Fix the validation error shown in stderr
+2. Fix data format in /tmp/enriched_rems_complete.json
 3. Rerun post-processor
 4. DO NOT create files manually as workaround
+```
 
 **Construct complete enriched_rems.json** (Bug 2 fix: merge Step 5 output with session metadata):
 
