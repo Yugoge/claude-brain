@@ -539,6 +539,22 @@ def generate_analytics():
         print(f"       Setup: https://github.com/settings/keys", file=sys.stderr)
         print(f"\n     Manual deployment: bash scripts/deploy-to-github.sh", file=sys.stderr)
 
+    # Sub-step 6: Local deployment (parallel to GitHub Pages)
+    print("\n  🏠 Deploying locally...", file=sys.stderr)
+    local_result = subprocess.run(
+        ['bash', 'scripts/deploy-local.sh'],
+        cwd=ROOT,
+        capture_output=True,
+        text=True
+    )
+    if local_result.returncode != 0:
+        print(f"  ⚠️  Local deployment failed: {local_result.stderr.strip()}", file=sys.stderr)
+    else:
+        deploy_dir = os.getenv('LOCAL_DEPLOY_DIR', '/var/www/knowledge')
+        print(f"  ✅ Local deployment → {deploy_dir}/", file=sys.stderr)
+        print(f"     • Dashboard: {deploy_dir}/index.html", file=sys.stderr)
+        print(f"     • Graph: {deploy_dir}/graph.html", file=sys.stderr)
+
 
 def display_completion_report(
     metadata: Dict,

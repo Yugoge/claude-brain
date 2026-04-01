@@ -1,10 +1,10 @@
 ---
-description: "Export memories to external file formats (JSON, CSV)"
-allowed-tools: Read, Write, mcp__memory-server__read_graph, TodoWrite
+description: "Export memories to external file formats (JSON, Markdown)"
+allowed-tools: Read, Write, Glob, Bash, TodoWrite
 disable-model-invocation: true
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
+**CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
 
 # Memory Export Command
 
@@ -14,7 +14,7 @@ Export memories to external file formats for backup, analysis, or transfer.
 
 ```
 /memory-export <filename>
-/memory-export <filename> --format csv
+/memory-export <filename> --format json
 /memory-export <filename> --category concepts
 /memory-export <filename> --domain finance
 ```
@@ -23,45 +23,52 @@ Export memories to external file formats for backup, analysis, or transfer.
 
 ```
 /memory-export memories-backup.json                         # Export all to JSON
-/memory-export memories.csv --format csv                    # Export as CSV
+/memory-export memories-backup.md                           # Export as combined Markdown
 /memory-export finance-concepts.json --category concepts --domain finance  # Finance concepts only
-/memory-export my-struggles.csv --category struggles --format csv  # Export struggles
+/memory-export my-struggles.json --category struggles        # Export struggles
 ```
 
 ## What This Command Does
 
-1. **Queries memory graph** - Filters by category and domain if specified
-2. **Formats data** - Converts to JSON or CSV format
-3. **Writes to file** - Exports to specified filename
-4. **Preserves all data** - No filtering by retention policy
+1. **Reads memory files** - Reads all .md files from auto-memory directory
+2. **Filters data** - Filters by category and domain if specified
+3. **Formats data** - Converts to JSON or combined Markdown format
+4. **Writes to file** - Exports to specified filename
 
 ## Implementation
 
-Export memory graph using MCP tools:
+Export auto-memory files using built-in tools:
 
-1. **Read full graph**:
+1. **List all memory files**:
 ```
-mcp__memory-server__read_graph
+Glob:
+  pattern: "*.md"
+  path: /root/.claude/projects/-root/memory/
 ```
 
-2. **Format data**:
-   - JSON: Use graph data as-is
-   - CSV: Transform entities → rows, relations → separate table
+2. **Read each memory file**:
+```
+Read: /root/.claude/projects/-root/memory/MEMORY.md
+```
+(Repeat for each .md file)
 
-3. **Write to file**:
+3. **Format data**:
+   - JSON: Structure as `{"files": [{"name": "...", "content": "..."}], "exported_at": "..."}`
+   - Markdown: Concatenate all files with headers
+
+4. **Write to file**:
 ```
 Write:
   file_path: "{output_path}"
   content: "{formatted_data}"
 ```
 
-**Note**: This command uses MCP tools + Write tool, no Python script needed.
+**Note**: This command uses Read, Glob, and Write tools on auto-memory files. No MCP tools needed.
 
 ## Notes
 
 - Export preserves ALL data (no filtering by retention policy)
 - Exported files can be version controlled with git
-- Use JSON for complete backups
-- Use CSV for data analysis in spreadsheet tools
-- Large exports (1000+ entities) may take a few seconds
+- Use JSON for structured backups
+- Use Markdown for human-readable combined export
 - See also: `/memory-show` (display memories in terminal), `/memory-status` (memory statistics and health)

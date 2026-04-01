@@ -9,11 +9,14 @@ Usage:
     source venv/bin/activate && python scripts/review/run_review.py --days 14    # Timeline with 14-day lookahead
     source venv/bin/activate && python scripts/review/run_review.py --format m   # Force multiple-choice format
     source venv/bin/activate && python scripts/review/run_review.py --lang zh    # Force Chinese dialogue
+    source venv/bin/activate && python scripts/review/run_review.py --easy       # Easy mode (rapid-fire fact recall)
+    source venv/bin/activate && python scripts/review/run_review.py --hard       # Hard mode (analysis/application)
     source venv/bin/activate && python scripts/review/run_review.py finance      # Domain-specific review
     source venv/bin/activate && python scripts/review/run_review.py [[rem-id]]   # Specific Rem review
 
 Format codes: m=multiple-choice, c=cloze, s=short-answer, p=problem-solving
 Language codes: zh=Chinese, en=English, fr=French
+Difficulty modes: easy, normal (default), hard
 
 Blind mode: Outputs only Rem ID and path (no title/domain/fsrs_state). Used by main agent to prevent
 bypassing review-master subagent consultation. Only review-master should see full Rem data.
@@ -27,6 +30,9 @@ from review_stats_lib import ReviewStats
 from datetime import datetime
 import subprocess
 import json
+import os
+import tempfile
+import uuid
 from pathlib import Path
 import re
 
@@ -157,6 +163,90 @@ def resolve_content_path(domain: str, rem_id: str) -> str:
     # File not found - return expected path for error reporting
     return str(kb_root / domain / f"{rem_id}.md")
 
+
+# Session persistence: Write session state to disk for recovery after context loss
+# Root cause fix: Conversation context can be compressed during long 50-Rem sessions,
+# losing the ordered Rem list and causing hallucinated Rem IDs.
+# Multi-session support: Each session writes to .review/session-{session_id}.json
+SESSION_DIR = Path('.review')
+STALE_SESSION_THRESHOLD_HOURS = 4
+
+
+def session_file_for(session_id: str) -> Path:
+    """Return the session file path for a given session_id."""
+    return SESSION_DIR / f'session-{session_id}.json'
+
+
+def find_all_session_files():
+    """Find all active session files matching .review/session-*.json."""
+    if not SESSION_DIR.exists():
+        return []
+    return sorted(SESSION_DIR.glob('session-*.json'))
+
+def check_existing_sessions():
+    """Check for existing/stale session files and warn. Returns list of found sessions."""
+    session_files = find_all_session_files()
+    if not session_files:
+        return []
+    found = []
+    for sf in session_files:
+        try:
+            with open(sf, 'r', encoding='utf-8') as f:
+                existing = json.load(f)
+            created = datetime.fromisoformat(existing['created_at'])
+            age_hours = (datetime.now() - created).total_seconds() / 3600
+            reviewed = sum(1 for r in existing.get('rems', []) if r.get('status') == 'reviewed')
+            total = existing.get('total', 0)
+            sid = existing.get('session_id', 'unknown')
+            if age_hours > STALE_SESSION_THRESHOLD_HOURS:
+                print(f"\n\u26a0\ufe0f  Stale session: {sf.name} ({age_hours:.1f}h old, {reviewed}/{total} reviewed)")
+                print(f"   Consider cleaning up: get_next_rem.py --session-id {sid} --cleanup")
+            else:
+                print(f"\n\u26a0\ufe0f  Active session: {sf.name} ({reviewed}/{total} reviewed, {age_hours:.1f}h old)")
+            found.append(existing)
+        except (json.JSONDecodeError, IOError, KeyError):
+            print(f"\n\u26a0\ufe0f  Corrupted session file: {sf.name}")
+    return found
+
+
+def write_session_file(blind_rems, metadata):
+    """Persist session state to .review/session-{session_id}.json atomically."""
+    check_existing_sessions()
+    session_rems = []
+    for r in blind_rems:
+        session_rems.append({
+            'id': r['id'],
+            'path': r['path'],
+            'conversation_source': r.get('conversation_source'),
+            'status': 'pending',
+            'rating': None,
+            'reviewed_at': None,
+        })
+    session_id = str(uuid.uuid4())
+    session_data = {
+        'session_id': session_id,
+        'created_at': datetime.now().isoformat(),
+        'difficulty_mode': metadata.get('difficulty_mode', 'normal'),
+        'format_preference': metadata.get('format_preference'),
+        'lang_preference': metadata.get('lang_preference'),
+        'format_history': metadata.get('format_history', []),
+        'total': len(session_rems),
+        'current_index': 0,
+        'rems': session_rems,
+    }
+    target = session_file_for(session_id)
+    SESSION_DIR.mkdir(parents=True, exist_ok=True)
+    temp_fd, temp_path = tempfile.mkstemp(dir=str(SESSION_DIR), suffix='.tmp')
+    try:
+        with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+            json.dump(session_data, f, indent=2, ensure_ascii=False)
+        os.rename(temp_path, str(target))
+    except Exception:
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
+        raise
+    return session_id
+
 # Ensure schedule populated
 subprocess.run([sys.executable, 'scripts/utilities/scan-and-populate-rems.py'], capture_output=True)
 
@@ -174,6 +264,7 @@ blind_mode = '--blind' in args  # Minimal output for main agent (only paths/IDs)
 future_days = 7  # Default lookahead
 format_preference = None
 lang_preference = None
+difficulty_mode = 'normal'  # Default: current behavior unchanged
 
 # Extract --days parameter if present
 if '--days' in args:
@@ -224,6 +315,14 @@ if '--lang' in args:
     else:
         print("Error: --lang must be followed by a language code (zh, en, fr)")
         sys.exit(1)
+
+# Extract difficulty mode if present (--easy, --normal, --hard)
+valid_modes = {'--easy': 'easy', '--normal': 'normal', '--hard': 'hard'}
+for flag, mode in valid_modes.items():
+    if flag in args:
+        difficulty_mode = mode
+        args = [a for a in args if a != flag]
+        break
 
 # Remove special flags from args for loader
 args = [a for a in args if a not in ['--timeline', '--blind']]
@@ -311,8 +410,9 @@ print()
 by_domain = loader.group_by_domain(rems)
 sorted_rems = loader.sort_by_relation_and_urgency(rems, scheduler)
 
-# Apply batch limit to prevent token overflow (max 20 Rems per session)
-BATCH_LIMIT = 20
+# Apply batch limit to prevent token overflow
+# Easy mode allows higher throughput (rapid-fire); normal/hard use standard limit
+BATCH_LIMIT = 50 if difficulty_mode == 'easy' else 20
 total_rems = len(sorted_rems)
 sorted_rems_limited = sorted_rems[:BATCH_LIMIT]
 has_more = total_rems > BATCH_LIMIT
@@ -365,6 +465,7 @@ if blind_mode:
         'format_history': format_history,
         'format_preference': format_preference,
         'lang_preference': lang_preference,
+        'difficulty_mode': difficulty_mode,
         'blind': True  # Flag indicating blind mode active
     }
 else:
@@ -379,8 +480,20 @@ else:
         'format_history': format_history,
         'format_preference': format_preference,
         'lang_preference': lang_preference,
+        'difficulty_mode': difficulty_mode,
         'blind': False
     }
+
+# Persist session state to disk for context-loss recovery
+if blind_mode and sorted_rems_limited:
+    session_meta = {
+        'difficulty_mode': difficulty_mode,
+        'format_preference': format_preference,
+        'lang_preference': lang_preference,
+        'format_history': format_history,
+    }
+    session_id = write_session_file(blind_rems, session_meta)
+    output['session_id'] = session_id
 
 print(f"\n--- DATA ---")
 print(json.dumps(output, indent=2))

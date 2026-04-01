@@ -1,14 +1,14 @@
 ---
 description: "Clear all memories (nuclear option with confirmation)"
-allowed-tools: mcp__memory-server__delete_entities, TodoWrite
+allowed-tools: Read, Write, Bash, Glob, TodoWrite
 disable-model-invocation: true
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
+**CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
 
 # Memory Clear Command
 
-WARNING: This command clears ALL memories from the knowledge graph. This is a nuclear option that should only be used when you want to completely reset the memory system.
+WARNING: This command clears ALL memories from the auto-memory files. This is a nuclear option that should only be used when you want to completely reset the memory system.
 
 ## Usage
 
@@ -29,38 +29,49 @@ WARNING: This command clears ALL memories from the knowledge graph. This is a nu
 1. **Previews deletion** - Shows statistics of what will be deleted
 2. **Requires confirmation** - User must type "DELETE ALL" to confirm
 3. **Creates backup** - Automatic timestamped backup before deletion
-4. **Deletes all memories** - Removes all concept entities, preference settings, struggle tracking, relationships, observations, ALL memory data
+4. **Clears all memory files** - Resets all .md files in memory directory to empty state
 5. **Verifies backup** - Option to cancel if backup fails
 
 ## Implementation
 
-Clear all memory entities using MCP tools:
+Clear auto-memory files using built-in tools:
 
-1. **Read current graph** (for backup):
+1. **List current files** (for preview):
 ```
-mcp__memory-server__read_graph
-```
-
-2. **Show warning** and require confirmation
-
-3. **Get all entity names** from graph
-
-4. **Delete all entities**:
-```
-mcp__memory-server__delete_entities:
-  entityNames: [all entity names from graph]
+Glob:
+  pattern: "*.md"
+  path: /root/.claude/projects/-root/memory/
 ```
 
-**Note**: This command uses MCP tools directly, no Python script needed.
+2. **Read each file** to show what will be deleted:
+```
+Read: /root/.claude/projects/-root/memory/MEMORY.md
+```
+
+3. **Show warning** and require confirmation
+
+4. **Create backup** before clearing:
+```bash
+cp -r /root/.claude/projects/-root/memory/ /root/.claude/projects/-root/memory-backup-$(date +%Y%m%d-%H%M%S)/
+```
+
+5. **Clear each memory file** by writing empty/minimal content:
+```
+Write:
+  file_path: /root/.claude/projects/-root/memory/MEMORY.md
+  content: "# Memory\n\n(Cleared on YYYY-MM-DD)\n"
+```
+
+**Note**: This command uses Read, Write, and Bash tools on auto-memory files. No MCP tools needed.
 
 ## Notes
 
-**Backup Location**: `.mcp/memory/memories-backup-YYYYMMDD-HHMMSS.json`
+**Backup Location**: `/root/.claude/projects/-root/memory-backup-YYYYMMDD-HHMMSS/`
 
 **Recovery**: If you accidentally clear memories, restore from backup:
 ```
-ls -la .mcp/memory/memories-backup-*.json
-cp .mcp/memory/memories-backup-20251029-092345.json .mcp/memory/memories.json
+ls -la /root/.claude/projects/-root/memory-backup-*/
+cp /root/.claude/projects/-root/memory-backup-YYYYMMDD-HHMMSS/*.md /root/.claude/projects/-root/memory/
 ```
 
 **When to Use**:

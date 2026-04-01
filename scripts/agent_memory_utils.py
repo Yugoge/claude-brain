@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Agent Memory Utilities - MCP Memory Server Integration
+Agent Memory Utilities - Auto-Memory File Integration
 
 Provides reusable memory operations for all consultant agents.
-Used by: analyst, book-tutor, finance-tutor, language-tutor, programming-tutor
+Uses Claude Code's built-in auto-memory system at /root/.claude/projects/-root/memory/
 
 Usage:
     from scripts.agent_memory_utils import AgentMemory
@@ -11,22 +11,42 @@ Usage:
     memory = AgentMemory()
     prefs = memory.get_all_preferences()
     memory.track_struggle("concept-name", difficulty=0.8, domain="finance")
+
+Migration Note:
+    Previously used MCP memory-server tools. Now uses auto-memory files
+    at /root/.claude/projects/-root/memory/ via Read/Write/Edit tools.
+    Auto-memory is always available (no MCP dependency, works in subprocesses).
 """
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 
+# Auto-memory directory
+MEMORY_DIR = Path("/root/.claude/projects/-root/memory")
+MEMORY_FILE = MEMORY_DIR / "MEMORY.md"
+
+
 class AgentMemory:
-    """Agent memory operations using MCP memory server tools."""
+    """Agent memory operations using auto-memory files.
+
+    Auto-memory files are stored at /root/.claude/projects/-root/memory/
+    Primary file: MEMORY.md (auto-loaded by Claude Code)
+    Additional topic files: learning.md, patterns.md, etc.
+
+    Agents interact with memory by:
+    - Reading: Use Read tool on memory files
+    - Searching: Use Grep tool to search memory directory
+    - Writing: Use Write/Edit tools to append/modify memory files
+    """
 
     def __init__(self):
         """Initialize memory client."""
-        # MCP tools are called via Claude Code's MCP integration
-        # This class provides a convenient Python interface
-        pass
+        self.memory_dir = MEMORY_DIR
+        self.memory_file = MEMORY_FILE
 
     # ==================== Query Operations ====================
 
@@ -37,12 +57,12 @@ class AgentMemory:
         Returns:
             dict: User preferences (difficulty, learning_pace, question_style, etc.)
 
-        MCP Call:
-            mcp__memory-server__search_nodes(query="user preferences")
+        Auto-Memory:
+            Read /root/.claude/projects/-root/memory/MEMORY.md
+            Search for sections containing preference-related entries
         """
-        # Agent should call: mcp__memory-server__search_nodes
-        # with query="user preferences"
-        # Returns: nodes containing preference observations
+        # Agent should use Read tool on memory files
+        # and parse preference-related sections
         pass
 
     def get_struggles(self, domain: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -55,8 +75,9 @@ class AgentMemory:
         Returns:
             list: Struggle records with concept names and difficulty scores
 
-        MCP Call:
-            mcp__memory-server__search_nodes(query="struggle {domain}")
+        Auto-Memory:
+            Use Grep tool to search for "struggle" or "quality=1" or "quality=2"
+            in /root/.claude/projects/-root/memory/ files
         """
         pass
 
@@ -71,14 +92,14 @@ class AgentMemory:
         Returns:
             list: Related concepts and context from previous sessions
 
-        MCP Call:
-            mcp__memory-server__search_nodes(query="{topic} {domain}")
+        Auto-Memory:
+            Use Grep tool to search for "{topic}" in memory files
         """
         pass
 
     def semantic_search(self, query: str, domain: Optional[str] = None, limit: int = 5) -> List[Dict[str, Any]]:
         """
-        Semantic search for relevant concepts in memory.
+        Search for relevant concepts in memory files.
 
         Args:
             query: Search query
@@ -88,8 +109,8 @@ class AgentMemory:
         Returns:
             list: Matching concepts with relevance scores
 
-        MCP Call:
-            mcp__memory-server__search_nodes(query="{query} {domain}")
+        Auto-Memory:
+            Use Grep tool to search for "{query}" in memory directory
         """
         pass
 
@@ -103,9 +124,9 @@ class AgentMemory:
         Returns:
             list: Related concept names
 
-        MCP Call:
-            mcp__memory-server__open_nodes(names=[concept_name])
-            Then extract relations from returned node
+        Auto-Memory:
+            Use Grep tool to search for "{concept_name}" in memory files
+            Parse surrounding context for related concepts
         """
         pass
 
@@ -120,16 +141,12 @@ class AgentMemory:
             difficulty: Difficulty score (0.0-1.0)
             domain: Knowledge domain
 
-        MCP Call:
-            mcp__memory-server__add_observations(
-                observations=[{
-                    "entityName": concept_name,
-                    "contents": [f"Review: struggled with difficulty={difficulty} on {timestamp}"]
-                }]
-            )
+        Auto-Memory:
+            Use Edit tool to append to memory file:
+            "Review: struggled with {concept_name}, difficulty={difficulty} on {timestamp}"
         """
         timestamp = datetime.now().isoformat()
-        # Agent should call: mcp__memory-server__add_observations
+        # Agent should use Edit tool to append to memory file
         pass
 
     def update_preference(self, key: str, value: Any):
@@ -140,16 +157,11 @@ class AgentMemory:
             key: Preference key (difficulty, learning_pace, question_style, etc.)
             value: New preference value
 
-        MCP Call:
-            mcp__memory-server__add_observations(
-                observations=[{
-                    "entityName": "user_preferences",
-                    "contents": [f"{key}={value} updated on {timestamp}"]
-                }]
-            )
+        Auto-Memory:
+            Use Edit tool to update preference entry in memory file
         """
         timestamp = datetime.now().isoformat()
-        # Agent should call: mcp__memory-server__add_observations
+        # Agent should use Edit tool to update memory file
         pass
 
     def save_concept(self, concept_name: str, domain: str, metadata: Dict[str, Any]):
@@ -161,22 +173,16 @@ class AgentMemory:
             domain: Knowledge domain
             metadata: Additional metadata (source, timestamp, material, etc.)
 
-        MCP Call:
-            mcp__memory-server__create_entities(
-                entities=[{
-                    "name": concept_name,
-                    "entityType": domain,
-                    "observations": [json.dumps(metadata)]
-                }]
-            )
+        Auto-Memory:
+            Use Edit tool to append concept entry to memory file
         """
-        # Agent should call: mcp__memory-server__create_entities
+        # Agent should use Edit tool to append to memory file
         pass
 
     def create_relationship(self, from_concept: str, to_concept: str,
                           relation_type: str, strength: float = 0.7):
         """
-        Create relationship between concepts in memory.
+        Record relationship between concepts in memory.
 
         Args:
             from_concept: Source concept
@@ -184,16 +190,10 @@ class AgentMemory:
             relation_type: Relation type (related_to, prerequisite_of, etc.)
             strength: Relationship strength (0.0-1.0)
 
-        MCP Call:
-            mcp__memory-server__create_relations(
-                relations=[{
-                    "from": from_concept,
-                    "to": to_concept,
-                    "relationType": relation_type
-                }]
-            )
+        Auto-Memory:
+            Use Edit tool to append relationship entry to memory file
         """
-        # Agent should call: mcp__memory-server__create_relations
+        # Agent should use Edit tool to append to memory file
         pass
 
     # ==================== Context Extraction ====================
@@ -215,7 +215,6 @@ class AgentMemory:
         # Agents can override with domain-specific logic
         concepts = []
         # Extract [[concept-id]] patterns
-        import re
         wikilinks = re.findall(r'\[\[([^\]]+)\]\]', answer)
         for link in wikilinks:
             concepts.append({
@@ -234,37 +233,29 @@ class AgentMemory:
         Returns:
             list: Related concepts
 
-        MCP Call:
-            mcp__memory-server__search_nodes(query=concept["name"])
+        Auto-Memory:
+            Use Grep tool to search for concept name in memory files
         """
-        # Agent should call: mcp__memory-server__search_nodes
-        # and extract related concepts from results
+        # Agent should use Grep tool on memory directory
         pass
 
     # ==================== Memory Operations for Analyst ====================
 
     def add_concept_node(self, concept_name: str, domain: str, metadata: Dict[str, Any]):
         """
-        Add concept node to memory graph (Analyst agent specific).
+        Add concept node to memory (Analyst agent specific).
 
         Args:
             concept_name: Concept name
             domain: Knowledge domain
             metadata: Metadata (question, timestamp, source, summary)
 
-        MCP Call:
-            mcp__memory-server__create_entities(
-                entities=[{
-                    "name": concept_name,
-                    "entityType": domain,
-                    "observations": [
-                        f"Question: {metadata.get('question', '')}",
-                        f"Summary: {metadata.get('summary', '')}",
-                        f"Source: {metadata.get('source', 'analyst')}",
-                        f"Timestamp: {metadata.get('timestamp', datetime.now().isoformat())}"
-                    ]
-                }]
-            )
+        Auto-Memory:
+            Use Edit tool to append concept entry to memory file with:
+            - Question context
+            - Summary
+            - Source
+            - Timestamp
         """
         pass
 
@@ -272,10 +263,11 @@ class AgentMemory:
 # ==================== Example Usage (for documentation) ====================
 
 def example_analyst_usage():
-    """Example: How analyst agent uses memory."""
+    """Example: How analyst agent uses memory with auto-memory files."""
     memory = AgentMemory()
 
     # Step 1: Query memory before answering
+    # Agent uses Grep tool to search memory files
     user_question = "Explain Black-Scholes model"
     results = memory.semantic_search(user_question, domain="finance")
 
@@ -287,6 +279,7 @@ def example_analyst_usage():
         print("Let me explain the Black-Scholes model...")
 
     # Step 2: Save concepts after answering
+    # Agent uses Edit tool to append to memory files
     concepts = ["Black-Scholes Model", "Option Pricing", "Stochastic Calculus"]
     for concept in concepts:
         memory.save_concept(
@@ -299,7 +292,8 @@ def example_analyst_usage():
             }
         )
 
-    # Step 3: Create relationships
+    # Step 3: Record relationships
+    # Agent uses Edit tool to append to memory files
     memory.create_relationship(
         "Black-Scholes Model",
         "Option Greeks",
@@ -309,27 +303,29 @@ def example_analyst_usage():
 
 
 def example_tutor_usage():
-    """Example: How domain tutors use memory."""
+    """Example: How domain tutors use memory with auto-memory files."""
     memory = AgentMemory()
 
-    # Get user preferences
+    # Get user preferences (Read tool on memory files)
     prefs = memory.get_all_preferences()
     difficulty_pref = prefs.get("difficulty", "medium")
 
-    # Check for previous struggles
+    # Check for previous struggles (Grep tool on memory files)
     struggles = memory.get_struggles(domain="finance")
 
-    # Track new struggle if user has difficulty
-    if user_struggling:
-        memory.track_struggle("call-option-intrinsic-value", difficulty=0.8, domain="finance")
+    # Track new struggle if user has difficulty (Edit tool on memory files)
+    # if user_struggling:
+    #     memory.track_struggle("call-option-intrinsic-value", difficulty=0.8, domain="finance")
 
-    # Update preferences based on feedback
-    if user_feedback == "too hard":
-        memory.update_preference("difficulty", "easy")
+    # Update preferences based on feedback (Edit tool on memory files)
+    # if user_feedback == "too hard":
+    #     memory.update_preference("difficulty", "easy")
 
 
 if __name__ == "__main__":
-    print("Agent Memory Utilities - MCP Integration")
+    print("Agent Memory Utilities - Auto-Memory Integration")
     print("This module provides memory operations for consultant agents.")
+    print(f"Memory directory: {MEMORY_DIR}")
+    print(f"Primary memory file: {MEMORY_FILE}")
     print("\nImport in agent code:")
     print("  from scripts.agent_memory_utils import AgentMemory")

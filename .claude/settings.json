@@ -17,6 +17,7 @@
       "Task",
       "TodoWrite",
       "Bash(source venv/bin/activate && python3 scripts/review/extract_conversation_context.py:*)",
+      "Bash(source venv/bin/activate && python scripts/review/get_next_rem.py*)",
       "Bash(scripts/learning-materials/update_progress.py:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",
@@ -149,18 +150,6 @@
             "on_error": "ignore"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-info.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-git-init.sh"
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -195,43 +184,13 @@
         ]
       },
       {
-        "matcher": "TodoWrite",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-tracker.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-post-deploy-local.py",
             "stdin_json": true,
             "on_error": "ignore"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-count.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-todo-sequence.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-git-checkpoint.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash\\(git commit.*\\)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-git-warn.sh"
           }
         ]
       }
@@ -264,20 +223,6 @@
             "on_error": "ignore"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-workflow-enforce.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          },
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-git-commit.sh"
-          }
-        ]
       }
     ],
     "SessionEnd": [
@@ -286,40 +231,6 @@
           {
             "type": "command",
             "command": "echo \"$(date -u +%Y-%m-%dT%H:%M:%SZ) SessionEnd\" >> ~/.claude/session.log"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/prompt-workflow.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-workflow-gate.py",
-            "stdin_json": true,
-            "on_error": "ignore"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-bash-safety.sh",
-            "stdin_json": true
           }
         ]
       }

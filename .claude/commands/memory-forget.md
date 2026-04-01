@@ -1,71 +1,75 @@
 ---
 description: "Remove specific memories by topic or name"
-allowed-tools: mcp__memory-server__search_nodes, mcp__memory-server__delete_entities, TodoWrite
+allowed-tools: Read, Edit, Grep, Glob, TodoWrite
 disable-model-invocation: true
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
+**CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
 
 # Memory Forget Command
 
-Remove specific memories from the knowledge graph by entity name, search query, entity type, or domain.
+Remove specific memories from auto-memory files by topic, keyword, or domain.
 
 ## Usage
 
 ```
 /memory-forget <concept-name>
 /memory-forget --query <search-query>
-/memory-forget --type <entity-type>
+/memory-forget --type <entry-type>
 /memory-forget --domain <domain>
 ```
 
 ## Examples
 
 ```
-/memory-forget "Black-Scholes Model"  # Delete specific concept
+/memory-forget "Black-Scholes Model"  # Delete specific concept entries
 /memory-forget --query "option"       # Delete all matching "option"
-/memory-forget --type struggles       # Delete all struggles
-/memory-forget --domain finance       # Delete all finance concepts
+/memory-forget --type struggles       # Delete all struggle entries
+/memory-forget --domain finance       # Delete all finance entries
 ```
 
 ## What This Command Does
 
-1. **Searches for matches** - Finds entities by name, query, type, or domain
-2. **Shows preview** - Lists all memories that will be deleted
+1. **Searches for matches** - Finds entries by keyword, type, or domain in memory files
+2. **Shows preview** - Lists all entries that will be removed
 3. **Requires confirmation** - Always asks for confirmation before deletion
-4. **Deletes entities** - Removes matching entities from memory graph
-5. **Cleans up relationships** - Automatically removes orphaned relationships
+4. **Removes entries** - Uses Edit tool to remove matching sections from memory files
+5. **Cleans up** - Removes empty sections after deletion
 
 ## Implementation
 
-Delete memory entities using MCP tools:
+Find and remove entries from auto-memory files:
 
 1. **Search for matches**:
 ```
-mcp__memory-server__search_nodes:
-  query: "{concept_name}"  # Or query/type/domain
+Grep:
+  pattern: "{concept_name}"
+  path: /root/.claude/projects/-root/memory/
+  output_mode: content
+  context: 5
 ```
 
 2. **Show preview** and ask for confirmation
 
-3. **Delete entities**:
+3. **Remove matching entries** using Edit tool:
 ```
-mcp__memory-server__delete_entities:
-  entityNames: ["{entity_1}", "{entity_2}", ...]
+Edit:
+  file_path: /root/.claude/projects/-root/memory/{file}.md
+  old_string: "{matched section text}"
+  new_string: ""
 ```
 
-**Note**: MCP automatically removes orphaned relationships.
-**Note**: This command uses MCP tools directly, no Python script needed.
+**Note**: This command uses Grep and Edit tools on auto-memory files. No MCP tools needed.
 
-This command modifies the memory graph by removing entities and their relationships.
+This command modifies memory files by removing matching entries.
 
 ## Notes
 
-**WARNING**: This action is irreversible! Deleted memories cannot be recovered unless you have a backup of the memory file.
+**WARNING**: This action modifies memory files. Consider creating a backup first.
 
 **Backup before deletion**:
-```
-cp .mcp/memory/memories.json .mcp/memory/memories-backup-$(date +%Y%m%d).json
+```bash
+cp -r /root/.claude/projects/-root/memory/ /root/.claude/projects/-root/memory-backup-$(date +%Y%m%d)/
 ```
 
 **Consider using `/memory-status` first to review what will be deleted.**

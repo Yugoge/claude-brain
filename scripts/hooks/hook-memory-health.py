@@ -3,17 +3,22 @@
 Memory Health Monitoring Hook
 
 PostToolUse hook that tracks memory operation health metrics automatically.
-Logs tool usage, backend, latency, and success/failure to health dashboard.
+Logs tool usage, latency, and success/failure to health dashboard.
 
 Hook Type: PostToolUse
-Trigger: After MCP Memory Server tool execution
+Trigger: After auto-memory file operations (Read/Write/Edit on memory directory)
 Action: Record metrics if tool is memory-related
+
+Migration Note:
+    Previously triggered on mcp__memory-server__* tools.
+    Now monitors Read/Write/Edit operations on auto-memory files at
+    /root/.claude/projects/-root/memory/
 
 Configuration (.claude/settings.json):
     {
       "hooks": {
         "PostToolUse": [{
-          "matcher": "mcp__memory-server__.*",
+          "matcher": "Read|Write|Edit",
           "hooks": [{
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook-memory-health.py",
@@ -36,6 +41,9 @@ from typing import Dict, Any, List
 # This environment variable is set by Claude Code to the project root
 PROJECT_DIR = Path(os.environ.get('CLAUDE_PROJECT_DIR', os.getcwd()))
 
+# Auto-memory directory path
+MEMORY_DIR = "/root/.claude/projects/-root/memory"
+
 
 class MemoryHealthMonitor:
     """Monitor and log memory operation health metrics."""
@@ -45,32 +53,31 @@ class MemoryHealthMonitor:
         self.health_file = PROJECT_DIR / '.mcp/memory/health.json'
         self.max_history = 100  # Keep last 100 operations
 
-        # Memory-related tool prefixes
-        self.memory_tools = {
-            "search_nodes", "create_entities", "create_relations",
-            "add_observations", "read_graph", "delete_entities",
-            "delete_observations", "delete_relations", "open_nodes"
-        }
+    def _is_memory_operation(self, hook_data: Dict[str, Any]) -> bool:
+        """Check if tool operation is on auto-memory files."""
+        tool_name = hook_data.get("tool_name", "")
+        # Check if the tool operates on memory directory files
+        tool_input = hook_data.get("tool_input", {})
+        file_path = tool_input.get("file_path", "") or tool_input.get("path", "")
+        return MEMORY_DIR in str(file_path)
 
     def _read_health_data(self) -> Dict[str, Any]:
         """Read current health metrics."""
         if not self.health_file.exists():
             return {
-                "version": "1.0.0",
-                "current_backend": "python",
+                "version": "2.0.0",
+                "backend": "auto-memory",
                 "health_status": "healthy",
                 "last_updated": datetime.now().isoformat(),
                 "metrics": {
                     "total_operations": 0,
                     "successful_operations": 0,
                     "failed_operations": 0,
-                    "failover_count": 0,
                     "success_rate": 100.0,
                     "avg_latency_ms": 0.0,
                     "min_latency_ms": 0.0,
                     "max_latency_ms": 0.0,
-                    "by_tool": {},
-                    "by_backend": {"official": 0, "python": 0}
+                    "by_tool": {}
                 },
                 "history": []
             }
@@ -79,8 +86,23 @@ class MemoryHealthMonitor:
             with open(self.health_file, 'r') as f:
                 return json.load(f)
         except Exception:
-            # Return default on error
-            return self._read_health_data()
+            return {
+                "version": "2.0.0",
+                "backend": "auto-memory",
+                "health_status": "healthy",
+                "last_updated": datetime.now().isoformat(),
+                "metrics": {
+                    "total_operations": 0,
+                    "successful_operations": 0,
+                    "failed_operations": 0,
+                    "success_rate": 100.0,
+                    "avg_latency_ms": 0.0,
+                    "min_latency_ms": 0.0,
+                    "max_latency_ms": 0.0,
+                    "by_tool": {}
+                },
+                "history": []
+            }
 
     def _write_health_data(self, data: Dict[str, Any]) -> bool:
         """Write health metrics to file."""
@@ -98,10 +120,6 @@ class MemoryHealthMonitor:
         except Exception:
             return False
 
-    def _is_memory_tool(self, tool_name: str) -> bool:
-        """Check if tool is memory-related."""
-        return any(mem_tool in tool_name.lower() for mem_tool in self.memory_tools)
-
     def _calculate_metrics(self, history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate aggregated metrics from history."""
         if not history:
@@ -109,13 +127,11 @@ class MemoryHealthMonitor:
                 "total_operations": 0,
                 "successful_operations": 0,
                 "failed_operations": 0,
-                "failover_count": 0,
                 "success_rate": 100.0,
                 "avg_latency_ms": 0.0,
                 "min_latency_ms": 0.0,
                 "max_latency_ms": 0.0,
-                "by_tool": {},
-                "by_backend": {"official": 0, "python": 0}
+                "by_tool": {}
             }
 
         total = len(history)
@@ -133,32 +149,19 @@ class MemoryHealthMonitor:
             tool = h.get("tool_name", "unknown")
             by_tool[tool] = by_tool.get(tool, 0) + 1
 
-        # Backend usage breakdown
-        by_backend = {"official": 0, "python": 0}
-        for h in history:
-            backend = h.get("backend", "python")
-            if backend in by_backend:
-                by_backend[backend] += 1
-
         return {
             "total_operations": total,
             "successful_operations": successful,
             "failed_operations": failed,
-            "failover_count": 0,  # Tracked separately in proxy
             "success_rate": (successful / total * 100) if total > 0 else 100.0,
             "avg_latency_ms": avg_latency,
             "min_latency_ms": min_latency,
             "max_latency_ms": max_latency,
-            "by_tool": by_tool,
-            "by_backend": by_backend
+            "by_tool": by_tool
         }
 
-    def record_operation(self, tool_name: str, success: bool, latency_ms: float, backend: str = "python"):
+    def record_operation(self, tool_name: str, success: bool, latency_ms: float):
         """Record a memory operation in health metrics."""
-        # Only track memory-related tools
-        if not self._is_memory_tool(tool_name):
-            return
-
         # Read current data
         data = self._read_health_data()
 
@@ -166,7 +169,7 @@ class MemoryHealthMonitor:
         operation = {
             "timestamp": datetime.now().isoformat(),
             "tool_name": tool_name,
-            "backend": backend,
+            "backend": "auto-memory",
             "success": success,
             "latency_ms": latency_ms
         }
@@ -195,6 +198,10 @@ class MemoryHealthMonitor:
 
     def process_hook_input(self, hook_data: Dict[str, Any]):
         """Process PostToolUse hook input."""
+        # Only track operations on auto-memory files
+        if not self._is_memory_operation(hook_data):
+            return
+
         # Extract tool information
         tool_name = hook_data.get("tool_name", "unknown")
         success = not hook_data.get("error", False)  # No error = success
@@ -202,11 +209,8 @@ class MemoryHealthMonitor:
         # Estimate latency (if provided, otherwise default)
         latency_ms = hook_data.get("duration_ms", 50.0)
 
-        # Backend is always Python in current implementation
-        backend = "python"
-
         # Record the operation
-        self.record_operation(tool_name, success, latency_ms, backend)
+        self.record_operation(tool_name, success, latency_ms)
 
 
 def main():

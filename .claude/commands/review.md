@@ -30,6 +30,9 @@ Start an interactive review session using spaced repetition (FSRS algorithm).
 /review                                # Review all Rems due today
 /review finance                        # Review all finance Rems
 /review [[call-option-intrinsic-value]]  # Review specific Rem
+/review --easy                         # Rapid-fire fact recall (high volume)
+/review --hard                         # Analysis/application questions (deep mastery)
+/review --easy --format m --lang zh finance  # Composable with all flags
 ```
 
 ## What This Command Does
@@ -116,9 +119,22 @@ source venv/bin/activate && python scripts/review/run_review.py --lang en  # Eng
 source venv/bin/activate && python scripts/review/run_review.py --lang fr  # French
 ```
 
+**Difficulty mode** (controls cognitive depth of questions):
+```bash
+source venv/bin/activate && python scripts/review/run_review.py --easy    # Bloom's Remember: fact recall, rapid-fire
+source venv/bin/activate && python scripts/review/run_review.py --normal  # Bloom's Understand: current default behavior
+source venv/bin/activate && python scripts/review/run_review.py --hard    # Bloom's Analyze/Apply: scenarios, discrimination
+```
+- `--easy`: Single fact-recall per Rem, no follow-ups, no explanation loop, batch limit 50
+- `--normal` (default): Current Socratic dialogue behavior unchanged
+- `--hard`: Analysis/application questions, follow-up probing, multi-concept discrimination
+- Composable with `--format` and `--lang` (e.g., `--easy --format m --lang zh`)
+- When `--format` is explicitly set, it overrides difficulty mode's format preference
+
 **Combined parameters**:
 ```bash
 source venv/bin/activate && python scripts/review/run_review.py --format m --lang zh finance
+source venv/bin/activate && python scripts/review/run_review.py --easy --format m --lang zh finance
 ```
 
 **Note**: Path resolution prefers `.md` and falls back to `.rem.md` when content still uses the legacy extension.
@@ -135,14 +151,48 @@ source venv/bin/activate && python scripts/review/run_review.py --format m --lan
 
 **Session Setup** (before first Rem):
 ```
-Load session tracking from run_review.py JSON output:
-  format_history = data['format_history']  // Loaded from .review/format_history.json
-  session_rem_ids = []  // Track Rems reviewed (for logging)
+Session state is now persisted to .review/session-{session_id}.json (written by run_review.py).
+Use get_next_rem.py --session-id {session_id} to retrieve the next Rem for each iteration.
+This prevents hallucinated Rem IDs when conversation context is compressed.
+
+session_id = data['session_id']  // CRITICAL: Extract from run_review.py JSON output, pass to all subsequent scripts
+format_history = data['format_history']  // Loaded from .review/format_history.json
 ```
 
-**Note**: format_history is populated by run_review.py from persistent state file. This fixes the stateless architecture issue introduced in commit 3ed6b6f.
+**Note**: Session Rems are persisted to disk. Even if conversation context is lost, call get_next_rem.py to recover the correct next Rem.
 
-**For each Rem in the session, follow this loop**:
+**Difficulty Mode Dialogue Rules** (from `difficulty_mode` in run_review.py JSON):
+
+**Easy Mode** (`difficulty_mode: "easy"`):
+- Question: Single fact-recall question (Bloom's Remember level)
+- After answer: Brief feedback only (correct/incorrect + correct answer if wrong)
+- No progressive hints -- show correct answer immediately if wrong
+- Skip explanation loop (Step 7) entirely -- never enter EXPLANATION_LOOP
+- Proceed directly to rating after brief feedback
+- Target: 15-30 seconds per Rem
+
+**Normal Mode** (`difficulty_mode: "normal"` or default):
+- Current behavior unchanged (Socratic dialogue, hints, explanation loop, adaptive formats)
+
+**Hard Mode** (`difficulty_mode: "hard"`):
+- Question: Analysis/application/discrimination question (Bloom's Analyze/Apply/Evaluate)
+- After initial answer: Ask 1-2 follow-up questions from review-master's `follow_up_questions`
+- Follow-up questions probe deeper: "Why?", "How does this differ from X?", "What if Y changed?"
+- Explanation loop (Step 7) remains active for confused users
+- Minimal hints -- challenge the user before providing help
+- Target: 3-5 minutes per Rem
+
+**For each Rem in the session, call get_next_rem.py to get the next Rem**:
+
+```bash
+source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id}
+```
+
+This returns JSON with the next pending Rem (id, path, conversation_source, index, total, remaining).
+If session_complete is true, proceed to Step 4 (Post-Session Summary).
+If stale_warning is present, inform user about session age.
+
+**For each Rem returned by get_next_rem.py, follow this loop**:
 
 #### 3. Consult Review-Master for Guidance
 
@@ -199,7 +249,8 @@ Use Task tool:
       \"mode\": \"{mode}\",
       \"consultation_type\": \"question\",
       \"format_preference\": \"{format_preference from run_review.py JSON or null}\",
-      \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\"
+      \"lang_preference\": \"{lang_preference from run_review.py JSON or null}\",
+      \"difficulty_mode\": \"{difficulty_mode from run_review.py JSON (easy/normal/hard)}\"
       {IF format_preference is null, include: ,\"recent_formats\": {format_history}}
     }
   }
@@ -350,7 +401,20 @@ Wait for user to answer the question.
 - Rating 2: Matches rating_2_indicators from JSON
 - Rating 1: Matches rating_1_indicators from JSON
 
+#### 6b. Hard Mode Follow-Up Questions (if difficulty_mode == "hard")
+
+**Only when `difficulty_mode == "hard"`** and user answered correctly (Quality 3-4):
+1. Present 1-2 follow-up questions from review-master's `follow_up_questions` field
+2. Follow-ups probe deeper reasoning: "Why does this matter?", "How would this change if X?", "Compare this with Y concept"
+3. Listen to user response and evaluate
+4. Use follow-up quality to inform final rating suggestion (better follow-up answers = higher rating)
+5. Then proceed to Step 7 (or Step 8 if no confusion)
+
+If user answered incorrectly (Quality 1-2), skip follow-ups and proceed to Step 7 normally.
+
 #### 7. Confusion Detection & Explanation Loop (Commit 893dffd Enhancement)
+
+**⚠️ EASY MODE EXCEPTION**: If `difficulty_mode == "easy"`, SKIP this entire step. Show correct answer briefly if wrong, then proceed directly to Step 8 (rating). Easy mode prioritizes throughput over re-teaching.
 
 **⚠️ CRITICAL**: Detect user confusion and provide explanation BEFORE proceeding to rating.
 
@@ -588,7 +652,7 @@ Compose the rating question and option labels yourself using natural phrasing fo
 **CRITICAL**: Immediately update schedule after rating:
 
 ```bash
-source venv/bin/activate && python scripts/review/update_review.py {rem_id} {user_rating}
+source venv/bin/activate && python scripts/review/update_review.py {rem_id} {user_rating} --session-id {session_id}
 ```
 
 **Parse JSON output and show feedback**:
@@ -614,15 +678,21 @@ FSRS Update:
 
 #### 10. Move to Next Rem
 
-**Progress indicator**:
+**Retrieve next Rem from disk** (prevents hallucination after context loss):
+```bash
+source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id}
 ```
-[{N}/{total}] {N} reviewed, {remaining} remaining
-```
+
+Parse the JSON output:
+- If `session_complete: true` -> All done, proceed to Step 4 (Post-Session Summary)
+- If `success: true` -> Use `rem.id`, `rem.path`, `rem.conversation_source` for next iteration
+- Progress: `[{reviewed+1}/{total}] {reviewed} reviewed, {remaining} remaining`
 
 **Repeat steps 3-10 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
+- Clean up session: `source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup`
 - Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules
 
@@ -632,10 +702,17 @@ FSRS Update:
 
 After all Rems reviewed (or early exit):
 
+**Session Cleanup** (always run at session end):
+```bash
+source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup
+```
+This deletes `.review/session-{session_id}.json` to prevent stale session warnings on next run.
+
 **Early Exit Handling** (if user interrupts before completing all Rems):
 - Save progress to `.review/history.json`
 - Update schedule for already-reviewed Rems
 - Show partial session summary:
+  - Difficulty mode: {difficulty_mode} (easy/normal/hard)
   - Reviewed: {N} out of {total}
   - Average rating: {avg}
   - Time spent: {minutes} min
@@ -751,10 +828,11 @@ Would you like to do a focused review session on these?
 - Run `/maintain --fix-all` to clean up schedule.json
 
 **Batch Limits**:
-- Maximum 20 Rems per session (prevents token overflow)
-- If more available: "📊 Batch Limit: Showing first 20 of N Rems"
+- Normal/Hard mode: Maximum 20 Rems per session (prevents token overflow)
+- Easy mode: Maximum 50 Rems per session (rapid-fire allows higher throughput)
+- If more available: "Batch Limit: Showing first {limit} of N Rems"
 - Remaining Rems appear in next session
-- Tip: Review daily to avoid accumulation
+- Tip: Review daily to avoid accumulation (use `--easy` to catch up on backlogs)
 
 **FSRS Parameter Changes**:
 - ⚠️ Changing FSRS parameters affects scheduling accuracy

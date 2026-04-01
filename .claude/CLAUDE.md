@@ -22,27 +22,44 @@ knowledge-system/
 └── scripts/                   # Utility scripts
 ```
 
-## Core Commands
+<!-- AUTO:command-list -->
+- `ask.md` - Ask any question with automatic web research and comprehensive answers
+- `deep-search.md` - Deep website exploration with iterative search strategy
+- `diagnose-memory.md` - Diagnose MCP memory server issues
+- `discover-relations.md` - Discover Relations Command
+- `fact-check.md` - Analyze media bias and verify news claims using structural analysis
+- `graph.md` - Graph Command
+- `kb-init.md` - Initialize or reinitialize the knowledge system
+- `learn.md` - Learn Command
+- `maintain.md` - Run knowledge base maintenance tasks
+- `memory-clear.md` - Clear all memories (nuclear option with confirmation)
+- `memory-export.md` - Export memories to external file formats (JSON, Markdown)
+- `memory-forget.md` - Remove specific memories by topic or name
+- `memory-show.md` - Display memories in a readable format with filtering options
+- `memory-status.md` - View current memory status and stored memories
+- `progress.md` - View learning progress across all materials or specific domains
+- `reflect-search.md` - Reflection-driven iterative search with goal evaluation
+- `research-deep.md` - Multi-source deep research with 15-20 iterative searches
+- `review.md` - Review Command
+- `save.md` - Save Command
+- `search-tree.md` - Tree search exploration with MCTS-inspired path evaluation
+- `site-navigate.md` - Intelligent site navigation simulating "click-through" exploration
+- `test.md` - Test Command
+<!-- /AUTO:command-list -->
 
-- `/learn <file-path>` - Start interactive Socratic learning from a material
-- **`/save [topic]`** - **One-stop-shop**: Extract concepts as ultra-minimal Rems + discover typed relations + maintain graph + auto-sync to FSRS
-- `/discover-relations <rem-id | --domain path>` - Discover typed relations for existing Rems using domain tutors
-- `/review [topic]` - Review knowledge using FSRS algorithm (1-4 rating scale)
-- `/maintain` - Run maintenance tasks (validation, fixes, graph rebuild, FSRS sync)
-- `/progress [topic]` - View learning progress
-- `/kb-init` - Initialize knowledge system
-
-## Agents
-
-- **book-tutor**: Socratic teaching for books/reports
-- **language-tutor**: Language learning specialist
-- **finance-tutor**: Finance domain specialist
-- **programming-tutor**: Programming domain specialist
-- **medicine-tutor**: Medical & healthcare domain specialist
-- **law-tutor**: Legal domain specialist
-- **science-tutor**: Science domain specialist (physics, chemistry, biology, earth science)
-- **review-master**: Review conductor (JSON consultant)
-- **analyst**: Universal AI assistant for research and problem-solving (JSON consultant)
+<!-- AUTO:agent-list -->
+- `analyst.md` - Universal AI assistant for comprehensive research, analysis, and problem-solving. Use for any question that needs web research, code execution, file operations, or deep analysis. Fully replaces Claude.ai web interface with complete tool access.
+- `book-tutor.md` - Learning Materials Expert Consultant - Provides JSON consultation for books, reports, papers, and documents with Socratic questioning strategies
+- `classification-expert.md` - Domain classification specialist using UNESCO ISCED-F 2013 taxonomy
+- `finance-tutor.md` - Quantitative Finance Domain Expert Consultant - Provides JSON consultation for calculation verification, scenario analysis, risk assessment, and market context
+- `journalist.md` - Journalism & Media Analysis Expert - Provides JSON consultation for structural bias analysis, funding source verification, editorial independence assessment, and red-line testing based on issue hierarchy
+- `language-tutor.md` - Language Domain Expert Consultant - Provides JSON consultation for grammar production, collocation testing, syntax construction, pronunciation practice, and CEFR-aligned Socratic strategies
+- `law-tutor.md` - Legal Domain Expert Consultant - Provides JSON consultation for legal reasoning, case analysis, statutory interpretation, and jurisprudence
+- `medicine-tutor.md` - Medical & Healthcare Domain Expert Consultant - Provides JSON consultation for diagnostic reasoning, treatment evaluation, medical terminology, and clinical knowledge
+- `programming-tutor.md` - Programming Domain Expert Consultant - Provides JSON consultation for syntax patterns, algorithm analysis, debugging strategies, and best practices
+- `review-master.md` - FSRS Review Expert Consultant - Provides JSON guidance for Socratic review questions, quality assessment, and memory optimization
+- `science-tutor.md` - Science Domain Expert Consultant - Provides JSON consultation for scientific method, experimental design, hypothesis testing, and multi-disciplinary science (physics, chemistry, biology, earth science)
+<!-- /AUTO:agent-list -->
 
 **Agent Architecture**: The system uses consultant agents only:
 - **Consultant Agents** (language-tutor, finance-tutor, programming-tutor, book-tutor, medicine-tutor, law-tutor, science-tutor, review-master, analyst) - Domain expert consultants providing JSON consultations to main agent

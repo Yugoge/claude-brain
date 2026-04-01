@@ -1,62 +1,73 @@
 ---
 description: "View current memory status and stored memories"
-allowed-tools: Read, mcp__memory-server__read_graph, mcp__memory-server__search_nodes, TodoWrite
+allowed-tools: Read, Glob, Bash, TodoWrite
 disable-model-invocation: true
 ---
 
-**⚠️ CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
+**CRITICAL**: Use TodoWrite to track workflow phases. Mark in_progress before each phase, completed immediately after.
 
 # Memory Status Command
 
-Display comprehensive memory status including memory server health, storage usage, memory count by category, recent memories, top concepts, and relationships count.
+Display comprehensive memory status including auto-memory health, storage usage, memory count by topic, recent memories, and file statistics.
 
 ## Usage
 
 ```
 /memory-status
 /memory-status <domain>
-/memory-status <entity-type>
+/memory-status <topic>
 ```
 
 ## Examples
 
 ```
-/memory-status            # Show all memories
-/memory-status finance    # Show finance domain memories
-/memory-status concepts   # Show concept entities
+/memory-status            # Show all memory files
+/memory-status finance    # Show finance-related memory entries
+/memory-status concepts   # Show concept-related entries
 ```
 
 ## What This Command Does
 
-1. **Checks memory server health** - Verifies storage directory, file permissions, memory file structure
-2. **Displays memory statistics** - Total entities, relations, observations, entity types breakdown
-3. **Lists recent memories** - Shows recently added entities, observations, relationship counts
-4. **Filters by domain** (if specified) - Shows domain-specific concepts and related concepts
+1. **Checks auto-memory health** - Verifies memory directory exists, file permissions, file structure
+2. **Displays memory statistics** - Total files, total size, topics covered, entry counts
+3. **Lists memory files** - Shows all .md files in memory directory with sizes
+4. **Filters by topic** (if specified) - Shows topic-specific entries from memory files
 
 ## Implementation
 
-Query memory graph statistics using MCP tools:
+Query auto-memory files in `/root/.claude/projects/-root/memory/`:
 
-1. **Read full graph**:
-```
-mcp__memory-server__read_graph
-```
-
-2. **Calculate statistics**:
-   - Count entities by type
-   - Count relations
-   - Count observations
-   - Group by domain
-
-3. **Search recent memories** (optional):
-```
-mcp__memory-server__search_nodes:
-  query: "{domain}"  # If domain filter provided
+1. **List memory directory**:
+```bash
+ls -la /root/.claude/projects/-root/memory/
 ```
 
-**Note**: This command uses MCP tools directly, no Python script needed.
+2. **Count files and calculate size**:
+```bash
+# Count .md files
+find /root/.claude/projects/-root/memory/ -name "*.md" | wc -l
+# Total size
+du -sh /root/.claude/projects/-root/memory/
+```
+
+3. **Read each memory file** to extract topics and entry counts:
+```
+Read: /root/.claude/projects/-root/memory/MEMORY.md
+```
+(Repeat for each .md file found)
+
+4. **Search for domain/topic** (if filter provided):
+```
+Grep:
+  pattern: "{domain}"
+  path: /root/.claude/projects/-root/memory/
+  output_mode: content
+```
+
+**Note**: This command uses Read, Glob, and Bash tools on auto-memory files. No MCP tools needed.
 
 ## Notes
 
-- Uses agent_memory_utils library to query and display memory information
+- Memory files are stored at `/root/.claude/projects/-root/memory/`
+- Primary file is `MEMORY.md`, additional topic-specific `.md` files may exist
 - See also: `/memory-forget` (remove specific memories), `/memory-clear` (clear all memories)

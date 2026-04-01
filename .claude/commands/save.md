@@ -555,7 +555,7 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
 - **Graph**: Update knowledge graph (backlinks, conversation index, normalize wikilinks, fix bidirectional links)
 - **Inferred Links**: Materialize inferred links (optional, with preview)
 - **FSRS Sync**: Add Rems to review schedule (automatic)
-- **Memory MCP**: Record to MCP (automatic)
+- **Auto-Memory**: Record to auto-memory files (automatic)
 - **Navigation**: Update conversation Rem links (bidirectional)
 - **Analytics**: Generate analytics & visualizations (automatic)
 - **Report**: Display completion report with performance metrics
@@ -591,9 +591,9 @@ source venv/bin/activate && python scripts/archival/save_post_processor.py \
 📅 Sync to FSRS Review Schedule
   ✓ FSRS sync completed
 
-🧠 Record to Memory MCP
-  ℹ️  MCP recording should be handled by main agent
-  ⏭️  Skipped (MCP tools unavailable in subprocess)
+🧠 Record to Auto-Memory
+  ℹ️  Auto-memory recording handled by main agent
+  ✅  Main agent writes session summary to auto-memory files at /root/.claude/projects/-root/memory/
 
 📊 Generate Analytics & Visualizations
   ✓ Analytics generated (30-day period)
@@ -654,7 +654,7 @@ Next: /review
 - ✅ All Steps 12-22 automated in single script call
 - ✅ Performance metrics included in completion report
 - ⚠️  Step 17 (materialize inferred links) skipped in non-interactive mode
-- ⚠️  Step 19 (Memory MCP) must be handled by main agent (MCP tools unavailable in subprocess)
+- ✅  Step 19 (Auto-Memory): Main agent writes session summary to auto-memory files using Read/Write/Edit tools
 
 ---
 

@@ -203,6 +203,7 @@ class QuestionFormatGenerator:
         rem_data: Dict,
         review_count: int = 0,
         recent_formats: Optional[List[str]] = None,
+        difficulty_mode: str = 'normal',
     ) -> QuestionFormat:
         """
         Provide format options context for AI to choose.
@@ -210,12 +211,17 @@ class QuestionFormatGenerator:
         Selection logic:
         1. First review: Always Short Answer (baseline)
         2. Avoid 3+ consecutive same format (variety)
-        3. Otherwise: Return default (AI will choose based on content)
+        3. Difficulty mode preferences (when no explicit --format):
+           - easy: MCQ > cloze (fastest formats for rapid recall)
+           - normal: Short Answer default (AI overrides based on content)
+           - hard: Problem-solving > short-answer (deepest thinking formats)
+        4. Otherwise: Return default (AI will choose based on content)
 
         Args:
             rem_data: Rem metadata (id, title, fsrs_state)
             review_count: Number of previous reviews
             recent_formats: List of last 3 formats used
+            difficulty_mode: 'easy' | 'normal' | 'hard' (default: 'normal')
 
         Returns:
             QuestionFormat enum value (default for AI to override)
@@ -239,7 +245,15 @@ class QuestionFormatGenerator:
                             return preferred
                     return available[0]
 
-        # Default: Return Short Answer as suggestion
+        # Difficulty mode preferences (when no explicit --format set)
+        # Easy: prefer fastest formats for rapid-fire recall
+        # Hard: prefer deepest formats for analytical thinking
+        if difficulty_mode == 'easy':
+            return QuestionFormat.MULTIPLE_CHOICE
+        elif difficulty_mode == 'hard':
+            return QuestionFormat.PROBLEM_SOLVING
+
+        # Default (normal): Return Short Answer as suggestion
         # AI will choose based on Rem content:
         # - Definitions/vocabulary → MCQ or Cloze
         # - Formulas → Cloze
@@ -296,5 +310,30 @@ if __name__ == "__main__":
     )
     assert result == QuestionFormat.SHORT_ANSWER, "Default is Short Answer (AI will override)"
     print("✅ select_format (default): PASS")
+
+    # Test difficulty_mode parameter
+    result = generator.select_format(
+        {"id": "test", "title": "Test"},
+        review_count=3,
+        difficulty_mode='easy',
+    )
+    assert result == QuestionFormat.MULTIPLE_CHOICE, "Easy mode should prefer MCQ"
+    print("✅ select_format (easy mode): PASS")
+
+    result = generator.select_format(
+        {"id": "test", "title": "Test"},
+        review_count=3,
+        difficulty_mode='hard',
+    )
+    assert result == QuestionFormat.PROBLEM_SOLVING, "Hard mode should prefer problem-solving"
+    print("✅ select_format (hard mode): PASS")
+
+    result = generator.select_format(
+        {"id": "test", "title": "Test"},
+        review_count=3,
+        difficulty_mode='normal',
+    )
+    assert result == QuestionFormat.SHORT_ANSWER, "Normal mode should default to short-answer"
+    print("✅ select_format (normal mode): PASS")
 
     print("\n✅ All QuestionFormatGenerator self-tests passed!")

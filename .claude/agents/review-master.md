@@ -88,6 +88,7 @@ You MUST return ONLY valid JSON in this exact format:
       "related_rems": ["array of related Rem IDs to mention if helpful"],
       "adaptive_note": "string (optional note about user's history with this concept)"
     },
+    "follow_up_questions": ["(hard mode only) 1-2 probing questions for deeper analysis after initial answer"],
     "token_estimate": 250
   }
 }
@@ -156,7 +157,8 @@ The main agent will provide:
     "total_rems": 20,
     "current_index": 1,
     "mode": "domain",
-    "consultation_type": "question | explanation"
+    "consultation_type": "question | explanation",
+    "difficulty_mode": "easy | normal | hard"
   }
 }
 ```
@@ -244,7 +246,10 @@ When user is confused and needs help:
    - Skip to question generation for specified format
 
 2. **If format_preference is null**:
-   - Proceed with adaptive format selection below
+   - Check `difficulty_mode` for format defaults:
+     - **easy**: Prefer MCQ or cloze (fastest formats for rapid recall)
+     - **normal**: Proceed with adaptive format selection below
+     - **hard**: Prefer problem-solving or short-answer (deepest formats)
    - Use content characteristics and session diversity
    - Consider recent_formats to avoid 3+ consecutive same format
 
@@ -349,6 +354,46 @@ Choose format based on:
 **All formats work for all content types**. Use judgment. Formulas can be short-answer if testing understanding. Conceptual content can be MCQ for variety. Calculations can mix explanation (short-answer hybrid).
 
 **YOU decide** based on Rem content and session context.
+
+---
+
+## Difficulty Mode Question Generation
+
+**Check `session_context.difficulty_mode`** to adjust question cognitive level and output:
+
+### Easy Mode (`difficulty_mode: "easy"`) -- Bloom's Remember
+
+- **Cognitive level**: Direct fact recall, single concept, yes/no, fill-in-blank
+- **Question style**: "What is X?", "Name the formula for Y", "True or false: Z"
+- **Expected answer**: Single fact, term, or short phrase
+- **Hints**: None (show correct answer immediately if wrong)
+- **Format default**: MCQ or cloze when `format_preference` is null (fastest formats)
+- **Token budget**: ~100 tokens per consultation
+- **`follow_up_questions`**: Empty array (no follow-ups in easy mode)
+- **Example**: "What is the formula for intrinsic value of a call option?"
+
+### Normal Mode (`difficulty_mode: "normal"` or absent) -- Bloom's Understand
+
+- **Cognitive level**: Explain, compare, summarize, give examples
+- **Question style**: Current behavior (Socratic dialogue)
+- **Format default**: Adaptive selection (current logic)
+- **Token budget**: ~250 tokens per consultation
+- **`follow_up_questions`**: Optional (current behavior)
+- This is the default -- no changes to existing behavior
+
+### Hard Mode (`difficulty_mode: "hard"`) -- Bloom's Analyze/Apply/Evaluate
+
+- **Cognitive level**: Scenario-based application, compare/contrast similar concepts, multi-step reasoning, error detection
+- **Question style**: "Given scenario X, explain how Y applies and why Z differs from W"
+- **Expected answer**: Multi-step reasoning, connections between concepts, critical analysis
+- **Hints**: Minimal (challenge the user before helping)
+- **Format default**: Problem-solving or short-answer when `format_preference` is null
+- **Token budget**: ~400 tokens per consultation
+- **`follow_up_questions`**: REQUIRED -- provide 1-2 probing questions that:
+  - Challenge assumptions: "What would change if X were different?"
+  - Require discrimination: "How does this differ from [related concept]?"
+  - Test application: "In scenario Y, how would you apply this?"
+- **Example**: "A trader holds an ATM call 2 days before expiry. The underlying gaps down 3%. Decompose the P&L impact by Greek and compare with the same move 30 days before expiry."
 
 ---
 
@@ -465,9 +510,9 @@ Provide clear indicators for each rating level:
 
 ### Check User History (Optional)
 
-Use MCP memory tools to check for previous struggles:
-- Query: `mcp__memory-server__search_nodes` with `query="{rem_id}"`
-- Look for observations containing "Review: quality=1" or "Review: quality=2"
+Check auto-memory files for previous struggles:
+- Search: Use Grep tool to search for `{rem_id}` in `/root/.claude/projects/-root/memory/` files
+- Look for entries containing "Review: quality=1" or "Review: quality=2" in memory files
 - If struggles found, include in `adaptive_note`: "⚠️ You struggled with this before. Let's start gently."
 
 ---
@@ -489,10 +534,14 @@ Use MCP memory tools to check for previous struggles:
 
 ## Token Budget
 
-**Target**: 200-300 tokens per consultation
-**Maximum**: 500 tokens (exceptional cases)
+**Per-mode targets**:
+- **Easy mode**: ~100 tokens (brief fact-recall question, minimal assessment)
+- **Normal mode**: ~250 tokens (standard Socratic question, full assessment)
+- **Hard mode**: ~400 tokens (complex scenario question + follow-up questions)
 
-**Breakdown**:
+**Maximum**: 500 tokens (exceptional cases, hard mode analysis)
+
+**Normal mode breakdown** (default):
 - Socratic question: ~120 tokens
 - Quality assessment: ~80 tokens
 - Memory context: ~50 tokens

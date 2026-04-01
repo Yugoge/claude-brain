@@ -5,23 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knowledge Graph</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
         }
 
-        #app {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
+        #app { display: flex; height: 100vh; width: 100vw; }
 
         #graph-container {
             flex: 1;
@@ -51,6 +44,7 @@
             font-size: 13px;
             font-family: 'Inter', sans-serif;
             transition: border-color 0.2s;
+            text-overflow: ellipsis;
         }
 
         #search-results {
@@ -61,15 +55,9 @@
             min-width: 100px;
         }
 
-        #search-results.active {
-            color: #1a1a1a;
-            font-weight: 500;
-        }
+        #search-results.active { color: #1a1a1a; font-weight: 500; }
 
-        #search-input:focus {
-            outline: none;
-            border-color: #1a1a1a;
-        }
+        #search-input:focus { outline: none; border-color: #1a1a1a; }
 
         #clear-search {
             padding: 10px 18px;
@@ -81,11 +69,10 @@
             font-size: 13px;
             font-family: 'Inter', sans-serif;
             transition: background 0.2s;
+            flex-shrink: 0;
         }
 
-        #clear-search:hover {
-            background: #374151;
-        }
+        #clear-search:hover { background: #374151; }
 
         #stats {
             position: absolute;
@@ -100,11 +87,48 @@
             font-family: 'Inter', sans-serif;
         }
 
-        #stats span {
-            color: #1a1a1a;
-            font-weight: 500;
+        #stats span { color: #1a1a1a; font-weight: 500; }
+
+        /* Zoom controls */
+        #zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 10;
         }
 
+        #zoom-controls button {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border: 1px solid #e8e9ea;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        #zoom-controls button:hover {
+            background: #1a1a1a;
+            color: white;
+            border-color: #1a1a1a;
+        }
+
+        #zoom-controls .hint {
+            font-size: 9px;
+            color: #9ca3af;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* Details panel */
         #details-panel {
             width: 0;
             background: white;
@@ -114,10 +138,7 @@
             padding: 0;
         }
 
-        #details-panel.open {
-            width: 480px;
-            padding: 32px;
-        }
+        #details-panel.open { width: 480px; padding: 32px; }
 
         #details-panel h3 {
             margin-bottom: 20px;
@@ -128,15 +149,41 @@
         }
 
         #details-panel p {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             color: #6b7280;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.8;
         }
 
-        #details-panel strong {
-            color: #1a1a1a;
-            font-weight: 500;
+        #details-panel strong { color: #1a1a1a; font-weight: 500; }
+
+        #fullscreen-details {
+            position: absolute;
+            top: 20px;
+            right: 56px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        #fullscreen-details:hover { background: #e5e7eb; }
+
+        #details-panel.fullscreen {
+            width: 100% !important;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1000;
+            padding: 32px;
+            border-left: none;
         }
 
         #close-details {
@@ -172,10 +219,45 @@
             font-family: 'Inter', sans-serif;
         }
 
-        svg {
-            width: 100%;
-            height: 100%;
+        /* FSRS parameter card grid */
+        .fsrs-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 8px 0 16px 0;
         }
+
+        .fsrs-card {
+            background: #f9fafb;
+            border: 1px solid #e8e9ea;
+            border-radius: 2px;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .fsrs-card .fsrs-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .fsrs-card .fsrs-label {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        /* Relation color pill */
+        .relation-pill {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        svg { width: 100%; height: 100%; }
 
         .node {
             cursor: pointer;
@@ -184,10 +266,7 @@
             transition: all 0.2s;
         }
 
-        .node:hover {
-            stroke: #1a1a1a;
-            stroke-width: 3px;
-        }
+        .node:hover { stroke: #1a1a1a; stroke-width: 3px; }
 
         .link {
             stroke: #d1d5db;
@@ -210,180 +289,77 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Collapsible legend */
         .legend {
             position: absolute;
             top: 90px;
             left: 20px;
             background: white;
-            padding: 16px 20px;
             border-radius: 2px;
             border: 1px solid #e8e9ea;
             font-size: 11px;
+            z-index: 10;
+            max-width: 220px;
         }
 
-        .legend strong {
-            display: block;
-            margin-bottom: 12px;
+        .legend-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .legend-header strong {
             color: #1a1a1a;
             font-weight: 500;
             font-size: 12px;
         }
 
+        .legend-toggle {
+            font-size: 10px;
+            color: #9ca3af;
+            transition: transform 0.2s;
+        }
+
+        .legend-body {
+            padding: 0 16px 12px 16px;
+            transition: max-height 0.3s ease, opacity 0.2s;
+            max-height: 500px;
+            overflow: hidden;
+            opacity: 1;
+        }
+
+        .legend.collapsed .legend-body {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+        }
+
+        .legend.collapsed .legend-toggle { transform: rotate(-90deg); }
+
         .legend-item {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #6b7280;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 2px;
+            transition: background 0.15s;
         }
+
+        .legend-item:hover { background: #f3f4f6; }
+        .legend-item.active { background: #e8f4fd; font-weight: 500; }
 
         .legend-color {
             width: 12px;
             height: 12px;
             border-radius: 2px;
             margin-right: 10px;
-        }
-
-        /* Mobile-responsive styles */
-        @media (max-width: 768px) {
-            #app {
-                flex-direction: column;
-            }
-
-            #controls {
-                top: 12px;
-                left: 12px;
-                right: 12px;
-                padding: 12px 16px;
-                gap: 8px;
-            }
-
-            #search-input {
-                flex: 1;
-                width: auto;
-                min-width: 0;
-                font-size: 16px;
-                padding: 12px 14px;
-            }
-
-            #clear-search {
-                padding: 12px 16px;
-                font-size: 13px;
-            }
-
-            .legend {
-                top: 78px;
-                left: 12px;
-                right: 12px;
-                padding: 12px 16px;
-                max-height: 200px;
-                overflow-y: auto;
-            }
-
-            .legend-item {
-                margin-bottom: 8px;
-            }
-
-            #stats {
-                bottom: 12px;
-                left: 12px;
-                right: 12px;
-                padding: 10px 16px;
-                text-align: center;
-            }
-
-            #details-panel {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                width: 100% !important;
-                height: 100vh;
-                z-index: 1000;
-                transform: translateY(100%);
-                transition: transform 0.3s ease;
-            }
-
-            #details-panel.open {
-                transform: translateY(0);
-                padding: 24px;
-                width: 100% !important;
-            }
-
-            #details-panel h3 {
-                font-size: 16px;
-                margin-bottom: 16px;
-                padding-right: 40px;
-            }
-
-            #details-panel p {
-                font-size: 13px;
-            }
-
-            #close-details {
-                width: 36px;
-                height: 36px;
-            }
-
-            .tag {
-                font-size: 10px;
-                padding: 3px 8px;
-            }
-
-            .node {
-                stroke-width: 1.5px;
-            }
-
-            .label {
-                font-size: 9px;
-            }
-
-            #rem-content-container > div {
-                max-height: 300px !important;
-            }
-
-            /* Full conversation containers need more space on mobile */
-            #conversations-container [id^="full-"] {
-                max-height: 60vh !important;
-            }
-
-            /* Excerpt containers stay compact */
-            #conversations-container [id^="excerpt-"] {
-                max-height: 200px !important;
-            }
-
-            button {
-                min-height: 44px;
-                touch-action: manipulation;
-            }
-
-            #search-input {
-                min-height: 44px;
-            }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            #details-panel.open {
-                width: 380px;
-            }
-
-            #controls {
-                padding: 14px 18px;
-            }
-
-            #search-input {
-                width: 220px;
-            }
-        }
-
-        @media (hover: none) and (pointer: coarse) {
-            .node {
-                r: 12;
-            }
-
-            button, input {
-                font-size: 16px;
-            }
+            flex-shrink: 0;
         }
 
         .node.opened {
@@ -392,9 +368,116 @@
             filter: brightness(1.1);
         }
 
-        .label.opened {
-            font-weight: 700;
-            fill: #1a1a1a;
+        .label.opened { font-weight: 700; fill: #1a1a1a; }
+
+        /* Content card vs Source card distinction */
+        .content-card {
+            background: #fafbfc;
+            padding: 16px;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.8;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #4b5563;
+        }
+
+        .source-card {
+            margin: 12px 0;
+            padding: 14px;
+            background: white;
+            border-radius: 2px;
+            border: 1px solid #e8e9ea;
+            border-left: 3px solid #3498db;
+        }
+
+        .source-card-header {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #3498db;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Section spacing */
+        .detail-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        /* Mobile-responsive styles */
+        @media (max-width: 768px) {
+            #app { flex-direction: column; }
+
+            #controls {
+                top: 12px; left: 12px; right: 12px;
+                padding: 12px 16px; gap: 8px;
+            }
+
+            #search-input {
+                flex: 1; width: auto; min-width: 0;
+                font-size: 16px; padding: 12px 14px;
+            }
+
+            #clear-search { padding: 12px 16px; font-size: 13px; }
+
+            .legend {
+                top: 78px; left: 12px; right: 12px;
+                padding: 12px 16px; max-height: 200px; overflow-y: auto;
+            }
+
+            .legend-item { margin-bottom: 8px; }
+
+            #stats {
+                bottom: 12px; left: 12px; right: 12px;
+                padding: 10px 16px; text-align: center;
+            }
+
+            #zoom-controls { bottom: 60px; right: 12px; }
+
+            #details-panel {
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                width: 100% !important; height: 100vh;
+                z-index: 1000; transform: translateY(100%);
+                transition: transform 0.3s ease;
+            }
+
+            #details-panel.open {
+                transform: translateY(0); padding: 24px;
+                width: 100% !important;
+            }
+
+            #details-panel h3 {
+                font-size: 16px; margin-bottom: 16px; padding-right: 40px;
+            }
+
+            #details-panel p { font-size: 13px; }
+            #close-details { width: 36px; height: 36px; }
+            .tag { font-size: 10px; padding: 3px 8px; }
+            .node { stroke-width: 1.5px; }
+            .label { font-size: 9px; }
+
+            #rem-content-container > div { max-height: 300px !important; }
+            #conversations-container [id^="full-"] { max-height: 60vh !important; }
+            #conversations-container [id^="excerpt-"] { max-height: 200px !important; }
+
+            button { min-height: 44px; touch-action: manipulation; }
+            #search-input { min-height: 44px; }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #details-panel.open { width: 380px; }
+            #controls { padding: 14px 18px; }
+            #search-input { width: 220px; }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .node { r: 12; }
+            button, input { font-size: 16px; }
         }
     </style>
 </head>
@@ -402,26 +485,37 @@
     <div id="app">
         <div id="graph-container">
             <div id="controls">
-                <input type="text" id="search-input" placeholder="Search nodes by title, content, tags, domain, or any keyword...">
+                <input type="text" id="search-input" placeholder="Search by title, tags, domain...">
                 <button id="clear-search">Clear</button>
                 <span id="search-results"></span>
             </div>
-            <div class="legend">
-                <strong>ISCED Broad Fields</strong>
-                <div class="legend-item"><div class="legend-color" style="background: #e67e22;"></div> 01 Education</div>
-                <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div> 02 Humanities</div>
-                <div class="legend-item"><div class="legend-color" style="background: #34495e;"></div> 03 Social Sciences</div>
-                <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div> 04 Business & Law</div>
-                <div class="legend-item"><div class="legend-color" style="background: #1abc9c;"></div> 05 Natural Sciences</div>
-                <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div> 06 ICT</div>
-                <div class="legend-item"><div class="legend-color" style="background: #16a085;"></div> 07 Engineering</div>
-                <div class="legend-item"><div class="legend-color" style="background: #27ae60;"></div> 08 Agriculture</div>
-                <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div> 09 Health</div>
-                <div class="legend-item"><div class="legend-color" style="background: #95a5a6;"></div> 10 Services</div>
-                <div class="legend-item"><div class="legend-color" style="background: #bdc3c7;"></div> Generic</div>
+            <div class="legend" id="legend">
+                <div class="legend-header" onclick="toggleLegend()">
+                    <strong>ISCED Broad Fields</strong>
+                    <span class="legend-toggle">&#9660;</span>
+                </div>
+                <div class="legend-body" id="legend-body">
+                    <div class="legend-item" data-domain="education" onclick="filterByDomain(this, 'education')"><div class="legend-color" style="background: #e67e22;"></div> 01 Education</div>
+                    <div class="legend-item" data-domain="humanities" onclick="filterByDomain(this, 'humanities')"><div class="legend-color" style="background: #f39c12;"></div> 02 Humanities</div>
+                    <div class="legend-item" data-domain="social-sciences" onclick="filterByDomain(this, 'social-sciences')"><div class="legend-color" style="background: #34495e;"></div> 03 Social Sciences</div>
+                    <div class="legend-item" data-domain="business-law" onclick="filterByDomain(this, 'business-law')"><div class="legend-color" style="background: #3498db;"></div> 04 Business & Law</div>
+                    <div class="legend-item" data-domain="natural-sciences" onclick="filterByDomain(this, 'natural-sciences')"><div class="legend-color" style="background: #1abc9c;"></div> 05 Natural Sciences</div>
+                    <div class="legend-item" data-domain="ict" onclick="filterByDomain(this, 'ict')"><div class="legend-color" style="background: #2ecc71;"></div> 06 ICT</div>
+                    <div class="legend-item" data-domain="engineering" onclick="filterByDomain(this, 'engineering')"><div class="legend-color" style="background: #16a085;"></div> 07 Engineering</div>
+                    <div class="legend-item" data-domain="agriculture" onclick="filterByDomain(this, 'agriculture')"><div class="legend-color" style="background: #27ae60;"></div> 08 Agriculture</div>
+                    <div class="legend-item" data-domain="health" onclick="filterByDomain(this, 'health')"><div class="legend-color" style="background: #9b59b6;"></div> 09 Health</div>
+                    <div class="legend-item" data-domain="services" onclick="filterByDomain(this, 'services')"><div class="legend-color" style="background: #95a5a6;"></div> 10 Services</div>
+                    <div class="legend-item" data-domain="generic" onclick="filterByDomain(this, 'generic')"><div class="legend-color" style="background: #bdc3c7;"></div> Generic</div>
+                </div>
             </div>
             <div id="stats">
                 Nodes: <span id="node-count">0</span> | Edges: <span id="edge-count">0</span> | Clusters: <span id="cluster-count">0</span>
+            </div>
+            <div id="zoom-controls">
+                <button onclick="zoomIn()" title="Zoom In (+)">+</button>
+                <button onclick="zoomOut()" title="Zoom Out (-)">-</button>
+                <button onclick="zoomFit()" title="Fit All (Space)">&#8596;</button>
+                <div class="hint">Scroll to zoom<br>Space = reset</div>
             </div>
             <svg id="svg"></svg>
         </div>
@@ -431,61 +525,122 @@
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script>
         // GRAPH_DATA_PLACEHOLDER
         const graphData = null;  // Will be replaced by actual data
 
-
-        // Track opened nodes
         const openedNodes = new Set();
+        let focusedNodeId = null;  // Track click-persistent focus
+        let activeDomainFilter = null;  // Track legend domain filter
+
+        // Relation type colors from metadata (fallback if not in data)
+        const RELATION_COLORS = (graphData && graphData.metadata && graphData.metadata.relationTypeColors) || {
+            'prerequisite_of': '#e74c3c', 'uses': '#3498db', 'example_of': '#2ecc71',
+            'contrasts_with': '#f39c12', 'synonym': '#9b59b6', 'component_of': '#1abc9c',
+            'analogous_to': '#e67e22', 'reference': '#95a5a6', 'inferred': '#d0d0d0'
+        };
 
         if (!graphData) {
             document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h2>No graph data available</h2></div>';
             throw new Error('No graph data');
         }
 
-        // Initialize
         const width = document.getElementById('graph-container').clientWidth;
         const height = document.getElementById('graph-container').clientHeight;
 
         const svg = d3.select('#svg');
         const g = svg.append('g');
 
-        // Update stats
         document.getElementById('node-count').textContent = graphData.metadata.nodeCount;
         document.getElementById('edge-count').textContent = graphData.metadata.edgeCount;
         const domainDist = graphData.metadata.domainDistribution || {};
-        const domainCount = Object.keys(domainDist).length;
-        document.getElementById('cluster-count').textContent = domainCount;
+        document.getElementById('cluster-count').textContent = Object.keys(domainDist).length;
 
-        // Zoom behavior
+        // Zoom behavior with semantic label visibility + collision detection
+        let currentZoom = 1;
+
+        function updateLabelVisibility() {
+            // Step 1: decide candidates by zoom level + connection count
+            const candidates = [];
+            label.each(function(d) {
+                let show = false;
+                if (currentZoom < 0.6) show = false;
+                else if (currentZoom >= 2.5) show = true;
+                else {
+                    const minConn = currentZoom >= 1.5 ? 3 : 5;
+                    show = (d.connections || 0) >= minConn;
+                }
+                d._labelCandidate = show;
+                d3.select(this).attr('display', show ? null : 'none');
+                if (show) candidates.push({el: this, d: d});
+            });
+
+            // Step 2: collision detection - hide overlapping labels
+            // Sort by connections desc so important labels survive
+            candidates.sort((a, b) => (b.d.connections || 0) - (a.d.connections || 0));
+            const placed = [];
+            const pad = 4;
+            candidates.forEach(c => {
+                const bbox = c.el.getBBox();
+                const r = {
+                    x: bbox.x - pad, y: bbox.y - pad,
+                    w: bbox.width + pad * 2, h: bbox.height + pad * 2
+                };
+                const overlaps = placed.some(p =>
+                    r.x < p.x + p.w && r.x + r.w > p.x &&
+                    r.y < p.y + p.h && r.y + r.h > p.y
+                );
+                if (overlaps) {
+                    d3.select(c.el).attr('display', 'none');
+                } else {
+                    placed.push(r);
+                }
+            });
+        }
+
         const zoom = d3.zoom()
             .scaleExtent([0.1, 10])
             .on('zoom', (event) => {
                 g.attr('transform', event.transform);
+                currentZoom = event.transform.k;
+                updateLabelVisibility();
             });
 
         svg.call(zoom);
 
-        // Initialize node positions to prevent edge/node misalignment
-        graphData.nodes.forEach((d, i) => {
+        // Zoom control functions
+        function zoomIn() {
+            svg.transition().duration(300).call(zoom.scaleBy, 1.5);
+        }
+        function zoomOut() {
+            svg.transition().duration(300).call(zoom.scaleBy, 0.67);
+        }
+        function zoomFit() {
+            svg.transition().duration(750).call(
+                zoom.transform,
+                d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
+            );
+        }
+
+        // Initialize node positions
+        graphData.nodes.forEach((d) => {
             if (!d.x) d.x = width / 2 + (Math.random() - 0.5) * 100;
             if (!d.y) d.y = height / 2 + (Math.random() - 0.5) * 100;
-            d.vx = 0;  // Initial velocity
+            d.vx = 0;
             d.vy = 0;
         });
 
-        // Force simulation with auto-stop after stabilization
+        // Force simulation -- increased charge for label collision mitigation
         const simulation = d3.forceSimulation(graphData.nodes)
-            .force('link', d3.forceLink(graphData.edges)
-                .id(d => d.id)
-                .distance(100))
-            .force('charge', d3.forceManyBody().strength(-300))
+            .force('link', d3.forceLink(graphData.edges).id(d => d.id).distance(100))
+            .force('charge', d3.forceManyBody().strength(-500))
             .force('center', d3.forceCenter(width / 2, height / 2))
-            .force('collision', d3.forceCollide().radius(d => d.size + 5))
-            .alphaDecay(0.02);  // Slightly slower decay for better initial layout
+            .force('collision', d3.forceCollide().radius(d => d.size + 8))
+            .alphaDecay(0.02);
 
-        // Draw links with colors and styles
+        // Draw links
         const link = g.append('g')
             .selectAll('line')
             .data(graphData.edges)
@@ -510,10 +665,18 @@
                 .on('end', dragended))
             .on('click', (event, d) => {
                 event.stopPropagation();
+                clickFocus(d);
                 showDetails(d);
             })
-            .on('mouseover', (event, d) => highlightConnections(d))
-            .on('mouseout', resetHighlight);
+            .on('mouseover', (event, d) => {
+                if (!focusedNodeId) highlightConnections(d);
+                // Show this node's label on hover even if hidden by zoom level
+                label.filter(l => l.id === d.id).attr('display', null);
+            })
+            .on('mouseout', () => {
+                if (!focusedNodeId) resetHighlight();
+                updateLabelVisibility();
+            });
 
         // Draw labels
         const label = g.append('g')
@@ -524,40 +687,27 @@
             .text(d => d.label)
             .attr('dy', d => d.size + 15);
 
-        // Track if simulation has stabilized
+        // Apply initial label visibility (hide low-connection nodes at default zoom)
+        updateLabelVisibility();
+
         let isStabilized = false;
 
-        // Update positions on tick
         simulation.on('tick', () => {
-            link
-                .attr('x1', d => d.source.x)
-                .attr('y1', d => d.source.y)
-                .attr('x2', d => d.target.x)
-                .attr('y2', d => d.target.y);
+            link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+            node.attr('cx', d => d.x).attr('cy', d => d.y);
+            label.attr('x', d => d.x).attr('y', d => d.y);
 
-            node
-                .attr('cx', d => d.x)
-                .attr('cy', d => d.y);
-
-            label
-                .attr('x', d => d.x)
-                .attr('y', d => d.y);
-
-            // Stop simulation when alpha drops below threshold
             if (simulation.alpha() < 0.01 && !isStabilized) {
-                console.log('Graph stabilized - stopping simulation');
                 simulation.stop();
                 isStabilized = true;
+                // Re-run collision detection after layout stabilizes
+                updateLabelVisibility();
             }
         });
 
-        // Drag functions - only reheat simulation if still stabilizing
         function dragstarted(event) {
-            // Only restart simulation if it was already running (not stabilized)
-            // This prevents reheating the entire graph after stabilization
-            if (!isStabilized && !event.active) {
-                simulation.alphaTarget(0.3).restart();
-            }
+            if (!isStabilized && !event.active) simulation.alphaTarget(0.3).restart();
             event.subject.fx = event.subject.x;
             event.subject.fy = event.subject.y;
         }
@@ -568,161 +718,271 @@
         }
 
         function dragended(event) {
-            // Only cool down if we reheated
-            if (!isStabilized && !event.active) {
-                simulation.alphaTarget(0);
-            }
-            // Keep dragged nodes fixed in position - user expects them to stay put
-            // fx/fy are already set, no need to clear them
+            if (!isStabilized && !event.active) simulation.alphaTarget(0);
         }
 
-        // Highlight connections
+        // Click-persistent focus with 1st and 2nd degree neighbors
+        function clickFocus(d) {
+            focusedNodeId = d.id;
+
+            // 1st degree neighbors
+            const first = new Set([d.id]);
+            graphData.edges.forEach(e => {
+                if (e.source.id === d.id || e.target.id === d.id) {
+                    first.add(e.source.id);
+                    first.add(e.target.id);
+                }
+            });
+
+            // 2nd degree neighbors
+            const second = new Set(first);
+            graphData.edges.forEach(e => {
+                if (first.has(e.source.id) || first.has(e.target.id)) {
+                    second.add(e.source.id);
+                    second.add(e.target.id);
+                }
+            });
+
+            node.attr('opacity', n => {
+                if (n.id === d.id) return 1;
+                if (first.has(n.id)) return 1;
+                if (second.has(n.id)) return 0.5;
+                return 0.1;
+            });
+
+            link.attr('opacity', e => {
+                if (e.source.id === d.id || e.target.id === d.id) return 1;
+                if (first.has(e.source.id) && first.has(e.target.id)) return 0.4;
+                return 0.05;
+            });
+
+            label.attr('opacity', n => {
+                if (first.has(n.id)) return 1;
+                if (second.has(n.id)) return 0.5;
+                return 0.1;
+            });
+        }
+
         function highlightConnections(d) {
             const connectedIds = new Set([d.id]);
-
             graphData.edges.forEach(e => {
                 if (e.source.id === d.id || e.target.id === d.id) {
                     connectedIds.add(e.source.id);
                     connectedIds.add(e.target.id);
                 }
             });
-
             node.attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.2);
-            link.attr('opacity', e =>
-                (e.source.id === d.id || e.target.id === d.id) ? 1 : 0.1
-            );
+            link.attr('opacity', e => (e.source.id === d.id || e.target.id === d.id) ? 1 : 0.1);
             label.attr('opacity', n => connectedIds.has(n.id) ? 1 : 0.2);
         }
 
         function resetHighlight() {
+            if (focusedNodeId) return;
             node.attr('opacity', 1);
             link.attr('opacity', 0.6);
             label.attr('opacity', 1);
         }
-        // Human-readable relation type labels
+
+        function clearFocus() {
+            focusedNodeId = null;
+            node.attr('opacity', 1);
+            link.attr('opacity', 0.6);
+            label.attr('opacity', 1);
+        }
+
+        // Legend toggle and domain filtering
+        function toggleLegend() {
+            document.getElementById('legend').classList.toggle('collapsed');
+        }
+
+        function filterByDomain(el, domain) {
+            // Toggle active state
+            if (activeDomainFilter === domain) {
+                activeDomainFilter = null;
+                el.classList.remove('active');
+                resetFilter();
+                return;
+            }
+
+            // Clear previous active
+            document.querySelectorAll('.legend-item').forEach(item => item.classList.remove('active'));
+            activeDomainFilter = domain;
+            el.classList.add('active');
+
+            // Filter graph
+            const matchingIds = new Set();
+            graphData.nodes.forEach(n => {
+                if (n.domain === domain) matchingIds.add(n.id);
+            });
+
+            // Include 1-hop neighbors
+            const original = new Set(matchingIds);
+            graphData.edges.forEach(e => {
+                const sid = typeof e.source === 'object' ? e.source.id : e.source;
+                const tid = typeof e.target === 'object' ? e.target.id : e.target;
+                if (original.has(sid)) matchingIds.add(tid);
+                if (original.has(tid)) matchingIds.add(sid);
+            });
+
+            node.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.08);
+            link.attr('opacity', e => {
+                const sid = typeof e.source === 'object' ? e.source.id : e.source;
+                const tid = typeof e.target === 'object' ? e.target.id : e.target;
+                return (matchingIds.has(sid) && matchingIds.has(tid)) ? 0.6 : 0.03;
+            });
+            label.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.08);
+
+            searchResultsElement.textContent = `${original.size} nodes in ${domain}`;
+            searchResultsElement.classList.add('active');
+        }
+
         function getRelationLabel(relationType) {
             const labels = {
-                'prerequisite_of': 'Prerequisite for',
-                'uses': 'Uses',
-                'example_of': 'Example of',
-                'contrasts_with': 'Contrasts with',
-                'synonym': 'Synonym of',
-                'component_of': 'Component of',
-                'analogous_to': 'Analogous to',
-                'linked-from-example_of': 'Is example for',
-                'linked-from-used_in': 'Used in',
-                'linked-from-prerequisite_of': 'Required by',
+                'prerequisite_of': 'Prerequisite for', 'uses': 'Uses',
+                'example_of': 'Example of', 'contrasts_with': 'Contrasts with',
+                'synonym': 'Synonym of', 'component_of': 'Component of',
+                'analogous_to': 'Analogous to', 'linked-from-example_of': 'Is example for',
+                'linked-from-used_in': 'Used in', 'linked-from-prerequisite_of': 'Required by',
                 'reference': 'References'
             };
-
-            // Fallback: capitalize first letter consistently (Issue #2)
             if (!labels[relationType]) {
                 const formatted = relationType.replace(/_/g, ' ').replace(/-/g, ' ');
                 return formatted.charAt(0).toUpperCase() + formatted.slice(1);
             }
-
             return labels[relationType];
         }
 
+        function getRelationColor(type) {
+            return RELATION_COLORS[type] || RELATION_COLORS['reference'] || '#95a5a6';
+        }
 
+        // Render LaTeX in a container using KaTeX auto-render
+        function renderLatex(container) {
+            if (typeof renderMathInElement === 'function') {
+                try {
+                    renderMathInElement(container, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                } catch (e) {
+                    console.warn('KaTeX render error:', e);
+                }
+            }
+        }
 
-        // Show details panel with enhanced content
         async function showDetails(d) {
             const panel = document.getElementById('details-panel');
             const content = document.getElementById('details-content');
 
-            // CRITICAL FIX #1: Clear previous highlighting, only highlight current node
             openedNodes.clear();
             openedNodes.add(d.id);
-
-            // Apply opened styling
             node.classed('opened', n => openedNodes.has(n.id));
             label.classed('opened', n => openedNodes.has(n.id));
-
-            // CRITICAL FIX #2: DO NOT clear fx/fy or restart simulation
-            // The previous code was CAUSING dispersion, not preventing it!
-            // Drag functions already handle position management correctly.
 
             const tags = d.tags || [];
             const tagsHtml = tags.length > 0
                 ? tags.map(tag => `<span class="tag">${tag}</span>`).join('')
                 : '<span style="color: #999; font-size: 12px;">No tags</span>';
 
-            // Find typed relations (only outgoing to avoid confusion)
+            // Typed relations with color pills
             const typedRelations = graphData.edges
                 .filter(e => e.source.id === d.id && e.type !== 'reference' && e.type !== 'inferred')
                 .map(e => {
                     const targetNode = graphData.nodes.find(n => n.id === e.target.id);
-                    const label = targetNode ? targetNode.label : e.target.id;
-                    return `<li><strong>${getRelationLabel(e.type)}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;">${label}</a></li>`;
+                    const lbl = targetNode ? targetNode.label : e.target.id;
+                    const color = getRelationColor(e.type);
+                    return `<li style="margin-bottom: 6px;"><span class="relation-pill" style="background:${color};"></span><strong>${getRelationLabel(e.type)}:</strong> <a href="#" onclick="focusNode('${e.target.id}'); return false;" style="color: #3498db;">${lbl}</a></li>`;
                 })
                 .join('');
 
             const relationsHtml = typedRelations
-                ? `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                ? `<div class="detail-section">
                      <p><strong>Typed Relations:</strong></p>
-                     <ul style="margin-left: 15px; margin-bottom: 10px;">${typedRelations}</ul>
+                     <ul style="margin-left: 15px; margin-bottom: 10px; list-style: none; padding-left: 0;">${typedRelations}</ul>
                    </div>`
                 : '';
 
-            // Format ISCED display
             const iscedDisplay = d.isced || 'Not classified';
-            const stabilityInfo = d.stability > 0 ? ` | Stability: ${d.stability}` : '';
-            const difficultyInfo = d.difficulty > 0 ? ` | Difficulty: ${d.difficulty}` : '';
             const lastReviewInfo = d.lastReviewed ? `<p><strong>Last Reviewed:</strong> ${d.lastReviewed}</p>` : '';
 
             content.innerHTML = `
                 <h3>${d.label}</h3>
                 <p><strong>ISCED:</strong> <span style="color: ${d.color}; font-weight: bold;">${iscedDisplay}</span></p>
                 <p><strong>Subdomain:</strong> ${d.subdomain || 'N/A'}</p>
-                <p><strong>Review Count:</strong> ${d.reviewCount}${stabilityInfo}${difficultyInfo}</p>
+                <div class="fsrs-grid">
+                    <div class="fsrs-card">
+                        <div class="fsrs-value">${d.reviewCount}</div>
+                        <div class="fsrs-label">Reviews</div>
+                    </div>
+                    <div class="fsrs-card">
+                        <div class="fsrs-value">${d.stability > 0 ? d.stability : '-'}</div>
+                        <div class="fsrs-label">Stability</div>
+                    </div>
+                    <div class="fsrs-card">
+                        <div class="fsrs-value">${d.difficulty > 0 ? d.difficulty : '-'}</div>
+                        <div class="fsrs-label">Difficulty</div>
+                    </div>
+                    <div class="fsrs-card">
+                        <div class="fsrs-value">${d.nextReview ? new Date(d.nextReview).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : '-'}</div>
+                        <div class="fsrs-label">Next Review</div>
+                    </div>
+                </div>
                 ${lastReviewInfo}
                 <p><strong>Connections:</strong> ${d.connections || 0}</p>
                 <p><strong>Tags:</strong><br>${tagsHtml}</p>
                 ${relationsHtml}
-                <div id="rem-content-container" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <p><strong>📝 Content:</strong></p>
+                <div id="rem-content-container" class="detail-section">
+                    <p><strong><i class="fa-solid fa-file-lines" style="margin-right: 6px; color: #6b7280;"></i>Content:</strong></p>
                     <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
                 </div>
-                <div id="conversations-container" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                    <p><strong>💬 Conversations:</strong></p>
+                <div id="conversations-container" class="detail-section">
+                    <p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Source Conversation:</strong></p>
                     <div style="font-size: 12px; color: #999; margin-top: 5px;">Loading...</div>
                 </div>
-                
             `;
 
-            // Add close button dynamically if not exists
             if (!document.getElementById('close-details')) {
                 const closeBtn = document.createElement('button');
                 closeBtn.id = 'close-details';
-                closeBtn.innerHTML = '×';
+                closeBtn.innerHTML = '\u00d7';
                 closeBtn.addEventListener('click', () => {
                     panel.classList.remove('open');
+                    panel.classList.remove('fullscreen');
+                    clearFocus();
                 });
                 panel.insertBefore(closeBtn, panel.firstChild);
+
+                const fsBtn = document.createElement('button');
+                fsBtn.id = 'fullscreen-details';
+                fsBtn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+                fsBtn.addEventListener('click', () => {
+                    const isFs = panel.classList.toggle('fullscreen');
+                    fsBtn.innerHTML = isFs
+                        ? '<i class="fa-solid fa-compress"></i>'
+                        : '<i class="fa-solid fa-expand"></i>';
+                });
+                panel.insertBefore(fsBtn, panel.firstChild);
             }
 
             panel.classList.add('open');
-
-            // Load Rem content asynchronously
             loadRemContent(d);
-            // Load conversations asynchronously
             loadConversations(d);
         }
 
-        function loadRemContent(node) {
+        function loadRemContent(nodeData) {
             const container = document.getElementById('rem-content-container');
             if (!container) return;
-
-            // Use embedded content directly from node
-            const content = node.content || '';
-
+            const content = nodeData.content || '';
             if (!content) {
                 container.innerHTML = `<p><strong><i class="fa-solid fa-file-lines" style="margin-right: 6px; color: #6b7280;"></i>Content:</strong></p><div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">No content available</div>`;
                 return;
             }
 
-            // Convert markdown to simple HTML (basic formatting)
             let html = content
                 .replace(/### (.*)/g, '<h4 style="margin-top:12px;margin-bottom:6px;font-size:14px;">$1</h4>')
                 .replace(/## (.*)/g, '<h3 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:600;">$1</h3>')
@@ -733,104 +993,395 @@
                 .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
                 .replace(/\n/g, '<br>');
 
-            const contentHtml = `<div style="background: #fafbfc; padding: 16px; border-radius: 2px; border: 1px solid #e8e9ea; margin-top: 12px; font-size: 14px; line-height: 1.6; max-height: 400px; overflow-y: auto; color: #4b5563;">
-                <p style="margin:8px 0;">${html}</p>
-            </div>`;
-
-            container.innerHTML = `<p><strong><i class="fa-solid fa-file-lines" style="margin-right: 6px; color: #6b7280;"></i>Content:</strong></p>${contentHtml}`;
+            container.innerHTML = `<p><strong><i class="fa-solid fa-file-lines" style="margin-right: 6px; color: #6b7280;"></i>Content:</strong></p><div class="content-card"><p style="margin:8px 0;">${html}</p></div>`;
+            renderLatex(container);
         }
 
-        function loadConversations(node) {
+        function loadConversations(nodeData) {
             const container = document.getElementById('conversations-container');
             if (!container) return;
-
-            // Use embedded conversations directly from node
-            const conversations = node.conversations || [];
-
+            const conversations = nodeData.conversations || [];
             if (conversations.length === 0) {
-                container.innerHTML = `<p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Conversations:</strong></p><div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">No related conversations</div>`;
+                container.innerHTML = `<p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Source Conversation:</strong></p><div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">No related conversations</div>`;
                 return;
             }
+
+            // Escape HTML to prevent XSS and raw tag rendering
+            const escapeHtml = (text) => {
+                if (!text) return '';
+                return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            };
+
+            // Render inline markdown (bold, italic, code, links)
+            const renderInline = (text) => {
+                return escapeHtml(text)
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:1px 4px;border-radius:3px;font-size:11px;font-family:monospace;">$1</code>')
+                    .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" style="color:#3498db;" target="_blank">$1</a>');
+            };
+
+            // Parse markdown text into block-level elements (inspired by happy-web)
+            const parseBlocks = (text) => {
+                if (!text) return '';
+                const lines = text.split('\n');
+                let html = '';
+                let inCodeBlock = false;
+                let codeLang = '';
+                let codeLines = [];
+                let inOptions = false;
+                let optionItems = [];
+
+                // Render a block of list lines with proper nesting via indentation
+                const renderNestedList = (listLines) => {
+                    const listStyle = 'margin:4px 0;padding-left:18px;font-size:12px;line-height:1.7;color:#374151;';
+                    const liStyle = 'margin:2px 0;';
+                    const items = [];
+                    for (const l of listLines) {
+                        if (!l.trim()) continue;
+                        const bm = l.match(/^(\s*)[-*+]\s+(.*)/);
+                        const nm = l.match(/^(\s*)\d+\.\s+(.*)/);
+                        if (bm) items.push({indent: bm[1].length, tag: 'ul', content: bm[2]});
+                        else if (nm) items.push({indent: nm[1].length, tag: 'ol', content: nm[2]});
+                    }
+                    if (!items.length) return '';
+                    const indentsSorted = [...new Set(items.map(it => it.indent))].sort((a,b)=>a-b);
+                    items.forEach(it => { it.level = indentsSorted.indexOf(it.indent); });
+                    let out = '';
+                    const stack = [];
+                    for (let i = 0; i < items.length; i++) {
+                        const {level, tag, content} = items[i];
+                        const nextLevel = i+1 < items.length ? items[i+1].level : -1;
+                        while (stack.length > 0 && stack[stack.length-1].level > level) {
+                            const s = stack.pop();
+                            out += `</${s.tag}></li>`;
+                        }
+                        if (stack.length === 0 || stack[stack.length-1].level < level) {
+                            out += `<${tag} style="${listStyle}">`;
+                            stack.push({level, tag});
+                        }
+                        if (nextLevel > level) {
+                            out += `<li style="${liStyle}">${renderInline(content)}`;
+                        } else {
+                            out += `<li style="${liStyle}">${renderInline(content)}</li>`;
+                        }
+                    }
+                    while (stack.length > 0) {
+                        const s = stack.pop();
+                        out += `</${s.tag}>`;
+                        if (stack.length > 0) out += '</li>';
+                    }
+                    return out;
+                };
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // Code block toggle
+                    if (line.trimStart().startsWith('```')) {
+                        if (inCodeBlock) {
+                            html += `<pre style="background:#1e1e1e;color:#d4d4d4;padding:10px 12px;border-radius:4px;font-size:11px;line-height:1.5;overflow-x:auto;margin:8px 0;"><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+                            codeLines = [];
+                            inCodeBlock = false;
+                        } else {
+                            codeLang = line.trim().slice(3);
+                            inCodeBlock = true;
+                        }
+                        continue;
+                    }
+                    if (inCodeBlock) { codeLines.push(line); continue; }
+
+                    // Empty line
+                    if (line.trim() === '') continue;
+
+                    // Headers (h1-h6)
+                    const hMatch = line.match(/^(#{1,6})\s+(.*)/);
+                    if (hMatch) {
+                        const level = hMatch[1].length;
+                        const sizes = {1: '15px', 2: '14px', 3: '13px', 4: '12px', 5: '11px', 6: '11px'};
+                        const weights = {1: '700', 2: '700', 3: '600', 4: '600', 5: '600', 6: '500'};
+                        html += `<div style="font-size:${sizes[level]};font-weight:${weights[level]};margin:10px 0 4px;color:#1a1a1a;">${renderInline(hMatch[2])}</div>`;
+                        continue;
+                    }
+
+                    // <options> block rendering
+                    if (line.trim() === '&lt;options&gt;' || line.trim() === '<options>') {
+                        inOptions = true; optionItems = [];
+                        continue;
+                    }
+                    if (line.trim() === '&lt;/options&gt;' || line.trim() === '</options>') {
+                        if (inOptions && optionItems.length > 0) {
+                            html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;">' +
+                                optionItems.map(o => `<span style="display:inline-block;padding:4px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:12px;font-size:11px;color:#374151;">${o}</span>`).join('') +
+                                '</div>';
+                        }
+                        inOptions = false;
+                        continue;
+                    }
+                    if (inOptions) {
+                        const optMatch = line.trim().match(/^(?:&lt;option&gt;|<option>)(.*?)(?:&lt;\/option&gt;|<\/option>)$/);
+                        if (optMatch) optionItems.push(escapeHtml(optMatch[1]));
+                        continue;
+                    }
+
+                    // List items (bullet or numbered) — collect full block then render nested
+                    if (line.match(/^\s*[-*+]\s+/) || line.match(/^\s*\d+\.\s+/)) {
+                        const listLines = [line];
+                        while (i + 1 < lines.length) {
+                            const next = lines[i + 1];
+                            if (next.match(/^\s*[-*+]\s+/) || next.match(/^\s*\d+\.\s+/)) {
+                                listLines.push(next); i++;
+                            } else if (next.trim() === '') {
+                                // Blank line: look ahead — keep if more list items follow
+                                let k = i + 2;
+                                while (k < lines.length && lines[k].trim() === '') k++;
+                                if (k < lines.length && (lines[k].match(/^\s*[-*+]\s+/) || lines[k].match(/^\s*\d+\.\s+/))) {
+                                    listLines.push(''); i = k - 1;
+                                } else { break; }
+                            } else { break; }
+                        }
+                        html += renderNestedList(listLines);
+                        continue;
+                    }
+
+                    // Horizontal rule
+                    if (line.match(/^---+$/)) {
+                        html += '<hr style="border:none;border-top:1px solid #e5e7eb;margin:8px 0;">';
+                        continue;
+                    }
+
+                    // Table (pipe-delimited)
+                    if (line.includes('|') && line.trim().startsWith('|')) {
+                        const tableLines = [line];
+                        while (i + 1 < lines.length && lines[i + 1].includes('|')) {
+                            i++; tableLines.push(lines[i]);
+                        }
+                        if (tableLines.length >= 2) {
+                            const sepLine = tableLines[1].trim();
+                            const isSep = /^[|\s\-:=]*$/.test(sepLine) && sepLine.includes('-');
+                            if (isSep) {
+                                const parseRow = r => r.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+                                const headers = parseRow(tableLines[0]);
+                                const rows = tableLines.slice(2).filter(r => r.includes('|')).map(parseRow);
+                                html += '<div style="overflow-x:auto;margin:8px 0;"><table style="border-collapse:collapse;width:100%;font-size:11px;line-height:1.5;">';
+                                html += '<thead><tr>' + headers.map(h => `<th style="padding:6px 10px;text-align:left;font-weight:600;color:#1a1a1a;border-bottom:2px solid #e5e7eb;white-space:nowrap;">${renderInline(h)}</th>`).join('') + '</tr></thead>';
+                                html += '<tbody>' + rows.map(r => '<tr>' + headers.map((_, ci) => `<td style="padding:5px 10px;border-bottom:1px solid #f3f4f6;color:#374151;">${renderInline(r[ci] || '')}</td>`).join('') + '</tr>').join('') + '</tbody>';
+                                html += '</table></div>';
+                                continue;
+                            }
+                        }
+                        tableLines.forEach(tl => {
+                            html += `<p style="margin:4px 0;font-size:12px;line-height:1.7;color:#374151;">${renderInline(tl)}</p>`;
+                        });
+                        continue;
+                    }
+
+                    // Regular text paragraph
+                    html += `<p style="margin:4px 0;font-size:12px;line-height:1.7;color:#374151;">${renderInline(line)}</p>`;
+                }
+                if (inCodeBlock) html += `<pre style="background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:4px;font-size:11px;overflow-x:auto;margin:8px 0;"><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+                return html;
+            };
+
+            // Parse conversation text into user/assistant/agent turns
+            const formatConversation = (text) => {
+                if (!text) return '';
+                const allLines = text.split('\n');
+                const turns = [];
+                let currentRole = null;
+                let currentLines = [];
+                let prevRole = null;
+
+                const flush = () => {
+                    if (currentRole && currentLines.length > 0) {
+                        turns.push({role: currentRole, content: currentLines.join('\n').trim()});
+                    }
+                    prevRole = currentRole;
+                };
+
+                for (let li = 0; li < allLines.length; li++) {
+                    const line = allLines[li];
+
+                    // Match ### Subagent (Analyst) → Assistant or ### Subagent → Assistant
+                    const subRespMatch = line.match(/^###\s+Subagent.*→\s*Assistant\s*$/);
+                    if (subRespMatch) {
+                        flush();
+                        currentRole = 'agent-response';
+                        currentLines = [];
+                        continue;
+                    }
+
+                    // Match ### Assistant → Subagent
+                    const agentReqMatch = line.match(/^###\s+Assistant\s*→\s*Subagent\s*$/);
+                    if (agentReqMatch) {
+                        flush();
+                        currentRole = 'agent-request';
+                        currentLines = [];
+                        continue;
+                    }
+
+                    // Match ### User or ### Assistant (exact)
+                    const turnMatch = line.match(/^###\s+(User|Assistant)\s*$/);
+                    if (turnMatch) {
+                        flush();
+                        const role = turnMatch[1].toLowerCase();
+
+                        // Heuristic: if previous role was agent-request, and this ### Assistant
+                        // starts with JSON content, it's actually the subagent response
+                        if (role === 'assistant' && prevRole === 'agent-request') {
+                            // Peek ahead for JSON start
+                            let isJson = false;
+                            for (let peek = li + 1; peek < Math.min(li + 5, allLines.length); peek++) {
+                                const s = allLines[peek].trim();
+                                if (!s) continue;
+                                if (s.startsWith('```json') || s.startsWith('{') || s.startsWith('[')) {
+                                    isJson = true;
+                                }
+                                break;
+                            }
+                            currentRole = isJson ? 'agent-response' : 'assistant';
+                        } else {
+                            currentRole = role;
+                        }
+                        currentLines = [];
+                        continue;
+                    }
+
+                    if (currentRole) currentLines.push(line);
+                }
+                if (currentRole && currentLines.length > 0) {
+                    turns.push({role: currentRole, content: currentLines.join('\n').trim()});
+                }
+
+                if (turns.length === 0) return parseBlocks(text);
+
+                // Group agent-request + agent-response pairs into consultation blocks
+                const grouped = [];
+                let i = 0;
+                while (i < turns.length) {
+                    if (turns[i].role === 'agent-request') {
+                        const consultation = {role: 'agent-consultation', parts: [turns[i]]};
+                        i++;
+                        while (i < turns.length && (turns[i].role === 'agent-response' || turns[i].role === 'agent-request')) {
+                            consultation.parts.push(turns[i]);
+                            i++;
+                        }
+                        grouped.push(consultation);
+                    } else {
+                        grouped.push(turns[i]);
+                        i++;
+                    }
+                }
+
+                let consultationCounter = 0;
+                return grouped.map(t => {
+                    // Agent consultation: collapsible block
+                    if (t.role === 'agent-consultation') {
+                        consultationCounter++;
+                        const cid = `agent-consult-${consultationCounter}-${Date.now()}`;
+                        const innerHtml = t.parts.map(p => {
+                            const isReq = p.role === 'agent-request';
+                            const lbl = isReq ? 'Assistant → Agent' : 'Agent → Assistant';
+                            const clr = isReq ? '#7c3aed' : '#0891b2';
+                            return `<div style="margin:6px 0;">
+                                <div style="font-size:9px;font-weight:600;color:${clr};margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;">${lbl}</div>
+                                ${parseBlocks(p.content)}
+                            </div>`;
+                        }).join('<hr style="border:none;border-top:1px solid #e9d5ff;margin:6px 0;">');
+
+                        return `<div style="margin:6px 0;">
+                            <div onclick="const b=document.getElementById('${cid}');b.style.display=b.style.display==='none'?'block':'none';this.querySelector('.chevron').textContent=b.style.display==='none'?'▶':'▼';"
+                                 style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 10px;background:#f5f3ff;border:1px solid #e9d5ff;border-radius:6px;font-size:11px;color:#7c3aed;font-weight:500;">
+                                <span class="chevron" style="font-size:9px;">▶</span>
+                                <i class="fa-solid fa-robot" style="font-size:10px;"></i>
+                                Agent Consultation
+                                <span style="font-size:9px;color:#a78bfa;margin-left:auto;">${t.parts.length} messages</span>
+                            </div>
+                            <div id="${cid}" style="display:none;margin-top:4px;padding:8px 10px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:0 0 6px 6px;border-top:none;max-height:300px;overflow-y:auto;">
+                                ${innerHtml}
+                            </div>
+                        </div>`;
+                    }
+
+                    // User / Assistant bubbles
+                    const isUser = t.role === 'user';
+                    const bg = isUser ? '#f0eee6' : '#ffffff';
+                    const align = isUser ? 'flex-end' : 'flex-start';
+                    const border = isUser ? '' : 'border-left:3px solid #e5e7eb;';
+                    const label = isUser ? 'You' : 'Assistant';
+                    const labelColor = isUser ? '#8b7e6a' : '#6b7280';
+                    return `<div style="display:flex;justify-content:${align};margin:6px 0;">
+                        <div style="max-width:92%;background:${bg};${border}padding:8px 12px;border-radius:8px;">
+                            <div style="font-size:10px;font-weight:600;color:${labelColor};margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">${label}</div>
+                            ${parseBlocks(t.content)}
+                        </div>
+                    </div>`;
+                }).join('');
+            };
+
+            // Simple markdown for non-conversation text (summary, etc.)
+            const formatMarkdown = (text) => {
+                if (!text) return '';
+                return parseBlocks(text);
+            };
 
             const conversationsHtml = conversations.map((conv, index) => {
                 const convId = `conv-${index}`;
                 const excerptId = `excerpt-${index}`;
                 const fullId = `full-${index}`;
-
-                // Format conversation tags
                 const convTags = conv.tags || [];
                 const tagsHtml = convTags.length > 0
                     ? convTags.map(tag => `<span class="tag">${tag}</span>`).join('')
                     : '';
 
-                // Convert markdown content to HTML
-                const formatMarkdown = (text) => {
-                    if (!text) return '';
-                    return text
-                        .replace(/### (.*)/g, '<h4 style="margin-top:10px;margin-bottom:5px;font-size:13px;font-weight:600;">$1</h4>')
-                        .replace(/## (.*)/g, '<h3 style="margin-top:12px;margin-bottom:6px;font-size:14px;font-weight:700;">$1</h3>')
-                        .replace(/# (.*)/g, '<h2 style="margin-top:15px;margin-bottom:8px;font-size:15px;font-weight:700;">$1</h2>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/`(.*?)`/g, '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-size:10px;">$1</code>')
-                        .replace(/\n\n/g, '</p><p style="margin:6px 0;font-size:13px;line-height:1.5;">')
-                        .replace(/\n/g, '<br>');
-                };
-
                 const summaryHtml = conv.summary ? `
-                    <div style="margin-top: 10px; padding: 10px; background: #fafbfc; border-left: 2px solid #1a1a1a; font-size: 11px; line-height: 1.6; color: #4b5563;">
+                    <div style="margin-top: 10px; padding: 10px; background: #fafbfc; border-left: 2px solid #1a1a1a; font-size: 11px; line-height: 1.8; color: #4b5563;">
                         <strong style="color: #1a1a1a;">Summary:</strong>
-                        <p style="margin:6px 0 0 0;font-size:11px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.summary)}</p>
+                        <p style="margin:6px 0 0 0;font-size:11px;line-height:1.8;color:#4b5563;">${formatMarkdown(conv.summary)}</p>
                     </div>
                 ` : '';
 
                 const excerptHtml = conv.excerpt ? `
-                    <div id="${excerptId}" style="margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 13px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:13px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.excerpt)}</p>
+                    <div id="${excerptId}" style="margin-top: 10px; padding: 8px; background: #fafbfc; border-radius: 6px; border: 1px solid #e8e9ea; max-height: 250px; overflow-y: auto;">
+                        ${formatConversation(conv.excerpt)}
                     </div>
                 ` : '';
 
                 const fullContentHtml = conv.content ? `
-                    <div id="${fullId}" style="display:none; margin-top: 10px; padding: 12px; background: #fafbfc; border-radius: 2px; border: 1px solid #e8e9ea; font-size: 13px; line-height: 1.6; max-height: 400px; overflow-y: auto;">
-                        <p style="margin:6px 0;font-size:13px;line-height:1.6;color:#4b5563;">${formatMarkdown(conv.content)}</p>
+                    <div id="${fullId}" style="display:none; margin-top: 10px; padding: 8px; background: #fafbfc; border-radius: 6px; border: 1px solid #e8e9ea; max-height: 500px; overflow-y: auto;">
+                        ${formatConversation(conv.content)}
                     </div>
                 ` : '';
 
                 const toggleButton = conv.content ? `
                     <button onclick="toggleConversation('${excerptId}', '${fullId}', '${convId}-btn'); return false;"
                             id="${convId}-btn"
-                            style="margin-top: 8px; padding: 6px 12px; background: #1a1a1a; color: white; border: none; border-radius: 2px; cursor: pointer; font-size: 11px; font-family: 'Inter', sans-serif; transition: background 0.2s;">
+                            style="margin-top: 8px; padding: 6px 12px; background: #1a1a1a; color: white; border: none; border-radius: 2px; cursor: pointer; font-size: 11px; font-family: 'Inter', sans-serif;">
                         Show Full Conversation
                     </button>
                 ` : '';
 
                 return `
-                    <div id="${convId}" style="margin: 12px 0; padding: 14px; background: white; border-radius: 2px; border: 1px solid #e8e9ea;">
+                    <div id="${convId}" class="source-card">
+                        <div class="source-card-header">Source Conversation</div>
                         <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <span style="color: #1a1a1a; font-size: 13px; font-weight: 500;">
-                                ${conv.title || 'Untitled'}
-                            </span>
+                            <span style="color: #1a1a1a; font-size: 13px; font-weight: 500;">${conv.title || 'Untitled'}</span>
                         </div>
                         <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">${conv.date || 'No date'}</div>
                         ${tagsHtml ? `<div style="margin-top: 6px;">${tagsHtml}</div>` : ''}
-                        ${summaryHtml}
-                        ${excerptHtml}
-                        ${fullContentHtml}
-                        ${toggleButton}
-                        
+                        ${summaryHtml}${excerptHtml}${fullContentHtml}${toggleButton}
                     </div>
                 `;
             }).join('');
 
             container.innerHTML = `<p><strong><i class="fa-solid fa-comments" style="margin-right: 6px; color: #6b7280;"></i>Source Conversation:</strong></p>${conversationsHtml}`;
+            renderLatex(container);
         }
 
-        // Toggle conversation display
         function toggleConversation(excerptId, fullId, btnId) {
             const excerpt = document.getElementById(excerptId);
             const full = document.getElementById(fullId);
             const btn = document.getElementById(btnId);
-
             if (full.style.display === 'none') {
                 excerpt.style.display = 'none';
                 full.style.display = 'block';
@@ -844,25 +1395,23 @@
             }
         }
 
-        // Helper to focus on a specific node
         function focusNode(nodeId) {
-            const node = graphData.nodes.find(n => n.id === nodeId);
-            if (node) {
-                showDetails(node);
-                // Optional: zoom and center on the node
-                // TODO: implement smooth zoom to node
+            const targetNode = graphData.nodes.find(n => n.id === nodeId);
+            if (targetNode) {
+                clickFocus(targetNode);
+                showDetails(targetNode);
             }
         }
 
-        // Close details panel
         const closeBtn = document.getElementById('close-details');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 document.getElementById('details-panel').classList.remove('open');
+                clearFocus();
             });
         }
 
-        // Search functionality with comprehensive field matching
+        // Search
         let searchTimeout;
         const searchResultsElement = document.getElementById('search-results');
 
@@ -870,131 +1419,49 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const term = e.target.value.toLowerCase().trim();
-
-                if (!term) {
-                    resetFilter();
-                    return;
-                }
+                if (!term) { resetFilter(); return; }
 
                 const matchingIds = new Set();
-                let matchedFields = {};
-
-                // Comprehensive search across ALL fields
                 graphData.nodes.forEach(n => {
                     let matched = false;
-                    let fieldMatches = [];
-
-                    // Search in label
-                    if (n.label && n.label.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('label');
-                    }
-
-                    // Search in tags
-                    if (n.tags && Array.isArray(n.tags) &&
-                        n.tags.some(t => t.toLowerCase().includes(term))) {
-                        matched = true;
-                        fieldMatches.push('tags');
-                    }
-
-                    // Search in content
-                    if (n.content && n.content.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('content');
-                    }
-
-                    // Search in domain
-                    if (n.domain && n.domain.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('domain');
-                    }
-
-                    // Search in subdomain
-                    if (n.subdomain && n.subdomain.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('subdomain');
-                    }
-
-                    // Search in ISCED classification
-                    if (n.isced && n.isced.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('isced');
-                    }
-
-                    // Search in numeric fields (reviewCount, stability, difficulty)
-                    if (n.reviewCount && n.reviewCount.toString().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('reviewCount');
-                    }
-
-                    if (n.stability && n.stability.toString().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('stability');
-                    }
-
-                    if (n.difficulty && n.difficulty.toString().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('difficulty');
-                    }
-
-                    // Search in ID (for direct node lookup)
-                    if (n.id && n.id.toLowerCase().includes(term)) {
-                        matched = true;
-                        fieldMatches.push('id');
-                    }
-
-                    // Search in conversations
+                    if (n.label && n.label.toLowerCase().includes(term)) matched = true;
+                    if (n.tags && Array.isArray(n.tags) && n.tags.some(t => t.toLowerCase().includes(term))) matched = true;
+                    if (n.content && n.content.toLowerCase().includes(term)) matched = true;
+                    if (n.domain && n.domain.toLowerCase().includes(term)) matched = true;
+                    if (n.subdomain && n.subdomain.toLowerCase().includes(term)) matched = true;
+                    if (n.isced && n.isced.toLowerCase().includes(term)) matched = true;
+                    if (n.id && n.id.toLowerCase().includes(term)) matched = true;
                     if (n.conversations && Array.isArray(n.conversations)) {
                         for (let conv of n.conversations) {
                             if ((conv.title && conv.title.toLowerCase().includes(term)) ||
                                 (conv.summary && conv.summary.toLowerCase().includes(term)) ||
-                                (conv.content && conv.content.toLowerCase().includes(term)) ||
                                 (conv.excerpt && conv.excerpt.toLowerCase().includes(term))) {
                                 matched = true;
-                                fieldMatches.push('conversations');
                                 break;
                             }
                         }
                     }
-
-                    if (matched) {
-                        matchingIds.add(n.id);
-                        matchedFields[n.id] = fieldMatches;
-                    }
+                    if (matched) matchingIds.add(n.id);
                 });
 
-                // Include 1-hop neighbors
                 const originalMatches = new Set(matchingIds);
                 graphData.edges.forEach(e => {
-                    // After D3 processes edges, source and target are objects
-                    const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
-                    const targetId = typeof e.target === 'object' ? e.target.id : e.target;
-
-                    if (originalMatches.has(sourceId)) matchingIds.add(targetId);
-                    if (originalMatches.has(targetId)) matchingIds.add(sourceId);
+                    const sid = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tid = typeof e.target === 'object' ? e.target.id : e.target;
+                    if (originalMatches.has(sid)) matchingIds.add(tid);
+                    if (originalMatches.has(tid)) matchingIds.add(sid);
                 });
 
-                // Update visibility using opacity instead of display
                 node.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
                 link.attr('opacity', e => {
-                    const sourceId = typeof e.source === 'object' ? e.source.id : e.source;
-                    const targetId = typeof e.target === 'object' ? e.target.id : e.target;
-                    return (matchingIds.has(sourceId) && matchingIds.has(targetId)) ? 0.6 : 0.05;
+                    const sid = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tid = typeof e.target === 'object' ? e.target.id : e.target;
+                    return (matchingIds.has(sid) && matchingIds.has(tid)) ? 0.6 : 0.05;
                 });
                 label.attr('opacity', d => matchingIds.has(d.id) ? 1 : 0.1);
 
-                // Update search results counter
-                const directMatches = originalMatches.size;
-                const totalNodes = graphData.nodes.length;
-                searchResultsElement.textContent = `Showing ${directMatches} of ${totalNodes} nodes`;
+                searchResultsElement.textContent = `Showing ${originalMatches.size} of ${graphData.nodes.length} nodes`;
                 searchResultsElement.classList.add('active');
-
-                // Log search stats for debugging
-                console.log(`Search "${term}" found: ${directMatches} direct matches, ${matchingIds.size} total with neighbors`);
-                console.log('Matched fields by node:', matchedFields);
-
-                // Don't restart simulation - just update opacity
-                // This keeps the graph structure stable
             }, 300);
         });
 
@@ -1004,15 +1471,15 @@
         });
 
         function resetFilter() {
-            node.attr('opacity', 1);
-            link.attr('opacity', 0.6);
-            label.attr('opacity', 1);
-
-            // Clear search results counter
+            activeDomainFilter = null;
+            document.querySelectorAll('.legend-item').forEach(item => item.classList.remove('active'));
+            if (!focusedNodeId) {
+                node.attr('opacity', 1);
+                link.attr('opacity', 0.6);
+                label.attr('opacity', 1);
+            }
             searchResultsElement.textContent = '';
             searchResultsElement.classList.remove('active');
-
-            // Don't restart simulation - maintain current positions
         }
 
         // Keyboard shortcuts
@@ -1021,18 +1488,21 @@
                 document.getElementById('search-input').value = '';
                 resetFilter();
                 document.getElementById('details-panel').classList.remove('open');
+                clearFocus();
             } else if (e.key === ' ' && e.target.tagName !== 'INPUT') {
                 e.preventDefault();
-                svg.transition().duration(750).call(
-                    zoom.transform,
-                    d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
-                );
+                zoomFit();
+            } else if (e.key === '+' || e.key === '=') {
+                if (e.target.tagName !== 'INPUT') zoomIn();
+            } else if (e.key === '-') {
+                if (e.target.tagName !== 'INPUT') zoomOut();
             }
         });
 
-        // Click background to close details
+        // Click background to close details and clear focus
         svg.on('click', () => {
             document.getElementById('details-panel').classList.remove('open');
+            clearFocus();
         });
     </script>
 </body>
