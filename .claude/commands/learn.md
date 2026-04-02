@@ -1,3 +1,4 @@
+---
 description: "Interactive learning with Socratic dialogue"
 allowed-tools: Read, Bash, Write, Task, TodoWrite
 argument-hint: "[file-path]"
