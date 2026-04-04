@@ -166,32 +166,54 @@ format_history = data['format_history']  // Loaded from .review/format_history.j
 
 The review-master consultation for the NEXT Rem is launched in the background while the user answers the CURRENT question. This creates a pipeline where questions are ready instantly.
 
-**⚠️ CRITICAL PREFETCH RULE — NON-NEGOTIABLE**:
-When a background prefetch `<task-notification>` arrives while you are WAITING FOR THE USER'S ANSWER to the current question:
-1. **DO NOT generate any visible output to the user** — no text, no acknowledgment, no interruption
-2. **DO NOT reveal the prefetched question or its answer**
-3. **DO NOT provide feedback on the current question** (user hasn't answered yet!)
-4. **SILENTLY store** the prefetch result internally as `prefetch_result`
-5. **CONTINUE WAITING** for the user's answer to the current question
-6. The prefetch notification is an INTERNAL system event, invisible to the user
+**⚠️ CRITICAL PREFETCH RULES — NON-NEGOTIABLE**:
 
-**Violation of this rule breaks the entire review flow.** The user must answer Q(N) before Q(N+1) is presented, regardless of when prefetch completes.
+**Rule 1 — File-based output**: Background prefetch agents MUST write their JSON result to `.review/prefetch-{rem_id}.json` and return ONLY `{"status":"ready","rem_id":"..."}`. This prevents `<task-notification>` from exposing correct answers, hints, or analysis to the user.
 
-**Pipeline state**: Track two variables throughout the session:
-- `prefetch_result` - JSON guidance from background Task (or null if not yet available / failed)
-- `prefetch_rem` - The Rem object (id, path, conversation_source) the prefetch corresponds to
+**Rule 2 — Silent notification**: When a background prefetch `<task-notification>` arrives while waiting for the user's answer:
+1. **DO NOT generate any visible output** — no text, no acknowledgment, no interruption
+2. **DO NOT provide feedback on the current question** (user hasn't answered yet!)
+3. **CONTINUE WAITING** for the user's answer to the current question
+
+**Violation of either rule breaks the entire review flow.**
+
+**Pipeline state**: Track one variable throughout the session:
+- `prefetch_rem` - The Rem object (id, path, conversation_source) the prefetch corresponds to, or null
 
 **Session start** (after extracting session_id and format_history):
 1. Call `get_next_rem.py --session-id {session_id}` to get **Rem 1** (the first Rem)
 2. Call `peek_next_rem.py --session-id {session_id}` to get **Rem 2** (the second pending Rem, without advancing any pointer)
 3. Launch **two Task calls in parallel** (single message, two Task tool invocations):
-   - Task A (foreground): Review-master consultation for Rem 1 (this is Q1 -- user waits for this)
-   - Task B (background, `run_in_background: true`): Review-master consultation for Rem 2 (this is Q2 -- prefetched while user answers Q1)
+   - Task A (foreground): Review-master consultation for Rem 1 — returns JSON directly (user waits for this, this is Q1)
+   - Task B (background, `run_in_background: true`): **File-writing wrapper** for Rem 2 (see prompt below)
 4. Set `prefetch_rem = Rem 2` (or null if no Rem 2 exists / peek returned null)
 5. When Task A completes, present Q1 to user normally (Steps 4-9 unchanged)
-6. **When Task B notification arrives**: Silently store result. DO NOT output anything. Continue waiting for user.
+6. **When Task B notification arrives**: DO NOT output anything. The result is already on disk.
 
-**If only 1 Rem in session** (peek_next_rem.py returns `peek_rem: null`): Skip Task B entirely. `prefetch_result = null`, `prefetch_rem = null`.
+**Background prefetch agent prompt** (Task B and all subsequent prefetch Tasks):
+```
+Use Agent tool:
+- subagent_type: "review-master"
+- model: "sonnet"
+- run_in_background: true
+- description: "Prefetch Q{N} guidance to file"
+- prompt: "
+  You are a review-master consultant. Follow your standard instructions.
+
+  **⚠️ OUTPUT RULE**: Do NOT return the JSON guidance as your response.
+  Instead:
+  1. Generate the review guidance JSON as normal
+  2. Write it to file: .review/prefetch-{rem_id}.json using the Write tool
+  3. Return ONLY this minimal confirmation:
+     {\"status\": \"ready\", \"rem_id\": \"{rem_id}\", \"file\": \".review/prefetch-{rem_id}.json\"}
+
+  This prevents your full analysis from appearing in task-notification visible to the user.
+
+  [... standard review-master session context here ...]
+  "
+```
+
+**If only 1 Rem in session** (peek_next_rem.py returns `peek_rem: null`): Skip Task B entirely. `prefetch_rem = null`.
 
 **Difficulty Mode Dialogue Rules** (from `difficulty_mode` in run_review.py JSON):
 
@@ -234,15 +256,18 @@ If stale_warning is present, inform user about session age.
 
 **Prefetch-Aware Consultation Flow**:
 
-**Check if prefetched result is available for the current Rem**:
-- IF `prefetch_result` is not null AND `prefetch_rem.id` matches the current Rem's id:
-  - Use `prefetch_result` directly as the review-master guidance JSON (skip Task call for this Rem)
-  - Clear `prefetch_result = null` and `prefetch_rem = null` after consuming
-- ELSE IF `prefetch_result` is not yet ready (background Task still running) AND `prefetch_rem.id` matches:
-  - Show brief message: "Preparing next question..." 
-  - Wait for the background Task to complete, then use its result
-  - Clear `prefetch_result = null` and `prefetch_rem = null` after consuming
-- ELSE (no prefetch available -- first Rem, prefetch failed, or mismatch):
+**Check if prefetched result file exists for the current Rem**:
+- IF `prefetch_rem.id` matches current Rem's id AND file `.review/prefetch-{rem_id}.json` exists:
+  - Read the file with `Read` tool to get review-master guidance JSON
+  - Delete the file after reading: `rm .review/prefetch-{rem_id}.json`
+  - Clear `prefetch_rem = null` after consuming
+  - Use the JSON as the review-master guidance (skip Task call for this Rem)
+- ELSE IF `prefetch_rem.id` matches but file does not exist yet (background Task still running):
+  - Show brief message: "Preparing next question..."
+  - Poll for file existence (check every 2s, max 30s): `ls .review/prefetch-{rem_id}.json`
+  - When file appears, read and consume as above
+  - If timeout: fall back to synchronous consultation
+- ELSE (no prefetch, first Rem, mismatch, or failure):
   - Fall through to synchronous consultation below (original behavior)
 
 **Expected Tool Usage Pattern** (Root Cause Fix: commit 9f5bd86):
@@ -743,18 +768,18 @@ source venv/bin/activate && python scripts/review/peek_next_rem.py --session-id 
 ```
 
 - If `peek_rem` exists (session has more pending Rems after Q(N+1)):
-  - Launch background Task for Q(N+2)'s review-master consultation (`run_in_background: true`)
-  - Set `prefetch_rem = peek_rem` (the Rem object from peek)
-  - The background Task result will become `prefetch_result` when it completes
+  - Launch background Task for Q(N+2) using the **file-writing wrapper prompt** (see Session Start section)
+  - The agent writes result to `.review/prefetch-{peek_rem.id}.json`
+  - Set `prefetch_rem = peek_rem`
 - If `peek_rem` is null (Q(N+1) is the last Rem): `prefetch_rem = null`, no background Task needed
 
-**Then proceed to Step 3 for Q(N+1)**. Step 3's prefetch-aware flow will consume the previously prefetched result if it matches Q(N+1), or wait for it if still running.
+**Then proceed to Step 3 for Q(N+1)**. Step 3's prefetch-aware flow will check for `.review/prefetch-{rem_id}.json` on disk.
 
 **Repeat steps 3-10 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
-- Discard any pending prefetch result (no cleanup needed -- background Task results are ephemeral)
+- Clean up prefetch files: `rm -f .review/prefetch-*.json`
 - Clean up session: `source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup`
 - Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules
