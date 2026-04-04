@@ -166,6 +166,17 @@ format_history = data['format_history']  // Loaded from .review/format_history.j
 
 The review-master consultation for the NEXT Rem is launched in the background while the user answers the CURRENT question. This creates a pipeline where questions are ready instantly.
 
+**⚠️ CRITICAL PREFETCH RULE — NON-NEGOTIABLE**:
+When a background prefetch `<task-notification>` arrives while you are WAITING FOR THE USER'S ANSWER to the current question:
+1. **DO NOT generate any visible output to the user** — no text, no acknowledgment, no interruption
+2. **DO NOT reveal the prefetched question or its answer**
+3. **DO NOT provide feedback on the current question** (user hasn't answered yet!)
+4. **SILENTLY store** the prefetch result internally as `prefetch_result`
+5. **CONTINUE WAITING** for the user's answer to the current question
+6. The prefetch notification is an INTERNAL system event, invisible to the user
+
+**Violation of this rule breaks the entire review flow.** The user must answer Q(N) before Q(N+1) is presented, regardless of when prefetch completes.
+
 **Pipeline state**: Track two variables throughout the session:
 - `prefetch_result` - JSON guidance from background Task (or null if not yet available / failed)
 - `prefetch_rem` - The Rem object (id, path, conversation_source) the prefetch corresponds to
@@ -178,6 +189,7 @@ The review-master consultation for the NEXT Rem is launched in the background wh
    - Task B (background, `run_in_background: true`): Review-master consultation for Rem 2 (this is Q2 -- prefetched while user answers Q1)
 4. Set `prefetch_rem = Rem 2` (or null if no Rem 2 exists / peek returned null)
 5. When Task A completes, present Q1 to user normally (Steps 4-9 unchanged)
+6. **When Task B notification arrives**: Silently store result. DO NOT output anything. Continue waiting for user.
 
 **If only 1 Rem in session** (peek_next_rem.py returns `peek_rem: null`): Skip Task B entirely. `prefetch_result = null`, `prefetch_rem = null`.
 
