@@ -162,6 +162,25 @@ format_history = data['format_history']  // Loaded from .review/format_history.j
 
 **Note**: Session Rems are persisted to disk. Even if conversation context is lost, call get_next_rem.py to recover the correct next Rem.
 
+**Prefetch Pipeline** (eliminates 10-15s wait between questions):
+
+The review-master consultation for the NEXT Rem is launched in the background while the user answers the CURRENT question. This creates a pipeline where questions are ready instantly.
+
+**Pipeline state**: Track two variables throughout the session:
+- `prefetch_result` - JSON guidance from background Task (or null if not yet available / failed)
+- `prefetch_rem` - The Rem object (id, path, conversation_source) the prefetch corresponds to
+
+**Session start** (after extracting session_id and format_history):
+1. Call `get_next_rem.py --session-id {session_id}` to get **Rem 1** (the first Rem)
+2. Call `peek_next_rem.py --session-id {session_id}` to get **Rem 2** (the second pending Rem, without advancing any pointer)
+3. Launch **two Task calls in parallel** (single message, two Task tool invocations):
+   - Task A (foreground): Review-master consultation for Rem 1 (this is Q1 -- user waits for this)
+   - Task B (background, `run_in_background: true`): Review-master consultation for Rem 2 (this is Q2 -- prefetched while user answers Q1)
+4. Set `prefetch_rem = Rem 2` (or null if no Rem 2 exists / peek returned null)
+5. When Task A completes, present Q1 to user normally (Steps 4-9 unchanged)
+
+**If only 1 Rem in session** (peek_next_rem.py returns `peek_rem: null`): Skip Task B entirely. `prefetch_result = null`, `prefetch_rem = null`.
+
 **Difficulty Mode Dialogue Rules** (from `difficulty_mode` in run_review.py JSON):
 
 **Easy Mode** (`difficulty_mode: "easy"`):
@@ -195,11 +214,24 @@ If stale_warning is present, inform user about session age.
 
 **For each Rem returned by get_next_rem.py, follow this loop**:
 
-#### 3. Consult Review-Master for Guidance
+#### 3. Consult Review-Master for Guidance (with Prefetch Pipeline)
 
 **⚠️ ARCHITECTURAL CHANGE**: Main agent does NOT read Rem files. Only review-master reads Rem content.
 
 **Rationale**: Prevents main agent from seeing Rem content and bypassing expert consultation ("feeling smart" and skipping review-master).
+
+**Prefetch-Aware Consultation Flow**:
+
+**Check if prefetched result is available for the current Rem**:
+- IF `prefetch_result` is not null AND `prefetch_rem.id` matches the current Rem's id:
+  - Use `prefetch_result` directly as the review-master guidance JSON (skip Task call for this Rem)
+  - Clear `prefetch_result = null` and `prefetch_rem = null` after consuming
+- ELSE IF `prefetch_result` is not yet ready (background Task still running) AND `prefetch_rem.id` matches:
+  - Show brief message: "Preparing next question..." 
+  - Wait for the background Task to complete, then use its result
+  - Clear `prefetch_result = null` and `prefetch_rem = null` after consuming
+- ELSE (no prefetch available -- first Rem, prefetch failed, or mismatch):
+  - Fall through to synchronous consultation below (original behavior)
 
 **Expected Tool Usage Pattern** (Root Cause Fix: commit 9f5bd86):
 
@@ -208,12 +240,13 @@ Review-master MUST demonstrate file reading via tool logs:
 2. **Read tool call on conversation file** - Required when conversation_source is not null
 3. **Fallback to extract_conversation_context.py** - If Read fails due to line limit (>2000 lines)
 
-**Validation**: Check tool logs after consultation. If review-master did not read files, consultation is invalid.
+**Validation**: Check tool logs after consultation. If review-master did not read files, consultation is invalid. (Applies to both prefetched and synchronous consultations.)
 
-**Fallback strategy**:
+**Fallback strategy** (applies when prefetch is not available or fails):
 - If review-master unavailable → Ask direct recall question: "What do you remember about the concept at {path}?"
 - If JSON invalid → Use minimal guidance (ask for free recall, no hints)
 - If consultation fails → Proceed with basic review (ask user to recall, then end)
+- If prefetch background Task failed → Fall back to synchronous call (same as no-prefetch path)
 
 ```
 Use Task tool:
@@ -320,12 +353,13 @@ Use Task tool:
 - `primary_question` - The question text (may include `<option>` tags for MCQ)
 - `format_specific` - Additional format data if needed
 
-**⚠️ CRITICAL: Track the format for next iteration**:
+**⚠️ CRITICAL: Track the format for next iteration** (only when question is PRESENTED to user, never during prefetch):
 ```bash
 source venv/bin/activate && python scripts/review/track_format.py {question_format}
 ```
 
 This updates `.review/format_history.json` with the format used. Next Rem will load updated history via run_review.py.
+**Prefetch note**: Do NOT call track_format.py when prefetching a future question. Only call it in Step 4 when the question is actually shown to the user.
 
 #### 4. Present Question to User (First-Person Voice)
 
@@ -677,7 +711,7 @@ FSRS Update:
 - Rating 3: "🎉 Good retention! Perfect difficulty level."
 - Rating 4: "Too easy! I'll make it harder next time."
 
-#### 10. Move to Next Rem
+#### 10. Move to Next Rem (with Prefetch Pipeline)
 
 **Retrieve next Rem from disk** (prevents hallucination after context loss):
 ```bash
@@ -685,14 +719,30 @@ source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {
 ```
 
 Parse the JSON output:
-- If `session_complete: true` -> All done, proceed to Step 4 (Post-Session Summary)
-- If `success: true` -> Use `rem.id`, `rem.path`, `rem.conversation_source` for next iteration
+- If `session_complete: true` -> All done, proceed to Step 4 (Post-Session Summary). Discard any pending prefetch.
+- If `success: true` -> This is Q(N+1). Use `rem.id`, `rem.path`, `rem.conversation_source` for next iteration.
 - Progress: `[{reviewed+1}/{total}] {reviewed} reviewed, {remaining} remaining`
+
+**Prefetch the question AFTER next** (Q(N+2)):
+
+After getting Q(N+1) from get_next_rem.py, peek at Q(N+2):
+```bash
+source venv/bin/activate && python scripts/review/peek_next_rem.py --session-id {session_id}
+```
+
+- If `peek_rem` exists (session has more pending Rems after Q(N+1)):
+  - Launch background Task for Q(N+2)'s review-master consultation (`run_in_background: true`)
+  - Set `prefetch_rem = peek_rem` (the Rem object from peek)
+  - The background Task result will become `prefetch_result` when it completes
+- If `peek_rem` is null (Q(N+1) is the last Rem): `prefetch_rem = null`, no background Task needed
+
+**Then proceed to Step 3 for Q(N+1)**. Step 3's prefetch-aware flow will consume the previously prefetched result if it matches Q(N+1), or wait for it if still running.
 
 **Repeat steps 3-10 for all Rems in session.**
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
+- Discard any pending prefetch result (no cleanup needed -- background Task results are ephemeral)
 - Clean up session: `source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup`
 - Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules
