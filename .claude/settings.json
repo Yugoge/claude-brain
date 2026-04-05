@@ -19,6 +19,7 @@
       "Bash(source venv/bin/activate && python3 scripts/review/extract_conversation_context.py:*)",
       "Bash(source venv/bin/activate && python scripts/review/get_next_rem.py*)",
       "Bash(source venv/bin/activate && python scripts/review/peek_next_rem.py*)",
+      "Bash(source venv/bin/activate && python scripts/review/cleanup_prefetch.py*)",
       "Bash(scripts/learning-materials/update_progress.py:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",

@@ -1,7 +1,7 @@
 # review
 
-*Last updated: 2026-04-04T11:10:16Z*
-**Total entries**: 24
+*Last updated: 2026-04-05T10:58:49Z*
+**Total entries**: 25
 **Convention**: kebab
 
 ## Tree
@@ -10,6 +10,7 @@ review/
 ├── `audit-conversation-paths.py` - Audit conversation_source paths in Rem files
 ├── `backup-schedule.sh` - Description: Create timestamped backup of review schedule
 ├── `cleanup-orphaned-entries.py` - Cleanup Orphaned Schedule Entries
+├── `cleanup_prefetch.py` - Clean up prefetch files left by the review pipeline
 ├── `debug_clustering.py` - Debug tool: Visualize review session clustering
 ├── `extract_conversation_context.py` - Extract key context from large conversation files using pattern matching
 ├── `fix-malformed-sources.py` - Fix malformed YAML sources that have Markdown link syntax.

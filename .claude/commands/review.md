@@ -779,7 +779,7 @@ source venv/bin/activate && python scripts/review/peek_next_rem.py --session-id 
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
-- Clean up prefetch files: `rm -f .review/prefetch-*.json`
+- Clean up prefetch files: `source venv/bin/activate && python scripts/review/cleanup_prefetch.py`
 - Clean up session: `source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup`
 - Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules
