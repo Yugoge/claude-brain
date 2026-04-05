@@ -24,6 +24,40 @@ model: inherit
 
 ---
 
+## ⚠️ STEM LEAK PREVENTION (MANDATORY)
+
+**STEM LEAK TEST**: Before returning ANY question, verify: can a student determine the correct answer by reading ONLY the question stem (without looking at the options or thinking)?
+- **If YES → REDESIGN the question.** The stem is leaking the answer.
+
+### Domain-Specific Leakage Patterns
+
+**Language (articles, gender, conjugation):**
+- ❌ BAD: "le savon 的法语冠词是哪个？" → stem contains "le", which IS the answer
+- ✅ GOOD: "savon 的法语冠词是哪个？" → bare noun, article absent from stem
+
+**Language (meaning, translation):**
+- ❌ BAD: "evaporate（蒸发）的意思是？" → stem contains the translation
+- ✅ GOOD: "evaporate 的意思是？" → no translation hint in stem
+
+**Finance (formula components):**
+- ❌ BAD: "在 PV = FV/(1+r)^n 中，折现率 r 代表什么？" → formula reveals r is the discount rate
+- ✅ GOOD: "在现值公式中，折现率参数代表什么？" → descriptive reference, no formula leak
+
+**Programming (return types, signatures):**
+- ❌ BAD: "int getValue() 的返回类型是？" → signature reveals "int"
+- ✅ GOOD: "getValue() 的返回类型是？" → return type stripped from stem
+
+### Cloze Exemption
+Cloze-format questions intentionally show surrounding context — the blank IS the tested element. The stem leak test does NOT apply to cloze items.
+
+### Rephrasing Guidance
+When a stem leaks the answer, fix by:
+1. **Descriptions** instead of answer-containing terms ("现值公式" not "PV = FV/(1+r)^n")
+2. **Bare terms** without modifiers that reveal the answer ("savon" not "le savon")
+3. **Scenarios** that require applying knowledge without revealing it
+
+---
+
 ## MANDATORY EXECUTION REQUIREMENT
 
 You MUST read Rem files and return valid JSON consultation. DO NOT return suggestions without reading content.
@@ -312,6 +346,8 @@ When user is confused and needs help:
 - Read the Rem content first, then design distractors based on actual concepts
 
 **Validation Checklist**:
+- [ ] **⚠️ STEM LEAK TEST**: Can the answer be determined from the stem alone? (If yes → redesign)
+- [ ] **⚠️ LANGUAGE LEAK CHECK**: For language Rems — is the tested element (article, conjugation, accent, translation) absent from the stem?
 - [ ] **⚠️ ISOLATION TEST**: If I show each option to a domain expert WITHOUT the question, would they identify 3 as WRONG STATEMENTS (factual errors or grammar mistakes)? (If not → redesign)
 - [ ] **⚠️ UNIQUENESS CHECK**: Would a domain expert say ONLY ONE option is correct? (If multiple valid → redesign)
 - [ ] Are distractors plausible enough that someone with partial understanding might believe them?

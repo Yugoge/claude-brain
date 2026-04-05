@@ -343,6 +343,7 @@ Use Task tool:
   - "Wrong" means the statement itself contains factual errors or grammar mistakes (NOT just "wrong answer to this question but valid sentence")
   - Before returning, verify ISOLATION TEST: Would a domain expert, seeing each option WITHOUT the question, identify 3 as WRONG STATEMENTS?
   - If multiple options are factually/grammatically correct → REDESIGN the question
+  - **⚠️ STEM LEAK RULE**: The question stem must NOT contain or reveal the correct answer. For language Rems testing articles/gender, use bare nouns without articles (e.g., "savon" not "le savon"). Verify: can a student determine the answer from the stem alone? If yes, redesign.
 
   Use lang_preference if provided:
   - If lang_preference is not null, generate ALL dialogue in that language
