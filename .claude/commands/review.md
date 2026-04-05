@@ -168,7 +168,7 @@ The review-master consultation for the NEXT Rem is launched in the background wh
 
 **⚠️ CRITICAL PREFETCH RULES — NON-NEGOTIABLE**:
 
-**Rule 1 — File-based output**: Background prefetch agents MUST write their JSON result to `.review/prefetch-{rem_id}.json` and return ONLY `{"status":"ready","rem_id":"..."}`. This prevents `<task-notification>` from exposing correct answers, hints, or analysis to the user.
+**Rule 1 — File-based output**: Background prefetch agents MUST write their JSON result to `.review/prefetch-{session_id}-{rem_id}.json` and return ONLY `{"status":"ready","rem_id":"..."}`. This prevents `<task-notification>` from exposing correct answers, hints, or analysis to the user.
 
 **Rule 2 — Silent notification**: When a background prefetch `<task-notification>` arrives while waiting for the user's answer:
 1. **DO NOT generate any visible output** — no text, no acknowledgment, no interruption
@@ -203,9 +203,9 @@ Use Agent tool:
   **⚠️ OUTPUT RULE**: Do NOT return the JSON guidance as your response.
   Instead:
   1. Generate the review guidance JSON as normal
-  2. Write it to file: .review/prefetch-{rem_id}.json using the Write tool
+  2. Write it to file: .review/prefetch-{session_id}-{rem_id}.json using the Write tool
   3. Return ONLY this minimal confirmation:
-     {\"status\": \"ready\", \"rem_id\": \"{rem_id}\", \"file\": \".review/prefetch-{rem_id}.json\"}
+     {\"status\": \"ready\", \"rem_id\": \"{rem_id}\", \"file\": \".review/prefetch-{session_id}-{rem_id}.json\"}
 
   This prevents your full analysis from appearing in task-notification visible to the user.
 
@@ -257,14 +257,13 @@ If stale_warning is present, inform user about session age.
 **Prefetch-Aware Consultation Flow**:
 
 **Check if prefetched result file exists for the current Rem**:
-- IF `prefetch_rem.id` matches current Rem's id AND file `.review/prefetch-{rem_id}.json` exists:
+- IF `prefetch_rem.id` matches current Rem's id AND file `.review/prefetch-{session_id}-{rem_id}.json` exists:
   - Read the file with `Read` tool to get review-master guidance JSON
-  - Delete the file after reading: `rm .review/prefetch-{rem_id}.json`
   - Clear `prefetch_rem = null` after consuming
   - Use the JSON as the review-master guidance (skip Task call for this Rem)
 - ELSE IF `prefetch_rem.id` matches but file does not exist yet (background Task still running):
   - Show brief message: "Preparing next question..."
-  - Poll for file existence (check every 2s, max 30s): `ls .review/prefetch-{rem_id}.json`
+  - Poll for file existence (check every 2s, max 30s): `ls .review/prefetch-{session_id}-{rem_id}.json`
   - When file appears, read and consume as above
   - If timeout: fall back to synchronous consultation
 - ELSE (no prefetch, first Rem, mismatch, or failure):
@@ -779,7 +778,7 @@ source venv/bin/activate && python scripts/review/peek_next_rem.py --session-id 
 
 **Early Exit Handling**:
 - If user stops early (e.g., "stop", "enough"), break loop
-- Clean up prefetch files: `source venv/bin/activate && python scripts/review/cleanup_prefetch.py`
+- Clean up prefetch files: `source venv/bin/activate && python scripts/review/cleanup_prefetch.py --session-id {session_id}`
 - Clean up session: `source venv/bin/activate && python scripts/review/get_next_rem.py --session-id {session_id} --cleanup`
 - Show partial session summary (see Step 4)
 - Save progress - already-reviewed Rems have updated schedules

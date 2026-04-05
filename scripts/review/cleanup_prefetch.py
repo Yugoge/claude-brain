@@ -1,23 +1,34 @@
 #!/usr/bin/env python3
 """
-Clean up prefetch files left by the review pipeline.
+Clean up prefetch files for a specific review session.
 
-Removes all .review/prefetch-*.json files. Safe to run anytime.
+File naming convention: .review/prefetch-{session_id}-{rem_id}.json
 
 Usage:
-    source venv/bin/activate && python scripts/review/cleanup_prefetch.py
+    source venv/bin/activate && python scripts/review/cleanup_prefetch.py --session-id <uuid>
+
+Exit codes: 0=success, 1=error
 """
 
 import json
 import glob
+import argparse
 from pathlib import Path
 
-PREFETCH_PATTERN = '.review/prefetch-*.json'
+REVIEW_DIR = '.review'
 
 
-def cleanup():
-    """Remove all prefetch files and report results."""
-    files = glob.glob(PREFETCH_PATTERN)
+def parse_args():
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(description='Clean up session prefetch files')
+    parser.add_argument('--session-id', required=True, help='UUID of the review session')
+    return parser.parse_args()
+
+
+def cleanup(session_id: str):
+    """Remove prefetch files for a specific session."""
+    pattern = f'{REVIEW_DIR}/prefetch-{session_id}-*.json'
+    files = glob.glob(pattern)
     removed = []
     for f in files:
         try:
@@ -29,10 +40,12 @@ def cleanup():
 
     print(json.dumps({
         'success': True,
+        'session_id': session_id,
         'removed': removed,
         'count': len(removed),
     }, indent=2, ensure_ascii=False))
 
 
 if __name__ == '__main__':
-    cleanup()
+    args = parse_args()
+    cleanup(args.session_id)
