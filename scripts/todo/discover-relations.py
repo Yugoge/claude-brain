@@ -32,7 +32,8 @@ def get_todos():
     {
         "content": "Step 4: Call Domain Tutor",
         "activeForm": "Step 4: Call Domain Tutor",
-        "status": "pending"
+        "status": "pending",
+        "subagent_call": {"agent": "{domain}-tutor", "subagent_type": "{domain}-tutor"}
     },
     {
         "content": "Step 5: Present Preview",

@@ -15,7 +15,8 @@ def main():
         {
             "content": "Step 2: Dual Journalist Consultation (Pro/Con Verification)",
             "activeForm": "Step 2: Dual Journalist Consultation (Pro/Con Verification)",
-            "status": "pending"
+            "status": "pending",
+            "subagent_call": [{"agent": "journalist", "subagent_type": "journalist"}, {"agent": "journalist", "subagent_type": "journalist"}]
         },
         {
             "content": "Step 3: Validate and Parse Dual Journalist Responses",

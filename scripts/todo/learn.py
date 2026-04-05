@@ -57,7 +57,8 @@ def get_todos():
     {
         "content": "Step 9: Select Appropriate Agent",
         "activeForm": "Step 9: Select Appropriate Agent",
-        "status": "pending"
+        "status": "pending",
+        "subagent_call": {"agent": "{domain}-tutor", "subagent_type": "{domain}-tutor"}
     },
     {
         "content": "Step 10: Domain Focus Constraints",
@@ -67,7 +68,8 @@ def get_todos():
     {
         "content": "Step 11: Consultation-Based Learning",
         "activeForm": "Step 11: Consultation-Based Learning",
-        "status": "pending"
+        "status": "pending",
+        "subagent_call": {"agent": "{domain}-tutor", "subagent_type": "{domain}-tutor"}
     },
     {
         "content": "Step 12: Post-Session Actions",

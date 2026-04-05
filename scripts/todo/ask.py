@@ -15,7 +15,7 @@ def get_todos():
     """
     return [
     {"content": "Step 1: Parse Question", "activeForm": "Step 1: Parsing Question", "status": "pending"},
-    {"content": "Step 2: Initial Analyst Consultation", "activeForm": "Step 2: Consulting Analyst", "status": "pending"},
+    {"content": "Step 2: Initial Analyst Consultation", "activeForm": "Step 2: Consulting Analyst", "status": "pending", "subagent_call": {"agent": "analyst", "subagent_type": "analyst"}},
     {"content": "Step 3: Validate and Parse Analyst Response", "activeForm": "Step 3: Validating Analyst Response", "status": "pending"},
     {"content": "Step 4: Confidence Gate and Escalation", "activeForm": "Step 4: Checking Confidence Gate", "status": "pending"},
     {"content": "Step 5: Internalize Guidance and Respond", "activeForm": "Step 5: Responding to User", "status": "pending"},

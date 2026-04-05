@@ -7,65 +7,47 @@ DO NOT EDIT MANUALLY - edit save.md and re-run generator script.
 """
 
 
-def get_todos():
-    """
-    Return list of todo items for TodoWrite.
-
-    Returns:
-        list[dict]: Todo items with content, activeForm, status
-    """
-    return [
-    {
-        "content": "Step 1: Pre-Processing (Batch Execution)",
-        "activeForm": "Step 1: Pre-Processing (Batch Execution)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 2: Domain Classification & ISCED Path (AI + Subagent)",
-        "activeForm": "Step 2: Domain Classification & ISCED Path (AI + Subagent)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 3: Extract Concepts (AI-driven, no file creation)",
-        "activeForm": "Step 3: Extract Concepts (AI-driven, no file creation)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
-        "activeForm": "Step 4: Analyze User Learning & Rem Updates (Learn/Review Sessions)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 5: Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
-        "activeForm": "Step 5: Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 6: Rem Extraction Transparency",
-        "activeForm": "Step 6: Rem Extraction Transparency",
-        "status": "pending"
-    },
-    {
-        "content": "Step 7: Generate Preview",
-        "activeForm": "Step 7: Generate Preview",
-        "status": "pending"
-    },
-    {
-        "content": "Step 8: User Confirmation",
-        "activeForm": "Step 8: User Confirmation",
-        "status": "pending"
-    },
-    {
-        "content": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
-        "activeForm": "Step 9: Update Learning Material Progress (Learn Sessions Only)",
-        "status": "pending"
-    },
-    {
-        "content": "Step 10: Execute Automated Post-Processing",
-        "activeForm": "Step 10: Execute Automated Post-Processing",
-        "status": "pending"
-    }
+# (content, activeForm, extra_meta) tuples for each step
+_STEPS = [
+    ("Pre-Processing (Batch Execution)", "Pre-Processing (Batch Execution)", None),
+    (
+        "Domain Classification & ISCED Path (AI + Subagent)",
+        "Domain Classification & ISCED Path (AI + Subagent)",
+        {"subagent_call": {"agent": "classification-expert", "subagent_type": "classification-expert"}},
+    ),
+    ("Extract Concepts (AI-driven, no file creation)", "Extract Concepts (AI-driven, no file creation)", None),
+    ("Analyze User Learning & Rem Updates (Learn/Review Sessions)", "Analyze User Learning & Rem Updates (Learn/Review Sessions)", None),
+    (
+        "Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
+        "Enrich with Typed Relations via Domain Tutor (AI + Subagent)",
+        {"subagent_call": {"agent": "domain-tutor", "subagent_type": "general-purpose"}},
+    ),
+    ("Rem Extraction Transparency", "Rem Extraction Transparency", None),
+    ("Generate Preview", "Generate Preview", None),
+    ("User Confirmation", "User Confirmation", None),
+    ("Update Learning Material Progress (Learn Sessions Only)", "Update Learning Material Progress (Learn Sessions Only)", None),
+    ("Execute Automated Post-Processing", "Execute Automated Post-Processing", None),
 ]
+
+
+def _build_step(index, desc, active, meta):
+    """Build a single todo item dict from step tuple."""
+    item = {
+        "content": f"Step {index}: {desc}",
+        "activeForm": f"Step {index}: {active}",
+        "status": "pending",
+    }
+    if meta:
+        item.update(meta)
+    return item
+
+
+def get_todos():
+    """Return list of todo items for TodoWrite."""
+    return [
+        _build_step(i + 1, desc, active, meta)
+        for i, (desc, active, meta) in enumerate(_STEPS)
+    ]
 
 
 if __name__ == "__main__":
