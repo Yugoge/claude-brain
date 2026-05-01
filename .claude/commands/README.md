@@ -1,3 +1,7 @@
+---
+disable-model-invocation: true
+---
+
 # commands
 
 Organization and usage documentation for `commands/`.
