@@ -104,4 +104,4 @@ session-env/
 systemd/
 
 # Workflow state (transient, per-session)
-.claude/workflow-current.json
+.claude/workflow-*.json
