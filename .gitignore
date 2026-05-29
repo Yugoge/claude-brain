@@ -69,7 +69,6 @@ learning-materials/
 knowledge-base/
 
 # Review System Data (FSRS scheduling, personal progress)
-.review/
 
 # Conversation Archives (your learning sessions)
 chats/
@@ -105,3 +104,4 @@ systemd/
 
 # Workflow state (transient, per-session)
 .claude/workflow-*.json
+node_modules/
