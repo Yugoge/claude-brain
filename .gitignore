@@ -105,3 +105,7 @@ systemd/
 # Workflow state (transient, per-session)
 .claude/workflow-*.json
 node_modules/
+
+# scratch outputs (no-track)
+/ois-accrual-analysis.json
+/qa-verification-report-*.json

@@ -23,6 +23,7 @@ Usage:
 import sys
 import json
 import argparse
+import re
 from pathlib import Path
 from datetime import datetime
 import os
@@ -212,6 +213,30 @@ def main():
             f"Invalid output_path: '{args.output_path}' resolves to current directory.\n"
             f"   This typically means output_path was empty or invalid.\n"
             f"   Fix: Provide full path including filename."
+        )
+
+    # Reject bare / misfiled output paths (root cause of stray numeric files
+    # like '235'/'236' filed at repo root on 2026-03-30: the caller passed a
+    # bare sequence number as output_path instead of the full knowledge-base
+    # path, and the existing checks above let it through). Three guards:
+    _name = output_path.name
+    if not _name.endswith('.md'):
+        raise ValueError(
+            f"Invalid output_path: '{args.output_path}' must end in '.md'.\n"
+            f"   A bare name/number (e.g. '235') means the caller did not assemble the full path.\n"
+            f"   Fix: knowledge-base/<isced-path>/NNN-<rem-id>.md"
+        )
+    if 'knowledge-base/' not in str(output_path) and 'docs/' not in str(output_path):
+        raise ValueError(
+            f"Invalid output_path: '{args.output_path}' is not under knowledge-base/ (or docs/).\n"
+            f"   Rems must be filed into the ISCED tree, not the repo root.\n"
+            f"   Fix: knowledge-base/<isced-path>/NNN-<rem-id>.md"
+        )
+    if not re.match(r'^\d+-.+\.md$', _name):
+        raise ValueError(
+            f"Invalid output_path filename: '{_name}' must match 'NNN-<slug>.md'.\n"
+            f"   Got a name without the numeric sequence prefix.\n"
+            f"   Fix: prefix with get-next-number.py output, e.g. '280-{args.rem_id}.md'"
         )
 
     # Generate content
