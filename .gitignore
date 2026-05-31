@@ -73,8 +73,10 @@ knowledge-base/_index/
 
 # Review System Data (FSRS scheduling, personal progress)
 
-# Conversation Archives (your learning sessions)
-chats/
+# Conversation Archives (your learning sessions) — TRACKED in this PRIVATE repo
+# for backup/migration (1021 rems reference chats/ as their source). The public
+# claude-brain repo keeps excluding chats/ via the sync-to-public Action.
+# (chats-test/ test fixtures stay ignored below.)
 
 # Analytics and Progress Data (for public repo)
 analytics-dashboard.html
