@@ -62,8 +62,10 @@ orchestrator_metadata.json
 # Private Documentation (use architecture/ in root instead)
 docs/
 
-# Personal Learning Materials (your private files)
-learning-materials/
+# Personal Learning Materials (your private files) — TRACKED in this PRIVATE repo.
+# Notes (*.md/*.json) as normal git; books (*.pdf/*.epub, ~338MB) via Git LFS
+# (see .gitattributes). The public claude-brain repo excludes learning-materials/
+# via the sync-to-public Action.
 
 # Extracted Knowledge Base (your personal knowledge)
 # Tracked in THIS private repo for backup/migration (repo is PRIVATE).
@@ -114,3 +116,10 @@ node_modules/
 # scratch outputs (no-track)
 /ois-accrual-analysis.json
 /qa-verification-report-*.json
+# harness-propagated by session-gitignore-propagate.sh
+tests/generated/
+# harness-propagated by session-gitignore-propagate.sh
+.claude/dev-registry/dev-*/
+# harness-propagated by session-gitignore-propagate.sh
+docs/codex/
+.claude/hooks/archive/
